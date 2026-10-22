@@ -1,0 +1,17 @@
+<!-- @dsCard group="Inputs" height=104 -->
+<html><head><style>body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.6 var(--font-sans)}
+.wrap{padding:24px;display:flex;flex-wrap:wrap;gap:8px;max-width:720px}
+.tag{height:32px;padding:0 8px 0 12px;display:inline-flex;align-items:center;gap:8px;border-radius:var(--r-tag);border:1px solid var(--line);background:var(--surface);color:var(--ink);font:400 13px var(--font-sans);cursor:pointer}
+.tag:hover{background:var(--sunken)}
+.tag:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.tag .ring circle{fill:none;stroke:var(--line)}.tag .ring path{display:none}
+.tag[aria-pressed="true"]{background:var(--action-bg);border-color:var(--action-line);font-weight:500}
+.tag[aria-pressed="true"] .ring circle{fill:var(--surface);stroke:var(--action-line)}
+.tag[aria-pressed="true"] .ring path{display:block}
+.tag .x{font-size:16px;line-height:1;color:var(--muted)}</style></head><body><div class="wrap" id="w"></div>
+<script>
+const ring='<svg class="ring" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.25" stroke-width="1.2"/><path d="M4.8 8.2l2.1 2.1 4.3-4.4" fill="none" stroke="var(--action-line)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const w=document.getElementById('w');
+[['设计负责人',1],['产品经理',0],['工程负责人',1],['HR / 招聘',0],['业务负责人',0]].forEach(([t,on])=>{const b=document.createElement('button');b.className='tag';b.setAttribute('aria-pressed',!!on);b.innerHTML=t+ring;b.onclick=()=>b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!=='true');w.appendChild(b)});
+const c=document.createElement('button');c.className='tag';c.setAttribute('aria-pressed','true');c.innerHTML='用研负责人<span class="x" aria-label="删除">×</span>';w.appendChild(c);
+</script></body></html>

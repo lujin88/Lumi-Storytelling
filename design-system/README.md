@@ -7,9 +7,9 @@ Lumi is an interview-storytelling coach. It turns a design project into a story 
 ## Principles
 
 1. **Paper first.** Every step sits on `paper`. Raised things (`surface`) are rare: scene cards, the coach bubble, the composer, a modal. Separation comes from `line` hairlines and whitespace, not shadows.
-2. **One left edge.** Topbar, content and composer share `gutter`. Nothing is centered except the empty-state mascot. Left-aligned content reads as a document.
+2. **One left edge.** Content and composer share `gutter`. There is no top bar on desktop; the logo and 中/EN sit in the sidebar. Nothing is centered except the empty-state mascot. Left-aligned content reads as a document.
 3. **State is a chip, never a color block.** Evidence status (supported / stated / inferred / missing) is always the outlined pill: `ok`, `warn`, `info`, `danger` text with its `-line` border on transparent. Never fill a card with a status color.
-4. **One way to answer (see Interaction rules).** Every list Lumi asks about (the six story questions, the three things to remember) is a row list: muted serif number, the question as the row title, a status chip, a text link on the right (回答 / 改写). The current row uses the action treatment (below). Answered rows are edited inline; unanswered ones are answered in the bottom composer.
+4. **One way to answer (see Interaction rules).** Every list Lumi asks about (the six story questions, the three things to remember) is a row list on the shared row grid (Interaction rule 7): a muted sans number, the question as the row title, a status chip. The whole row is the target; there are no 回答 / 改写 buttons (Interaction rule 1). The current row uses the action treatment (below). Answered rows are edited inline; unanswered ones are answered in the bottom composer.
 5. **Ink is the only button fill.** One primary per screen (`ink` fill, white text); everything else is outlined on `surface`.
 
 ## Voice
@@ -27,17 +27,18 @@ Chinese first, English parity. Short, direct, second person. Name the user's mat
 
 | State | Fill | Line | Text / mark | Used by |
 | --- | --- | --- | --- | --- |
-| Selected | `action-bg` (= `soft` #e7ecf3) | 1px `action-line` (= `blue` #7e8fae) | `ink`; check mark in `action-ink` | ChoiceCard, multi-select chip, style chip, segmented control (language, 要点/逐字稿, modal toggles), active nav row |
+| Selected | `action-bg` (= `soft` #e7ecf3) | 1px `action-line` (= `blue` #7e8fae) | `ink`; Tag check in `action-line` | ChoiceCard, Tag, style chip, active nav row |
+| Pressed segment | `action-bg` | none (the track holds the shape) | `action-ink`, 600 | Segmented controls on a `sunken` track: LanguageToggle, 要点/逐字稿, modal toggles |
 | Current | `action-bg` | 3px `action-ink` (= `info` #526787) bar on the left | number in `action-ink`, 600 | Current question row, open accordion item |
-| Hover | `sunken` | none | `ink` | Rows that are not current |
+| Hover | `sunken` | unchanged | `ink` | Rows that are not current; ChoiceCard and Tag that are not selected |
 
 Never use white-on-track, a grey fill or an ink border for selection; those read as "not picked". Dark mode maps the same tokens (`soft` #232a36, `blue` #9fb0cf, `info` #a9bbd6).
 
-**Single vs multi select.** Single choice = rectangular ChoiceCard or segment (`r-control` 6px), no mark. Multi choice = Tag (`r-tag` 12px: softer than a card, squarer than a pill) with a trailing 16px ring; selected = `surface` circle with an `action-line` ring and an `action-line` check (same colour as the tag border), never a filled dark circle. Custom entries add a trailing ×. Tag and ChoiceCard share the same borders: 1px `line` at rest, 1px `action-line` when selected.
+**Single vs multi select.** Single choice = rectangular ChoiceCard or segment (`r-control` 6px), no mark. Multi choice = Tag (`r-tag` 12px: softer than a card, squarer than a pill) with a trailing 16px ring; selected = `surface` circle with an `action-line` ring and an `action-line` check (same colour as the tag border), never a filled dark circle. Custom entries add a trailing ×. See ChoiceCard and Tag. Tag and ChoiceCard share the same borders: 1px `line` at rest, 1px `action-line` when selected.
 
-**Type.** System sans for UI, Georgia for numerals only (scene numbers, foundation numbers, the audit score). A 1.25 ratio from the 14px body: 12, 13, 14, 16, 20, 24, 32. Page titles 24/600, the intro headline 32/600. Weights 400 / 500 / 600; 700 only for the wordmark. Headings use 600 with no extra tracking.
+**Type.** System sans for everything in the UI, list numbers and the story score included. Georgia appears only inside slide thumbnails and exported slides. A 1.25 ratio from the 14px body: 12, 13, 14, 16, 20, 24, 32. Page titles 24/600, the intro headline 32/600. Weights 400 / 500 / 600; 700 only for the wordmark. Headings use 600 with no extra tracking.
 
-**Spacing.** 4px base: `s-1`…`s-8` = 4, 8, 12, 16, 24, 32, 48, 64. Controls are `control-h` (40px) tall; the composer and its CTA are `composer-h` (64px).
+**Spacing.** 4px base: `s-1`…`s-8` = 4, 8, 12, 16, 24, 32, 48, 64. Controls are `control-h` (40px) tall; the composer and its CTA are `composer-h` (48px).
 
 **Radius.** Small and quiet: `r-chip` 4px for status chips, `r-control` 6px for anything you press or type into (the language toggle included), `r-surface` 8px for things that hold content. `r-tag` 12px is for multi-select tags; `r-pill` only for round numbered markers.
 
@@ -49,7 +50,7 @@ Material Symbols Outlined, weight 400, 16–20px, inheriting text color. Filled 
 
 ## Mascot
 
-Lumi the mascot appears on the intro, in the coach bubble avatar (36px) and in empty states. Never on the map page, never next to a scene card.
+Lumi the mascot appears on the intro, in the story score face, on the step 5 file card and in empty states (the coach bubble avatar returns if CoachBubble does). Never on the map page, never next to a scene card.
 
 ## Interaction rules
 

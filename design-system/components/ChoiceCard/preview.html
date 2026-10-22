@@ -1,9 +1,13 @@
-<!-- @dsCard group="Inputs" height=120 -->
-<html><head><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0"><style>body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.6 var(--font-sans)}
-.ms{font-family:"Material Symbols Outlined";font-weight:400;font-style:normal;font-size:18px;line-height:1;display:inline-block;-webkit-font-feature-settings:"liga";font-feature-settings:"liga"}
-.wrap{padding:24px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.row{display:flex;flex-wrap:wrap;gap:8px;padding:24px}
-.choice{min-height:64px;min-width:160px;padding:12px 16px;border-radius:var(--r-control);border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;justify-content:center;gap:2px;text-align:left;font-family:var(--font-sans);color:var(--ink);cursor:pointer}
-.choice:hover{background:var(--soft)}
-.choice.on{border-color:var(--ink);background:var(--selected)}
-.choice strong{font-size:14px;font-weight:600}.choice span{font-size:12px;color:var(--muted)}</style></head><body><div class="row"><button class="choice on"><strong>设计经理</strong><span>看判断和影响</span></button><button class="choice"><strong>同组设计师</strong><span>看过程和细节</span></button><button class="choice"><strong>跨职能伙伴</strong><span>看协作和结果</span></button></div></body></html>
+<!-- @dsCard group="Inputs" height=160 -->
+<html><head><style>body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.6 var(--font-sans)}
+.wrap{padding:24px;display:flex;flex-direction:column;gap:16px;max-width:720px}
+.lbl{font-size:13px;font-weight:600;margin:0 0 8px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.grid.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.choice{height:40px;padding:0 16px;border-radius:var(--r-control);border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 14px var(--font-sans);cursor:pointer}
+.choice:hover{background:var(--sunken)}
+.choice[aria-pressed="true"]{background:var(--action-bg);border-color:var(--action-line)}
+.choice:focus-visible{outline:2px solid var(--blue);outline-offset:2px}</style></head><body><div class="wrap">
+<div><p class="lbl">用在哪</p><div class="grid" data-g><button class="choice" aria-pressed="true">面试</button><button class="choice" aria-pressed="false">汇报</button><button class="choice" aria-pressed="false">作品集</button></div></div>
+<div><p class="lbl">准备讲多久</p><div class="grid c4" data-g><button class="choice" aria-pressed="false">5 分钟</button><button class="choice" aria-pressed="true">10 分钟</button><button class="choice" aria-pressed="false">15 分钟</button><button class="choice" aria-pressed="false">30 分钟</button></div></div>
+</div><script>document.querySelectorAll('[data-g]').forEach(g=>g.querySelectorAll('.choice').forEach(b=>b.onclick=()=>g.querySelectorAll('.choice').forEach(x=>x.setAttribute('aria-pressed',x===b))))</script></body></html>
