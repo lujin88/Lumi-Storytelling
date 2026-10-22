@@ -4,6 +4,9 @@ Project manager writes this. One line each, newest first.
 
 | 日期 | 决定 | 原因 |
 |---|---|---|
+| 2026-10-22 | Approved: 1 wave preview with `doubao-seedance-2-0-mini-260615`, 1 run, 4 s, 480p, 1:1, est. ¥0.88 (list price; actual cost from the Ark bill). Submit only after the model is activated in the Ark console | Lu in #lumi-storytelling, event 3ffc3047 |
+| 2026-10-22 | Lumi wave clip may be 4 s (Seedance 2.0 minimum), kept at natural speed, instead of the 2–3 s target | Natural motion matters more than 1 s in a loop; Lu chose option 2, #lumi-storytelling event dd1a9742 |
+| 2026-10-22 | Lumi video clips are generated through the Volcengine Ark API (key in local Keychain as `ARK_API_KEY`); Jimeng/Dreamina CLI later. Each paid generation still needs Lu's approval with a cost quote | Lu in #lumi-storytelling, event 392d186f |
 | 2026-10-22 | Download page is one card: files, Download button and Lumi together | Two separate blocks read as two unrelated things |
 | 2026-10-22 | Panel = sunken fill, no border; outlined card = page fill + line border; never mixed | Score card and file card need different weight |
 | 2026-10-22 | Numbered lists share one grid: 16px padding, 24px number column, 12px gap | Numbers sat too far from text; part titles and rows didn't align |
