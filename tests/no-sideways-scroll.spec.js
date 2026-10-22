@@ -30,18 +30,20 @@ for (const lang of ['zh', 'en']) {
   }
 }
 
-test('Story tooltip fits the viewport when shown', async ({ page }) => {
-  await openApp(page, { storage: { 'lumi-workbench-v1': JSON.stringify({ lang: 'en' }) } });
-  await fillStepOne(page, NOTES);
-  await page.locator('#sidebar [data-page="story"]').evaluate((el) => el.click());
-  for (const width of [320, 390, 721, 1280]) {
-    await page.setViewportSize({ width, height: 850 });
-    await page.locator('.info-tip .info-btn').focus();
-    const tip = page.locator('.info-tip .tip');
-    await expect(tip).toBeVisible();
-    const box = await tip.evaluate((el) => el.getBoundingClientRect().toJSON());
-    expect(box.left, `left at ${width}px`).toBeGreaterThanOrEqual(0);
-    expect(box.right, `right at ${width}px`).toBeLessThanOrEqual(width);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
-  }
-});
+for (const lang of ['zh', 'en']) {
+  test(`Story tooltip fits the viewport when shown (${lang})`, async ({ page }) => {
+    await openApp(page, { storage: { 'lumi-workbench-v1': JSON.stringify({ lang }) } });
+    await fillStepOne(page, NOTES);
+    await page.locator('#sidebar [data-page="story"]').evaluate((el) => el.click());
+    for (const width of [320, 390, 721, 1280]) {
+      await page.setViewportSize({ width, height: 850 });
+      await page.locator('.info-tip .info-btn').focus();
+      const tip = page.locator('.info-tip .tip');
+      await expect(tip).toBeVisible();
+      const box = await tip.evaluate((el) => el.getBoundingClientRect().toJSON());
+      expect(box.left, `left at ${width}px`).toBeGreaterThanOrEqual(0);
+      expect(box.right, `right at ${width}px`).toBeLessThanOrEqual(width);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
+    }
+  });
+}
