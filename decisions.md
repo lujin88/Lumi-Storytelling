@@ -4,6 +4,7 @@ Project manager writes this. One line each, newest first.
 
 | 日期 | 决定 | 原因 |
 |---|---|---|
+| 2026-10-22 | Lumi clips stay transparent (keyed from a green background), not baked onto the page colour | Page has light and dark backgrounds; generated backgrounds drift per frame; keying is a local script with no credits. Lu: "你们继续做吧", #lumi-storytelling event 001113f3 |
 | 2026-10-22 | `handoff.md` is Lu's single view of project state: PM updates it daily before close, and at once when a PR merges, a decision is needed or the plan changes. Four sections, current state only, one page max, last 5 completed items, links as `lujin88/Lumi-Storytelling#N` | Lu in #lumi-storytelling, event 7a6556cd |
 | 2026-10-22 | Remove the light-grey ellipse behind Lumi (index.html only; the `selected` token `#e7eaf0` stays) | Lu in #lumi-storytelling, event 1f0b026e |
 | 2026-10-22 | Lumi wave uses the existing Seedance 2.0 mini clip (Dreamina task cd75c5b3, 4 s, 960×960, 24 credits, already paid). Mini is the default for the remaining clips, pending Lu's review of wave. The seedance2.0 run (04d249b4, 32 credits, paid) is kept only as a quality comparison; nobody waits on it | Measured on this account: mini 24 credits/clip and finished; seedance2.0 32 credits/clip and queue position ~3980 moving ~2 per minute. Mini frames look on-model at thumbnail size. Lu asked PM to decide, #lumi-storytelling event f4361ff1. 2.0 fast and 2.5 costs not measured (to confirm) |

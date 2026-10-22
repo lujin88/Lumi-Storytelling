@@ -8,13 +8,12 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 
 ## 等 Lu 决定的事
 1. **Merge order**: lujin88/Lumi-Storytelling#11 first, then lujin88/Lumi-Storytelling#12. Recommend: merge both now (QA: main + #11 + #12 = bf608d2, 32 tests pass). If not merged: mobile layout fixes and the Story sideways scroll stay on main.
-2. **Lumi clip background**: A transparent (keyed from green) | B baked-in page colour. Recommend A: the page has light `#f7f5f0` and dark `#17191f`; generated backgrounds drift per frame and would show a box edge; B needs a new paid run. If not decided: wave PR goes ahead with A.
-3. **Model for the other 5 clips**: A Seedance 2.0 mini (24 credits/clip, measured) | B seedance2.0 (32 credits/clip, queue over a day). Recommend A, judged after you see wave. This reverses your earlier "not mini". Blocks: the other 5 clips.
-4. **Who spent 24 credits on this Dreamina account** before our run (task cd75c5b3)? You, or another channel's agent? If unknown, measured cost per clip can't be trusted.
-5. **Key check (PRD 8.12)**: A in the browser | B local `server/` API. Conflicts with "no backend for now, GitHub Pages". Blocks backend v1 and task 1b.
-6. **Backend hosting and region; shared org key in v1** (yes/no). Blocks backend v1.
-7. **Icons**: A Material Symbols (`design-system/README.md`) | B Remix Icon (your global rule). Recommend B. Blocks: any icon change.
-8. **Download page**: where Lumi sits, and whether the GitHub Pages line stays inside the card. Blocks: download page polish.
+2. **Model for the other 5 clips**: A Seedance 2.0 mini (24 credits/clip, measured) | B seedance2.0 (32 credits/clip, queue over a day). Recommend A, judged after you see wave. This reverses your earlier "not mini". Blocks: the other 5 clips.
+3. **Who spent 24 credits on this Dreamina account** before our run (task cd75c5b3)? You, or another channel's agent? If unknown, measured cost per clip can't be trusted.
+4. **Key check (PRD 8.12)**: A in the browser | B local `server/` API. Conflicts with "no backend for now, GitHub Pages". Blocks backend v1 and task 1b.
+5. **Backend hosting and region; shared org key in v1** (yes/no). Blocks backend v1.
+6. **Icons**: A Material Symbols (`design-system/README.md`) | B Remix Icon (your global rule). Recommend B. Blocks: any icon change.
+7. **Download page**: where Lumi sits, and whether the GitHub Pages line stays inside the card. Blocks: download page polish.
 
 ## 最近完成的
 - lujin88/Lumi-Storytelling#13: Lumi clips via Dreamina CLI; wave reassigned to Developer.
@@ -26,4 +25,4 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 ## 下一步
 1. Developer opens the wave PR; QA and visual review check it against the renders and on Safari (WebP fallback).
 2. Lu reviews wave; if OK, the other 5 clips (idle, head tilt, thinking, jump, cheer) with the same keying script.
-3. Backend v1 starts once items 5 and 6 are decided.
+3. Backend v1 starts once items 4 and 5 are decided.
