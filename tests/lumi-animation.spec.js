@@ -9,16 +9,52 @@ const lumiState = (page) => page.locator('img[data-lumi]').first().getAttribute(
 
 const animationName = (locator) => locator.evaluate((el) => getComputedStyle(el).animationName);
 
-test("Lumi waves on open, then goes back to the page's own animation", async ({ page }) => {
+test('Lumi waves on open with the transparent WebM, then goes back to the still', async ({ page }) => {
   const errors = await openApp(page);
-  const lumi = page.locator('img.intro-lumi[data-lumi]');
-  await expect(lumi).toBeVisible();
+  const still = page.locator('img.intro-lumi[data-lumi]');
+  const video = page.locator('video[data-lumi-video]');
   expect(await lumiState(page)).toBe('wave');
-  expect(await animationName(lumi)).toBe('lumiWave');
-  await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('idle');
+  // The clip replaces the CSS placeholder: the <video> takes the still's place, the <img> is hidden.
+  await expect(video).toHaveAttribute('src', 'assets/lumi/wave.webm');
+  await expect(video).toBeVisible();
+  await expect(still).toBeHidden();
+  await expect.poll(() => video.evaluate((v) => v.readyState)).toBeGreaterThan(0);
+  expect(await video.evaluate((v) => v.duration)).toBeCloseTo(4, 0);
+  await expect.poll(() => lumiState(page), { timeout: 6000 }).toBe('idle');
   // Idle keeps what the page had before the state machine: the intro Lumi was a still.
-  expect(await animationName(lumi)).toBe('none');
+  await expect(video).toHaveCount(0);
+  await expect(still).toBeVisible();
+  expect(await animationName(still)).toBe('none');
   expect(errors).toEqual([]);
+});
+
+test('a WebM that fails to load falls back to the animated WebP', async ({ page }) => {
+  await openApp(page);
+  await expect.poll(() => lumiState(page), { timeout: 6000 }).toBe('idle');
+  await page.evaluate(() => {
+    LUMI_CLIPS.wave = { webm: 'assets/lumi/missing.webm', webp: 'assets/lumi/wave.webp' };
+    lumiAnim.set('wave');
+  });
+  const still = page.locator('img.intro-lumi[data-lumi]');
+  await expect(still).toHaveAttribute('src', 'assets/lumi/wave.webp');
+  await expect(still).toBeVisible();
+  await expect(page.locator('video[data-lumi-video]')).toHaveCount(0);
+});
+
+test.describe('Safari', () => {
+  // Safari and every iOS browser cannot show WebM alpha, so they get the animated WebP.
+  test.use({
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
+  });
+
+  test('gets the animated WebP instead of the WebM', async ({ page }) => {
+    await openApp(page);
+    const still = page.locator('img.intro-lumi[data-lumi]');
+    expect(await lumiState(page)).toBe('wave');
+    await expect(still).toHaveAttribute('src', 'assets/lumi/wave.webp');
+    await expect(still).toBeVisible();
+    await expect(page.locator('video[data-lumi-video]')).toHaveCount(0);
+  });
 });
 
 test('the download page keeps its celebrate loop after cheering', async ({ page }) => {
