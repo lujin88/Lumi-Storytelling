@@ -4,7 +4,7 @@ Read harness-core's `AGENTS.md` first (https://github.com/lujin88/harness-core),
 
 ## Project
 - One line: a single-file prototype that turns project notes into a presentable story (slides, script, follow-up answers).
-- Channel: pending (Buzz channel name not decided).
+- Channel: `#lumi-storytelling` (Buzz). Team: Lumi Storytelling.
 - Default branch: `main`.
 
 ## Files

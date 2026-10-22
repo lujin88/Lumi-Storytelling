@@ -6,7 +6,7 @@ Project manager writes this. One page max.
 - Repo set up from harness-core templates; prototype, design system and PRD imported.
 
 ## 等 Lu 决定的事
-- Buzz channel name and backend team setup.
+- Backend team is set up in `#lumi-storytelling`; first task not assigned yet.
 - Backend hosting and whether company use (shared key) is in v1.
 - Download page: Lumi's position and whether the GitHub Pages line stays inside the card.
 
