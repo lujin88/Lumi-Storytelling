@@ -1,0 +1,7 @@
+<!-- @dsCard group="Navigation" height=88 -->
+<html><head><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0"><style>body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.6 var(--font-sans)}
+.ms{font-family:"Material Symbols Outlined";font-weight:400;font-style:normal;font-size:18px;line-height:1;display:inline-block;-webkit-font-feature-settings:"liga";font-feature-settings:"liga"}
+.wrap{padding:24px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.lp{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-control);overflow:hidden;margin:24px}
+.lp button{height:32px;padding:0 16px;border:0;background:transparent;color:var(--muted);font:500 13px var(--font-sans);cursor:pointer}
+.lp button[aria-pressed="true"]{background:var(--selected);color:var(--ink);font-weight:600}</style></head><body><div class="lp"><button aria-pressed="true">中文</button><button aria-pressed="false">EN</button></div><script>document.querySelectorAll('.lp button').forEach(b=>b.onclick=()=>document.querySelectorAll('.lp button').forEach(x=>x.setAttribute('aria-pressed',x===b)))</script></body></html>

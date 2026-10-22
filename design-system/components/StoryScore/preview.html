@@ -1,0 +1,18 @@
+<!-- @dsCard group="Feedback" height=230 -->
+<html><head><style>body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.6 var(--font-sans)}
+.wrap{padding:24px;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.card{width:300px;border:1px solid var(--line);border-radius:var(--r-2,6px);background:var(--paper)}
+.card.open{background:var(--surface)}
+.head{display:grid;grid-template-columns:48px 1fr 16px;gap:12px;align-items:center;padding:12px}
+.ring{width:48px;height:48px;border-radius:50%;background:conic-gradient(var(--ok) var(--p),var(--line) 0);display:grid;place-items:center}
+.ring i{width:40px;height:40px;border-radius:50%;background:var(--sunken);display:block}
+.l{font-size:12px;color:var(--muted);line-height:16px}.n{font-weight:600;font-size:16px;line-height:21px}.n span{color:var(--muted);font-weight:400;font-size:13px}
+.chev{width:8px;height:8px;border:solid var(--muted);border-width:0 1.5px 1.5px 0;transform:rotate(45deg) translateY(-3px)}
+.open .chev{transform:rotate(-135deg)}
+.dims{border-top:1px solid var(--line);padding:8px 12px 12px;display:grid;gap:6px;font-size:13px}
+.dims div{display:flex;justify-content:space-between}.dims em{font-style:normal;color:var(--muted)}.dims a{color:var(--action-ink);text-decoration:underline;text-underline-offset:3px}
+</style></head><body><div class="wrap">
+<div class="card"><div class="head"><span class="ring" style="--p:100%"><i></i></span><span><div class="l">故事评分</div><div class="n">10<span>/10</span></div><div class="l">只看完整度，内容还要你来打磨</div></span><span class="chev"></span></div></div>
+<div class="card open"><div class="head"><span class="ring" style="--p:60%"><i></i></span><span><div class="l">故事评分</div><div class="n">6<span>/10</span></div><div class="l">只看完整度，内容还要你来打磨</div></span><span class="chev"></span></div>
+<div class="dims"><div>背景<em>完整</em></div><div>冲突<a>去补</a></div><div>结果<a>去补</a></div></div></div>
+</div></body></html>

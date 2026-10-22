@@ -1,0 +1,27 @@
+<!-- @dsCard height=288 -->
+<html><head><style>
+body{margin:0;background:var(--paper)}
+.cv{position:relative;width:960px;height:288px;overflow:hidden}
+.nm{position:absolute;left:40px;bottom:40px;max-width:440px}
+.nm h1{margin:0;font:500 72px/.95 var(--font-sans);letter-spacing:-2px;color:var(--ink)}
+.nm p{margin:12px 0 0;font:14px var(--font-sans);color:var(--muted)}
+.ink{fill:var(--ink)}.blue{fill:var(--blue)}.soft{fill:var(--soft)}.sel{fill:var(--selected)}.surf{fill:var(--surface)}
+</style></head><body><div class="cv">
+<svg width="960" height="288" viewBox="0 0 960 288" style="position:absolute;inset:0">
+<!-- blocks: ink 200x192, blue 160x120, soft 296x96, selected 120x160 (spacing multiples of s-4/s-5)
+     arrangement: staggered stack bleeding off the top and right edges, like note cards on a desk
+     pattern: pills from r-pill and r-surface, read as the chips that carry evidence status ("state is a chip")
+     scales: gaps s-4 16, pill height 22 (chip), radii r-surface 14 and r-pill (half the short side) -->
+<rect class="soft" x="520" y="-14" width="296" height="96" rx="14"/>
+<rect class="ink" x="560" y="98" width="200" height="192" rx="14"/>
+<rect class="blue" x="776" y="58" width="200" height="120" rx="14"/>
+<rect class="sel" x="776" y="194" width="160" height="110" rx="14"/>
+<rect class="surf" x="584" y="122" width="96" height="22" rx="11"/>
+<rect class="surf" x="584" y="160" width="136" height="22" rx="11"/>
+<rect class="surf" x="584" y="198" width="72" height="22" rx="11"/>
+<rect class="ink" x="800" y="82" width="88" height="22" rx="11"/>
+<rect class="soft" x="800" y="120" width="128" height="22" rx="11"/>
+<rect class="blue" x="800" y="218" width="104" height="22" rx="11"/>
+</svg>
+<div class="nm"><h1>Lumi</h1><p>把一个项目讲成一个让人记住的故事。</p></div>
+</div></body></html>
