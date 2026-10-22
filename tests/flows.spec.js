@@ -53,12 +53,23 @@ test('answering a story question raises the score', async ({ page }) => {
   await expect.poll(() => storyScore(page)).toBeGreaterThan(before);
 });
 
-test('download excludes saved API keys', async ({ page }) => {
-  const marker = 'FAKE-KEY-FOR-TEST-ONLY';
+test('download excludes saved API keys and GitHub token', async ({ page }) => {
+  // One distinct marker per secret, so a leak names the field that leaked.
+  const keyMarkers = {
+    claude: 'FAKE-CLAUDE-KEY-FOR-TEST-ONLY',
+    openai: 'FAKE-OPENAI-KEY-FOR-TEST-ONLY',
+    gemini: 'FAKE-GEMINI-KEY-FOR-TEST-ONLY',
+    jimeng: 'FAKE-JIMENG-KEY-FOR-TEST-ONLY',
+  };
+  const githubMarker = 'FAKE-GITHUB-TOKEN-FOR-TEST-ONLY';
   await openApp(page, {
-    storage: { 'lumi-api-keys-v1': JSON.stringify({ claude: marker, openai: '', gemini: '', jimeng: '' }) },
+    storage: {
+      'lumi-api-keys-v1': JSON.stringify(keyMarkers),
+      'lumi-github-token-v1': githubMarker,
+    },
   });
-  await expect.poll(() => page.evaluate(() => localStorage.getItem('lumi-api-keys-v1'))).toContain(marker);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('lumi-api-keys-v1'))).toContain(keyMarkers.jimeng);
+  expect(await page.evaluate(() => localStorage.getItem('lumi-github-token-v1'))).toBe(githubMarker);
   await page.click('[data-action="loadSample"]');
   await page.click('#sidebar [data-page="publish"]');
   const [download] = await Promise.all([
@@ -71,5 +82,7 @@ test('download excludes saved API keys', async ({ page }) => {
   // Guard that the archive is searchable as bytes (stored, not compressed).
   expect(zip.includes(Buffer.from('lumi-project.json'))).toBe(true);
   expect(zip.includes(Buffer.from('"brief"'))).toBe(true);
-  expect(zip.includes(Buffer.from(marker))).toBe(false);
+  for (const [name, marker] of [...Object.entries(keyMarkers), ['github', githubMarker]]) {
+    expect(zip.includes(Buffer.from(marker)), `${name} secret leaked into the download`).toBe(false);
+  }
 });
