@@ -3,11 +3,11 @@
 Project manager writes this. Current state only, one page max. Lu's decisions go in `decisions.md`.
 
 ## 现在在做什么
-- QA + visual review | task 9, Lumi wave: lujin88/Lumi-Storytelling#15 (d146862). Mini clip (0 credits), transparent WebM 436KB + WebP 438KB, `LUMI_ONCE` 4000ms, grey ellipse removed, 17 tests pass. Left: QA on main + #11 + #12 + #15, real Safari check, on-model check against the renders.
+- Developer + visual review | task 9, Lumi wave: lujin88/Lumi-Storytelling#15. QA passed (c15bcac). Developer is fixing two findings in the same PR: phones download ~430KB for a hidden Lumi; iOS in-app browsers would get WebM and may show a black box. Visual review is checking real Safari and on-model. Later: clip can stop mid-wave on slow networks.
 - Lu | merge lujin88/Lumi-Storytelling#11, then lujin88/Lumi-Storytelling#12. Both passed QA and visual review.
 
 ## 等 Lu 决定的事
-1. **Merge order**: lujin88/Lumi-Storytelling#11, then #12, then #15 once reviewed (all three touch `index.html`). Recommend: merge both now (QA: main + #11 + #12 = bf608d2, 32 tests pass). If not merged: mobile layout fixes and the Story sideways scroll stay on main.
+1. **Merge order**: lujin88/Lumi-Storytelling#11 → #12 → #15, with #14 before or together with #15 (it restores the mini decision #15 relies on). Recommend: merge #11, #12, #14 now; #15 after the developer fixes two QA findings and visual review reports. QA: main + #11 + #12 + #15 = c15bcac, 34 tests pass, no conflicts. If not merged: mobile fixes and the Story sideways scroll stay on main.
 2. **Model for the other 5 clips**: A Seedance 2.0 mini (24 credits/clip, measured) | B seedance2.0 (32 credits/clip, queue over a day). Recommend A, judged after you see wave. This reverses your earlier "not mini". Blocks: the other 5 clips.
 3. **Who spent 24 credits on this Dreamina account** before our run (task cd75c5b3)? You, or another channel's agent? If unknown, measured cost per clip can't be trusted.
 4. **Key check (PRD 8.12)**: A in the browser | B local `server/` API. Conflicts with "no backend for now, GitHub Pages". Blocks backend v1 and task 1b.
