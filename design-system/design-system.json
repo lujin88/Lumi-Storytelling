@@ -18,8 +18,8 @@
  },
  "lastChange": {
   "by": "Lu Jin",
-  "at": "2026-10-22T11:00:20Z",
+  "at": "2026-10-22T13:42:31Z",
   "via": "Claude Code",
-  "note": "Interaction rules; QuestionList, Accordion, EvidenceMark, Banner, StoryScore"
+  "note": "Fix README contradictions (top bar, row actions, numerals, composer height); ChoiceCard and LanguageToggle match the build; add Tag"
  }
 }

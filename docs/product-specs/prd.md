@@ -216,7 +216,7 @@ When the purpose is Interview or Report, step 1 asks who is listening. The answe
 | Interview | Design lead, Product manager, Engineering lead, HR / recruiter, Business lead | Type a role, press Enter; removable |
 | Report | Design lead, CEO, Head of product, Tech / IT lead, Business unit lead, Finance | Type a team, press Enter; removable |
 
-- **Multi-select.** A panel interview or a mixed leadership review is common, so any number of roles can be picked. Nothing is required; with no role picked, Lumi behaves as before.
+- **Multi-select.** A panel interview or a mixed leadership review is common, so any number of roles can be picked. Roles are Tags; purpose and length are single-choice ChoiceCards (design system). Nothing is required; with no role picked, Lumi behaves as before.
 - **Stored per purpose.** `state.audience = { interview: [...], report: [...] }` and `state.customRoles` the same shape, both in `lumi-workbench-v1`. Switching purpose keeps each list.
 - **Role → focus map.** Each preset role maps to the story checks it probes first. Custom roles carry no map and only add their name to prompts.
 
@@ -365,12 +365,12 @@ Lumi talks like a calm senior colleague sitting next to you: warm, direct, and o
 
 **Source of truth:** the [Lumi Storytelling Workbench design system](https://claude.ai/artifact/JgUPgFxykKD89aDr3MaZag) holds the tokens, type scale and components. The notes below are the original audit. The current build applies it as one token layer:
 
-- **Type:** 32 font sizes reduced to 7 (12 / 13 / 14 / 16 / 20 / 28 / 44); weights 400 / 500 / 600.
+- **Type:** 32 font sizes reduced to 7 (12 / 13 / 14 / 16 / 20 / 24 / 32); weights 400 / 500 / 600.
 - **Spacing:** 84 distinct paddings reduced to an 8-step 4px scale (4 → 64).
-- **Radius:** 18 radii reduced to two plus pill (10 control, 14 surface, 999).
+- **Radius:** 18 radii reduced to five (4 chip, 6 control, 8 surface, 12 tag, 999 round markers only).
 - **Layout:** no top bar on desktop (the 中/EN toggle sits next to the logo); content and composer share one gutter (40 / 64 at ≥1600 / 32 at ≤1100 / 16 at ≤720), all left-aligned; sidebar and footer share 24px bottom padding. The sidebar "正在创作" project block is removed.
-- **Chips:** one outlined pill for every status (supported / stated / inferred / missing, answered / brief). Lumi's drafts are marked 初稿 (draft) until the user edits or accepts them.
-- **Language toggle:** a Google-style segmented pill with no divider; the pressed segment shows by fill.
+- **Chips:** one outlined chip (4px radius) for every status (supported / stated / inferred / missing, answered / brief). Lumi's drafts are marked 初稿 (draft) until the user edits or accepts them.
+- **Language toggle:** 中 / EN segments on a sunken track next to the logo; the pressed segment shows by the action fill alone (design system: LanguageToggle).
 - **Theme:** follows local time; dark from 19:00 to 07:00.
 - **Icons:** Material Symbols Outlined replaces Remix Icon (subset embedded). Material has no brand logos, so GitHub uses `code`.
 
@@ -387,7 +387,7 @@ Pulled directly from the app's own `:root` CSS variables and its `designSystemMa
 | `--soft` | `#E7ECF3` | Selected/hover fill |
 | `--line` | `#E3E1DB` | Hairline borders |
 
-**Typography:** display headings in an editorial serif (Georgia / Songti SC for Chinese), UI chrome in the system sans stack (-apple-system, Segoe UI, PingFang SC, Microsoft YaHei). `h1` is 46px/1.22 (40px/1.45 in Chinese, since CJK needs more line-height at the same size).
+**Typography:** the system sans stack (-apple-system, Segoe UI, PingFang SC, Microsoft YaHei) for the whole UI, list numbers and the story score included. Georgia / Songti SC appear only inside slide thumbnails and exported slides. Page titles are 24/600 and the step 1 headline 32/600 (§12.4).
 
 **Motion:** restrained transitions plus small looping SVG-free CSS keyframe animations on the Lumi mascot per page (a gentle float/think/read/work/idea/build/celebrate pose tied to `data-pose`), respecting `prefers-reduced-motion`.
 
