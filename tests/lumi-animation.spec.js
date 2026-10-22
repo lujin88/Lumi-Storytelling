@@ -7,12 +7,27 @@ const NOTES = '我重新设计了团队的研究流程。产品经理反对，�
 /** Animation state shown on the first Lumi image on screen. */
 const lumiState = (page) => page.locator('img[data-lumi]').first().getAttribute('data-lumi-state');
 
-test('Lumi waves on open, then breathes when idle', async ({ page }) => {
+const animationName = (locator) => locator.evaluate((el) => getComputedStyle(el).animationName);
+
+test("Lumi waves on open, then goes back to the page's own animation", async ({ page }) => {
   const errors = await openApp(page);
-  await expect(page.locator('img[data-lumi]').first()).toBeVisible();
+  const lumi = page.locator('img.intro-lumi[data-lumi]');
+  await expect(lumi).toBeVisible();
   expect(await lumiState(page)).toBe('wave');
+  expect(await animationName(lumi)).toBe('lumiWave');
   await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('idle');
+  // Idle keeps what the page had before the state machine: the intro Lumi was a still.
+  expect(await animationName(lumi)).toBe('none');
   expect(errors).toEqual([]);
+});
+
+test('the download page keeps its celebrate loop after cheering', async ({ page }) => {
+  await openApp(page);
+  await page.click('[data-action="loadSample"]');
+  await page.click('#sidebar [data-page="publish"]');
+  const lumi = page.locator('img.character[data-lumi]');
+  await expect.poll(() => animationName(lumi)).toBe('lumiCheer');
+  await expect.poll(() => animationName(lumi), { timeout: 5000 }).toBe('lumiCelebrate');
 });
 
 test('Lumi thinks while the user types, then returns to idle', async ({ page }) => {
