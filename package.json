@@ -1,0 +1,11 @@
+{
+  "name": "lumi-storytelling",
+  "private": true,
+  "description": "Test harness for the single-file Lumi Storytelling prototype. The page itself has no build step.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}
