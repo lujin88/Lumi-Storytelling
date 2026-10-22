@@ -25,7 +25,7 @@ fi
 [ -f decisions.md ] && { grep -q '| 日期 | 决定 | 原因 |' decisions.md || err "decisions.md table header changed"; }
 
 # Links in markdown point to files that exist
-grep -rhoE '`[A-Za-z0-9_./-]+\.md`' --include=*.md . | tr -d '`' | sort -u | while read -r p; do
+grep -rhoE '`[A-Za-z0-9_./-]+\.md`' --include=*.md --exclude-dir=node_modules . | tr -d '`' | sort -u | while read -r p; do
   case "$p" in */*) [ -e "$p" ] || [ -e "templates/project/$p" ] || echo "WARN: referenced $p not found";; esac
 done
 
