@@ -29,7 +29,7 @@ Read harness-core's `AGENTS.md` first (https://github.com/lujin88/harness-core),
 
 ## Acceptance numbers
 - Sizes, spacing, type, radius: `design-system/tokens.json`.
-- Lumi animation clips: each file under 500KB (Lu, #lumi-storytelling team instructions).
+- Lumi animation clips: each file under 1MB (Lu, 2026-10-23, see decisions.md; was 500KB).
 - To confirm: contrast, performance, API latency and cost limits.
 
 ## How to run and test
