@@ -4,6 +4,7 @@ Project manager writes this. One line each, newest first.
 
 | 日期 | 决定 | 原因 |
 |---|---|---|
+| 2026-10-23 | Step 5 save location: Chrome/Edge open the system save dialog (default Downloads, user can pick another folder); Safari/Firefox and sandboxed frames save to Downloads and the page says so. The page does not try to open Finder. The short GitHub Pages guide stays inside the download card | Lu wants users to choose where files go; the save dialog (`showSaveFilePicker`) exists only in Chromium browsers. Lu: "是", #lumi-storytelling event 9466c23b |
 | 2026-10-23 | Keys and the GitHub token are saved (`localStorage`) only when Lumi is opened over http(s) (GitHub Pages or the local `server/` at `http://127.0.0.1:4317`). Opened as a `file://` page, they live in memory only and are gone when the page closes | Developer measured in Chrome 156 that every `file://` page shares one origin and one `localStorage`, so any local HTML could read stored keys. Lu chose A, #lumi-storytelling event cc5303bd |
 | 2026-10-23 | Lumi clips may be up to 1MB per file (was 500KB); wave is re-exported from the 960×960 source with lighter compression | Blur and blocks showed at the edge when zoomed. Lu chose A, #lumi-storytelling event cc5303bd. Load-time cost to be measured |
 | 2026-10-23 | Remaining 5 Lumi clips use Seedance 2.0 mini (24 credits/clip measured). Generation still waits for Lu to approve the reworked wave and the credit spend | Cheaper and no day-long queue. Lu chose A, #lumi-storytelling event cc5303bd |
