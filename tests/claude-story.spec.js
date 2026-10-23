@@ -252,6 +252,54 @@ test.describe('busy line and cancel', () => {
     expect(errors).toEqual([]);
   });
 
+  // Claude's reply also drafts the row the user is answering, with a quote that is in the notes.
+  const draftWithReframe = (ex) => {
+    const out = JSON.parse(JSON.stringify(ex.modelOutput));
+    out.answers[out.answers.findIndex((a) => a.id === 'reframe')] = { id: 'reframe', text: 'Claude 起草的 reframe。', quote: '研究负责人反对' };
+    return out;
+  };
+
+  test('a draft that arrives after the user answered a row leaves that row alone', async ({ page }) => {
+    const ex = example('draft-answers');
+    const { errors } = await openWithKeys(page, ['claude']);
+    let pending = null;
+    await page.route(CLAUDE, (route) => { pending = route; });
+    await fillStepOne(page, ex.notes);
+    await page.click('#footer [data-action="next"]');
+    await expect.poll(() => pending !== null).toBe(true);
+    expect(await page.evaluate(() => openFoundations()[0].id)).toBe('reframe');
+    await page.fill('#guideText', '我自己的 reframe 回答。');
+    await page.click('#footer [data-action="send"]');
+    await expect.poll(() => page.evaluate(() => state.found.reframe?.text)).toBe('我自己的 reframe 回答。');
+    await fulfillClaude(pending, draftWithReframe(ex));
+    await expect.poll(() => page.evaluate(() => !!state.drafted)).toBe(true);
+    const r = await rows(page);
+    expect(r.reframe).toEqual({ text: '我自己的 reframe 回答。', src: 'answer', base: '我自己的 reframe 回答。' });
+    expect(r.stake).toEqual({ text: ex.expect.drafted.stake, src: 'brief' });
+    expect(await page.evaluate(() => Object.keys(state.found))).toEqual(['reframe']);
+    expect(errors).toEqual([]);
+  });
+
+  test('an answer typed while Claude drafts is saved to the row the user was answering', async ({ page }) => {
+    const ex = example('draft-answers');
+    const { errors } = await openWithKeys(page, ['claude']);
+    let pending = null;
+    await page.route(CLAUDE, (route) => { pending = route; });
+    await fillStepOne(page, ex.notes);
+    await page.click('#footer [data-action="next"]');
+    await expect.poll(() => pending !== null).toBe(true);
+    expect(await page.evaluate(() => openFoundations()[0].id)).toBe('reframe');
+    await page.fill('#guideText', '我自己的 reframe 回答。');
+    // The draft fills reframe before Send, so the next open row is now decision.
+    await fulfillClaude(pending, draftWithReframe(ex));
+    await expect.poll(() => page.evaluate(() => !!state.drafted)).toBe(true);
+    await expect(page.locator('#guideText')).toHaveValue('我自己的 reframe 回答。');
+    await page.click('#footer [data-action="send"]');
+    await expect.poll(() => page.evaluate(() => state.found)).toEqual({ reframe: { text: '我自己的 reframe 回答。' } });
+    expect((await rows(page)).decision.src).toBe('missing');
+    expect(errors).toEqual([]);
+  });
+
   test('a step 2 draft cancelled before Claude answers writes nothing and leaves the rule draft', async ({ page }) => {
     const ex = example('draft-answers');
     const { errors } = await openWithKeys(page, ['claude']);
