@@ -1,0 +1,1 @@
+Transcribe the speech in this audio word for word, in the language that is spoken. Return only the transcript. Don't translate, summarize, correct or add anything. If there is no speech, return an empty response.

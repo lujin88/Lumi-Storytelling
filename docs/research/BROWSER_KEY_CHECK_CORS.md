@@ -30,6 +30,24 @@ Run with `curl` from Lu's Mac on 2026-10-23, `Origin: null` (what a page opened 
 
 So Claude works from the browser only with the extra header; without it, even errors are unreadable.
 
+## The calls the page makes (task 14)
+
+Run with `curl` from Lu's Mac on 2026-10-23, `Origin: null`, no key or a made-up key (`FAKE`). No real key was used.
+
+| Request | Result |
+|---|---|
+| Claude preflight `OPTIONS /v1/messages` | 200, `access-control-allow-origin: *`, allows `content-type, x-api-key, anthropic-version, anthropic-dangerous-direct-browser-access` |
+| Claude `POST /v1/messages`, bad key, with the browser header | 401, `access-control-allow-origin: *`, `authentication_error` |
+| OpenAI preflight `OPTIONS /v1/images/edits` | 200, `access-control-allow-origin: *`, allows `authorization` |
+| OpenAI `POST /v1/images/edits` (multipart), bad key | 401, `access-control-allow-origin: *`, "Incorrect API key provided" |
+| Gemini preflight `OPTIONS /v1beta/models/gemini-3.8-flash:generateContent` | 200, `access-control-allow-origin: null`, allows `content-type, x-goog-api-key` |
+| Gemini `POST …:generateContent`, bad key | 400, `access-control-allow-origin: null`, `API_KEY_INVALID` |
+
+Docs for these calls:
+- Claude structured output (`output_config.format` with `json_schema`; every object needs `additionalProperties: false`; the JSON comes back in the text block): https://platform.claude.com/docs/en/build-with-claude/structured-outputs
+- OpenAI image edits (multipart `model`, `image`, `prompt`; GPT Image models return `b64_json`): https://developers.openai.com/api/docs/guides/image-generation. `gpt-image-1` and `gpt-image-1-mini` are deprecated and removed on 2026-12-01; replacements `gpt-image-2.5-sunburst` / `gpt-image-2.5-flare`: https://developers.openai.com/api/docs/deprecations
+- Gemini audio (`generateContent` with `inlineData`; the examples use `gemini-3.8-flash`; requests up to 20 MB including inline files): https://ai.google.dev/gemini-api/docs/generate-content/audio
+
 ## What the docs say
 
 **Claude**

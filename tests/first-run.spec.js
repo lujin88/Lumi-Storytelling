@@ -72,10 +72,12 @@ test('after skipping, an AI action shows an inline connect prompt, not silence',
   await page.click('#sidebar [data-page="build"]');
   await page.fill('#guideText', '把标题改短一点');
   await page.click('#footer [data-action="send"]');
+  // Step 3 edits go to Claude first (PRD 8.13); the typed text stays in the box.
   const prompt = page.locator('.connect-prompt');
-  await expect(prompt).toContainText('这一步要用 OpenAI');
-  await prompt.locator('[data-action="connectPrompt:openai"]').click();
-  await expect(page.locator('#key-openai')).toBeFocused();
+  await expect(prompt).toContainText('这一步要用 Claude');
+  await expect(page.locator('#guideText')).toHaveValue('把标题改短一点');
+  await prompt.locator('[data-action="connectPrompt:claude"]').click();
+  await expect(page.locator('#key-claude')).toBeFocused();
   expect(errors).toEqual([]);
 });
 
