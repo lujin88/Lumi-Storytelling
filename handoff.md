@@ -9,8 +9,7 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 
 ## 等 Lu 决定的事
 1. **Who spent 24 credits on this Dreamina account** before our run (task cd75c5b3)? You, or another channel's agent? If unknown, measured cost per clip can't be trusted.
-2. **Download page**: (a) keep the short GitHub Pages publishing guide inside the download card or not; (b) where files are saved: Lu wants the user to pick the folder (default Downloads). Proposal: Chrome/Edge open the system save dialog; Safari/Firefox save to Downloads and say so. Waiting for Lu to confirm.
-3. **Approve credits for the other 5 clips** (mini, 5 × 24 = 120 credits, measured price) after the reworked wave.
+2. **Approve credits for the other 5 clips** (mini, 5 × 24 = 120 credits, measured price) after the reworked wave.
 
 ## 最近完成的
 - lujin88/Lumi-Storytelling#14: handoff in four sections; mini decision restored.
@@ -23,3 +22,4 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 1. Developer | re-export wave from the 960 source, each file under 1MB, before/after screenshots; then Lu reviews.
 2. If wave is OK and Lu approves the credits, the other 5 clips (mini) (idle, head tilt, thinking, jump, cheer) with the same keying script.
 3. Developer | backend v1: browser key check (Claude, OpenAI, Gemini) + local `server/` for Jimeng. Started 2026-10-23; PR next, then QA.
+4. Developer | task 12 after 10 and 11: step 5 save dialog on Chrome/Edge, Downloads fallback elsewhere.
