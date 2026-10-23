@@ -15,8 +15,9 @@ A design-led prototype that turns a messy project into a story you can present: 
 | Path | What |
 |---|---|
 | `index.html` | The prototype |
+| `server/` | Local service for Jimeng video only. Run `node server`, then open http://127.0.0.1:4317 |
 | `design-system/` | Tokens, components and rules the prototype follows |
 | `docs/product-specs/prd.md` | The PRD |
 | `AGENTS.md` | How agents work in this repo |
 
-AI features use your own keys (Claude required; OpenAI, Gemini and Jimeng optional), set in Settings and kept in your browser.
+AI features use your own keys (Claude required; OpenAI, Gemini and Jimeng optional), set in Settings and kept in your browser. Keys are saved only when Lumi is opened over http(s); opened as a file, they last until the page closes.
