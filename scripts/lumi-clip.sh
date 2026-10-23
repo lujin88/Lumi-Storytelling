@@ -28,7 +28,7 @@ CANVAS=${CANVAS:-480 460}
 CRF=${CRF:-30}
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=$HERE/../assets/lumi
-LIMIT=512000
+LIMIT=${LIMIT:-512000}
 
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
