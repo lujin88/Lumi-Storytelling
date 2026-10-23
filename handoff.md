@@ -22,3 +22,4 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 2. If wave is OK and Lu approves the credits, the other 5 clips (mini) (idle, head tilt, thinking, jump, cheer) with the same keying script.
 3. Developer | backend v1: browser key check (Claude, OpenAI, Gemini) + local `server/` for Jimeng. Key storage: lujin88/Lumi-Storytelling#20 in QA. Key check and Jimeng `server/` PR after #20 merges.
 4. Developer | task 12 after 10 and 11: step 5 save dialog on Chrome/Edge, Downloads fallback elsewhere.
+5. Developer | task 13 after 12: `file://` notice + button to the local `server/`, project carried over.
