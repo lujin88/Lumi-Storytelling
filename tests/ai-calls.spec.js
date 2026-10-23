@@ -106,6 +106,30 @@ test.describe('step 3 send', () => {
     expect(errors).toEqual([]);
   });
 
+  test('cancelling while OpenAI edits the image aborts that request; a late image is not used', async ({ page }) => {
+    const ex = example('image-edit');
+    const { errors } = await openBuild(page, ['claude', 'openai']);
+    await uploadImage(page);
+    const before = await page.evaluate(() => state.generatedImage);
+    await claudeReplies(page, ex.claudeOutput);
+    let pending = null;
+    const aborted = [];
+    page.on('requestfailed', (r) => { if (r.url() === OPENAI) aborted.push(r.failure()?.errorText); });
+    await page.route(OPENAI, (route) => { pending = route; });
+    await sendOnBuild(page, ex.request);
+    await expect.poll(() => pending !== null).toBe(true);
+    await expect(page.locator('#footer #aiStatus')).toContainText('Lumi 正在改你的图片…');
+    await page.locator('#footer #aiStatus').getByRole('button', { name: '取消' }).click();
+    // The OpenAI request itself is aborted, not only ignored.
+    await expect.poll(() => aborted.length).toBe(1);
+    expect(aborted[0]).toContain('ABORTED');
+    await pending.fulfill({ json: { created: 0, data: [{ b64_json: EDITED_B64 }] } }).catch(() => {});
+    await page.waitForTimeout(300);
+    expect(await page.evaluate(() => state.generatedImage)).toBe(before);
+    await expect(inlineError(page)).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
   test('an image request with no image says to upload one, without calling OpenAI', async ({ page }) => {
     const { errors } = await openBuild(page, ['claude', 'openai']);
     await page.evaluate(() => { state.generatedImage = null; });

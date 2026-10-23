@@ -67,6 +67,10 @@ test.describe('step 2 drafts', () => {
     expect(await check('研究负责人同意，他担心 AI 写的结论客户不信。')).toBe(false);
     expect(await check('以前要花两天')).toBe(false);
     expect(await check('')).toBe(false);
+    // Punctuation alone is in almost any notes; it is not a quote.
+    expect(await check('。')).toBe(false);
+    expect(await check('，「」')).toBe(false);
+    expect(await check('三')).toBe(true);
   });
 
   test('without Claude, step 2 keeps the rule draft and makes no call', async ({ page }) => {
@@ -195,9 +199,21 @@ test.describe('step 4 drafts', () => {
     const source = '试点四周后，从三天缩短到四小时；两个大客户推迟了续约。覆盖 12 个项目，提升 3.5 倍。';
     const guard = (text, L = 'zh') => page.evaluate(([x, s, l]) => guardNumbers(x, s, l), [text, source, L]);
     expect(await guard('从三天缩短到四小时，覆盖 12 个项目。')).toBe('从三天缩短到四小时，覆盖 12 个项目。');
-    expect(await guard('从三天缩短到两小时，覆盖 15 个项目，提升 3.5 倍。')).toBe('从三天缩短到[待补]，覆盖 [待补] 个项目，提升 3.5 倍。');
+    expect(await guard('覆盖 15 个项目，提升 3.5 倍。')).toBe('覆盖 [待补] 个项目，提升 3.5 倍。');
     expect(await guard('覆盖 １２ 个项目')).toBe('覆盖 １２ 个项目');
     expect(await guard('Saved 40% of the time.', 'en')).toBe('Saved [Needed]% of the time.');
+    // Chinese numerals with 十/百/千/万/亿, or before %, are checked.
+    expect(await guard('省了三十个小时，覆盖两百人，节省一万元，提升三十%。')).toBe('省了[待补]个小时，覆盖[待补]人，节省[待补]元，提升[待补]%。');
+  });
+
+  test('the number check leaves 一个, 第一次, 这一年 and 两位 alone', async ({ page }) => {
+    await openWithKeys(page, []);
+    const source = '我放弃了全自动生成。从三天缩短到四小时。';
+    const guard = (text) => page.evaluate(([x, s]) => guardNumbers(x, s, 'zh'), [text, source]);
+    for (const text of ['这是一个取舍，我一个人定的。', '第一次试点时，两位研究员先用。', '这一年里我们每天都在用。', '十分重要，万一出错就要重来。'])
+      expect(await guard(text)).toBe(text);
+    // Known gap: a single Chinese numeral before a unit is not checked, so a made-up 两小时 or 三位 gets through.
+    expect(await guard('从三天缩短到两小时，三位研究员先用。')).toBe('从三天缩短到两小时，三位研究员先用。');
   });
 });
 
@@ -300,6 +316,111 @@ test.describe('busy line and cancel', () => {
     expect(errors).toEqual([]);
   });
 
+  // The composer is not rebuilt under the user: focus, caret and typed text stay, and typing goes on after it.
+  const composerKept = async (page) => {
+    expect(await page.evaluate(() => document.activeElement === window.__composer && document.activeElement.isConnected)).toBe(true);
+  };
+  const markComposer = (page) => page.evaluate(() => { window.__composer = document.querySelector('#guideText'); });
+
+  test('typing in the composer goes on after a step 2 draft lands', async ({ page }) => {
+    const ex = example('draft-answers');
+    const { errors } = await openWithKeys(page, ['claude']);
+    let pending = null;
+    await page.route(CLAUDE, (route) => { pending = route; });
+    await fillStepOne(page, ex.notes);
+    await page.click('#footer [data-action="next"]');
+    await expect.poll(() => pending !== null).toBe(true);
+    await page.click('#guideText');
+    await page.keyboard.type('我在打字');
+    await markComposer(page);
+    await fulfillClaude(pending, draftWithReframe(ex));
+    await expect.poll(() => page.evaluate(() => !!state.drafted)).toBe(true);
+    // The draft is on the page; only the composer was left alone.
+    expect((await rows(page)).stake).toEqual({ text: ex.expect.drafted.stake, src: 'brief' });
+    await composerKept(page);
+    await page.keyboard.type('继续');
+    await expect(page.locator('#guideText')).toHaveValue('我在打字继续');
+    await page.click('#footer [data-action="send"]');
+    await expect.poll(() => page.evaluate(() => state.found)).toEqual({ reframe: { text: '我在打字继续' } });
+    expect(errors).toEqual([]);
+  });
+
+  test('an IME composition in progress is not interrupted when a step 2 draft lands', async ({ page }) => {
+    const ex = example('draft-answers');
+    await openWithKeys(page, ['claude']);
+    let pending = null;
+    await page.route(CLAUDE, (route) => { pending = route; });
+    await fillStepOne(page, ex.notes);
+    await page.click('#footer [data-action="next"]');
+    await expect.poll(() => pending !== null).toBe(true);
+    await page.click('#guideText');
+    await page.keyboard.type('我在');
+    await markComposer(page);
+    await page.evaluate(() => { window.__ime = []; for (const t of ['compositionstart', 'compositionend']) window.__composer.addEventListener(t, () => window.__ime.push(t)); });
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Input.imeSetComposition', { text: 'da', selectionStart: 2, selectionEnd: 2 });
+    expect(await page.evaluate(() => window.__ime)).toEqual(['compositionstart']);
+    await fulfillClaude(pending, ex.modelOutput);
+    await expect.poll(() => page.evaluate(() => !!state.drafted)).toBe(true);
+    // Still composing, in the same field.
+    expect(await page.evaluate(() => window.__ime)).toEqual(['compositionstart']);
+    await composerKept(page);
+    await cdp.send('Input.insertText', { text: '打' });
+    expect(await page.evaluate(() => window.__ime)).toEqual(['compositionstart', 'compositionend']);
+    await expect(page.locator('#guideText')).toHaveValue('我在打');
+  });
+
+  test('typing in the composer goes on after a step 4 draft lands', async ({ page }) => {
+    const ex = example('draft-defend');
+    const { errors } = await openSample(page);
+    let pending = null;
+    await page.route(CLAUDE, (route) => { pending = route; });
+    await page.click('#sidebar [data-page="defend"]');
+    await expect.poll(() => pending !== null).toBe(true);
+    await page.click('#guideText');
+    await page.keyboard.type('先回答第一问');
+    await markComposer(page);
+    await fulfillClaude(pending, ex.modelOutput);
+    await expect.poll(() => page.evaluate(() => state.defend[4])).toBe(ex.expect.answers['4']);
+    await expect(page.locator('.q-card[data-def="4"] .def-ans')).toContainText('效率提升了 [待补]%');
+    await composerKept(page);
+    await page.keyboard.type('，接着写');
+    await expect(page.locator('#guideText')).toHaveValue('先回答第一问，接着写');
+    expect(errors).toEqual([]);
+  });
+
+  test('the kept composer is rebuilt once focus leaves the footer', async ({ page }) => {
+    const ex = example('draft-answers');
+    await openWithKeys(page, ['claude']);
+    let pending = null;
+    await page.route(CLAUDE, (route) => { pending = route; });
+    await fillStepOne(page, ex.notes);
+    await page.click('#footer [data-action="next"]');
+    await expect.poll(() => pending !== null).toBe(true);
+    await page.click('#guideText');
+    await page.keyboard.type('草稿');
+    await markComposer(page);
+    await fulfillClaude(pending, ex.modelOutput);
+    await expect.poll(() => page.evaluate(() => !!state.drafted)).toBe(true);
+    await page.click('#content h1');
+    await expect.poll(() => page.evaluate(() => window.__composer.isConnected)).toBe(false);
+    await expect(page.locator('#guideText')).toHaveValue('草稿');
+  });
+
+  test('without focus in the composer, a landing draft rebuilds the footer at once', async ({ page }) => {
+    const ex = example('draft-answers');
+    await openWithKeys(page, ['claude']);
+    let pending = null;
+    await page.route(CLAUDE, (route) => { pending = route; });
+    await fillStepOne(page, ex.notes);
+    await page.click('#footer [data-action="next"]');
+    await expect.poll(() => pending !== null).toBe(true);
+    await markComposer(page);
+    await fulfillClaude(pending, ex.modelOutput);
+    await expect.poll(() => page.evaluate(() => !!state.drafted)).toBe(true);
+    expect(await page.evaluate(() => window.__composer.isConnected)).toBe(false);
+  });
+
   test('a step 2 draft cancelled before Claude answers writes nothing and leaves the rule draft', async ({ page }) => {
     const ex = example('draft-answers');
     const { errors } = await openWithKeys(page, ['claude']);
@@ -319,6 +440,26 @@ test.describe('busy line and cancel', () => {
     expect(await page.evaluate(() => state.drafted)).toBeNull();
     expect((await rows(page)).challenge.text).toBe('研究负责人反对，他担心 AI 写的结论客户不信。');
     expect(errors).toEqual([]);
+  });
+
+  test('a cancelled step 2 draft is not retried at once, but is the next time step 2 opens', async ({ page }) => {
+    const ex = example('draft-answers');
+    await openWithKeys(page, ['claude']);
+    let calls = 0;
+    await page.route(CLAUDE, () => { calls++; }); // never answers
+    await fillStepOne(page, ex.notes);
+    await page.click('#footer [data-action="next"]');
+    await expect.poll(() => calls).toBe(1);
+    await busyLine(page).getByRole('button', { name: '取消' }).click();
+    await expect(busyLine(page)).toContainText('已取消，没有改动。');
+    // Clicking step 2 while on it is not opening it again.
+    await page.click('#sidebar [data-page="story"]');
+    await page.waitForTimeout(300);
+    expect(calls).toBe(1);
+    await page.click('#sidebar [data-page="dump"]');
+    await page.click('#sidebar [data-page="story"]');
+    await expect(busyLine(page)).toContainText('Lumi 正在起草你的回答…');
+    expect(calls).toBe(2);
   });
 
   test('the busy text follows the request: review on step 2, drafting on step 4', async ({ page }) => {
