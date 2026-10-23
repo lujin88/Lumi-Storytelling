@@ -12,8 +12,7 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 3. **Who spent 24 credits on this Dreamina account** before our run (task cd75c5b3)? You, or another channel's agent? If unknown, measured cost per clip can't be trusted.
 4. **Key check (PRD 8.12)**: A in the browser | B local `server/` API. Conflicts with "no backend for now, GitHub Pages". Blocks backend v1 and task 1b.
 5. **Backend hosting and region; shared org key in v1** (yes/no). Blocks backend v1.
-6. **Icons**: A Material Symbols (`design-system/README.md`) | B Remix Icon (your global rule). Recommend B. Blocks: any icon change.
-7. **Download page**: where Lumi sits, and whether the GitHub Pages line stays inside the card. Blocks: download page polish.
+6. **Download page**: where Lumi sits, and whether the GitHub Pages line stays inside the card. Blocks: download page polish.
 
 ## 最近完成的
 - lujin88/Lumi-Storytelling#13: Lumi clips via Dreamina CLI; wave reassigned to Developer.

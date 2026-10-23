@@ -4,6 +4,7 @@ Project manager writes this. One line each, newest first.
 
 | 日期 | 决定 | 原因 |
 |---|---|---|
+| 2026-10-23 | Icons use Remix Icon, not Material Symbols. `design-system/README.md` to be updated by the designer | Matches Lu's global rule; Lu in #lumi-storytelling, event be3d74ac |
 | 2026-10-22 | Lumi clips stay transparent (keyed from a green background), not baked onto the page colour | Page has light and dark backgrounds; generated backgrounds drift per frame; keying is a local script with no credits. Lu: "你们继续做吧", #lumi-storytelling event 001113f3 |
 | 2026-10-22 | `handoff.md` is Lu's single view of project state: PM updates it daily before close, and at once when a PR merges, a decision is needed or the plan changes. Four sections, current state only, one page max, last 5 completed items, links as `lujin88/Lumi-Storytelling#N` | Lu in #lumi-storytelling, event 7a6556cd |
 | 2026-10-22 | Remove the light-grey ellipse behind Lumi (index.html only; the `selected` token `#e7eaf0` stays) | Lu in #lumi-storytelling, event 1f0b026e |
