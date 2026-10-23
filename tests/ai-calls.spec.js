@@ -157,6 +157,10 @@ test.describe('step 3 send', () => {
     ['no credit', (route) => route.fulfill({ status: 400, json: { type: 'error', error: { type: 'invalid_request_error', message: 'Your credit balance is too low to access the Anthropic API.' } } }), 'Claude 账户没有额度了。充值后再试。', true],
     ['network', (route) => route.abort('internetdisconnected'), '连不上 Claude。检查网络后再试。', false],
     ['unusable reply', (route) => route.fulfill({ json: { content: [{ type: 'text', text: '{"target":' }], stop_reason: 'max_tokens' } }), 'Claude 这次没有给出结果。再试一次。', false],
+    ['unknown target', (route) => route.fulfill({ json: { content: [{ type: 'text', text: JSON.stringify({ target: 'video', reply: '好了', image_instruction: '', slides: [], script: '' }) }], stop_reason: 'end_turn' } }), 'Claude 这次没有给出结果。再试一次。', false],
+    ['too many requests', (route) => route.fulfill({ status: 429, json: { type: 'error', error: { type: 'rate_limit_error', message: 'Rate limited' } } }), 'Claude 现在请求太多，或到了用量上限。过一会儿再试。', false],
+    ['overloaded', (route) => route.fulfill({ status: 529, json: { type: 'error', error: { type: 'overloaded_error', message: 'Overloaded' } } }), 'Claude 暂时没有响应。过一会儿再试。', false],
+    ['server error', (route) => route.fulfill({ status: 500, json: { type: 'error', error: { type: 'api_error', message: 'Internal server error' } } }), 'Claude 暂时没有响应。过一会儿再试。', false],
   ];
   for (const [name, reply, text, settingsLink] of claudeFailures) {
     test(`Claude failure (${name}) shows one line where the user sent, and keeps the text`, async ({ page }) => {
@@ -182,6 +186,86 @@ test.describe('step 3 send', () => {
     await sendOnBuild(page, '把图里的背景换成深蓝色');
     await expect(inlineError(page)).toContainText('OpenAI 账户没有额度了。充值后再试。');
     expect(await page.evaluate(() => state.generatedImage)).toBe(before);
+    expect(errors).toEqual([]);
+  });
+});
+
+test.describe('step 3 edge cases', () => {
+  test('switching language while Claude works still writes into the language the request was sent in', async ({ page }) => {
+    const { errors } = await openBuild(page, ['claude']);
+    let release;
+    const gate = new Promise((r) => { release = r; });
+    let sentLanguage = null;
+    await page.route(CLAUDE, async (route) => {
+      sentLanguage = JSON.parse(route.request().postDataJSON().messages[0].content).language;
+      await gate;
+      return route.fulfill({ json: { content: [{ type: 'text', text: JSON.stringify({ target: 'text', reply: '我把第 1 页标题改短了。', image_instruction: '', slides: [{ index: 0, title: '中文新标题', body: '中文新正文' }], script: '' }) }], stop_reason: 'end_turn' } });
+    });
+    await sendOnBuild(page, '把第 1 页标题改短一点');
+    await expect.poll(() => sentLanguage).toBe('zh');
+    await page.evaluate(() => document.querySelector('[data-action="lang:en"]').click());
+    await expect.poll(() => page.evaluate(() => state.lang)).toBe('en');
+    const en = await page.evaluate(() => [state.scenes[0].en, state.scenes[0].enp]);
+    release();
+    await expect.poll(() => page.evaluate(() => state.aiBusy)).toBe(false);
+    const after = await page.evaluate(() => ({ zh: state.scenes[0].zh, zhp: state.scenes[0].zhp, en: [state.scenes[0].en, state.scenes[0].enp] }));
+    expect(after.zh).toBe('中文新标题');
+    expect(after.zhp).toBe('中文新正文');
+    expect(after.en).toEqual(en);
+    await expect(slideTitle(page, 0)).toHaveText(en[0]);
+    expect(errors).toEqual([]);
+  });
+
+  const noChange = [
+    ['only a reply', { target: 'text', reply: '我把第 1 页标题改短了。', image_instruction: '', slides: [], script: '' }],
+    ['indexes out of range or empty titles', { target: 'text', reply: '我把第 1 页标题改短了。', image_instruction: '', slides: [{ index: 99, title: '新标题', body: '' }, { index: -1, title: '新标题', body: '' }, { index: 0, title: '  ', body: '新正文' }], script: '' }],
+  ];
+  for (const [name, output] of noChange) {
+    test(`a valid reply that changes nothing (${name}) says so and keeps the text`, async ({ page }) => {
+      const { errors } = await openBuild(page, ['claude']);
+      const before = await page.evaluate(() => JSON.stringify(state.scenes));
+      await claudeReplies(page, output);
+      await sendOnBuild(page, '把第 1 页标题改短一点');
+      await expect(inlineError(page)).toContainText('这次没有改动。换个说法再试一次。');
+      await expect(page.locator('#toast')).not.toContainText('我把第 1 页标题改短了');
+      await expect(page.locator('#guideText')).toHaveValue('把第 1 页标题改短一点');
+      expect(await page.evaluate(() => JSON.stringify(state.scenes))).toBe(before);
+      expect(errors).toEqual([]);
+    });
+  }
+
+  test('a request that never answers times out, says so, and lets the user send again', async ({ page }) => {
+    await page.clock.install();
+    const { errors } = await openBuild(page, ['claude']);
+    await page.route(CLAUDE, () => {}); // never answers
+    await sendOnBuild(page, '把第 1 页标题改短一点');
+    await expect.poll(() => page.evaluate(() => state.aiBusy)).toBe(true);
+    await page.clock.fastForward('09:59');
+    expect(await page.evaluate(() => state.aiBusy)).toBe(true);
+    await page.clock.fastForward('00:02');
+    await expect(inlineError(page)).toContainText('Claude 暂时没有响应。过一会儿再试。');
+    await expect(page.locator('#guideText')).toHaveValue('把第 1 页标题改短一点');
+    expect(await page.evaluate(() => state.aiBusy)).toBe(false);
+    await page.unroute(CLAUDE);
+    const ex = example('step3-edit');
+    await claudeReplies(page, ex.modelOutput);
+    await page.click('#footer [data-action="send"]');
+    await expect(slideTitle(page, ex.expect.slide)).toHaveText(ex.expect.title);
+    expect(errors).toEqual([]);
+  });
+
+  test('markup in what Claude returns is shown as text on every page, never run', async ({ page }) => {
+    const { errors } = await openBuild(page, ['claude']);
+    const probe = (where) => `<img src="x" onerror="window.__xss=(window.__xss||0)+1">${where}`;
+    await claudeReplies(page, { target: 'text', reply: probe('reply'), image_instruction: '', slides: [{ index: 0, title: probe('title'), body: probe('body') }], script: probe('script') });
+    await sendOnBuild(page, '把第 1 页标题改短一点');
+    await expect(slideTitle(page, 0)).toContainText('<img');
+    for (const p of ['build', 'story', 'defend', 'publish', 'talk']) {
+      await page.evaluate((p) => go(p), p);
+      await page.waitForTimeout(100);
+    }
+    expect(await page.evaluate(() => document.querySelectorAll('img[src="x"]').length)).toBe(0);
+    expect(await page.evaluate(() => window.__xss || 0)).toBe(0);
     expect(errors).toEqual([]);
   });
 });
