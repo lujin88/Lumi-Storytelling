@@ -62,7 +62,9 @@ test('download excludes saved API keys and GitHub token', async ({ page }) => {
     jimeng: 'FAKE-JIMENG-KEY-FOR-TEST-ONLY',
   };
   const githubMarker = 'FAKE-GITHUB-TOKEN-FOR-TEST-ONLY';
+  // Over http, because file:// pages no longer load saved keys (see key-storage.spec.js).
   await openApp(page, {
+    http: true,
     storage: {
       'lumi-api-keys-v1': JSON.stringify(keyMarkers),
       'lumi-github-token-v1': githubMarker,
