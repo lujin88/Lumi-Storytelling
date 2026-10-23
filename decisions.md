@@ -4,6 +4,8 @@ Project manager writes this. One line each, newest first.
 
 | 日期 | 决定 | 原因 |
 |---|---|---|
+| 2026-10-23 | Key check (PRD 8.12) runs in the browser. Claude, OpenAI and Gemini are called from the browser with the user's key (`localStorage` only). Backend v1 shrinks to a local `server/` for Jimeng/Dreamina only (CLI runs on the user's machine); nothing is deployed, so hosting and region are not needed for v1. A provider that blocks browser calls (to confirm from its docs) moves to the local service | Matches PRD 8.12 "Keys stay in this browser only" and ARCHITECTURE.md; no server to rent. Lu chose A, #lumi-storytelling event 8f4c172c |
+| 2026-10-23 | No shared company key in v1 | A shared key must live on a server and needs logins and usage limits (accounts and billing are out of scope). Lu agreed, #lumi-storytelling event 8f4c172c |
 | 2026-10-23 | Icons use Remix Icon, not Material Symbols. `design-system/README.md` to be updated by the designer | Matches Lu's global rule; Lu in #lumi-storytelling, event be3d74ac |
 | 2026-10-22 | Lumi clips stay transparent (keyed from a green background), not baked onto the page colour | Page has light and dark backgrounds; generated backgrounds drift per frame; keying is a local script with no credits. Lu: "你们继续做吧", #lumi-storytelling event 001113f3 |
 | 2026-10-22 | `handoff.md` is Lu's single view of project state: PM updates it daily before close, and at once when a PR merges, a decision is needed or the plan changes. Four sections, current state only, one page max, last 5 completed items, links as `lujin88/Lumi-Storytelling#N` | Lu in #lumi-storytelling, event 7a6556cd |
