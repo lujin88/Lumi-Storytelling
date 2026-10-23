@@ -351,9 +351,9 @@ h1[tabindex="-1"]:focus{outline:none}
 .scene-card.ev-missing .thumb{opacity:.45}
 @media(max-width:720px){#content .scene-card{grid-template-columns:88px minmax(0,1fr)}.thumb{width:88px}}
 /* tooltip v2: light card, hugs content */
-.info-tip .tip{left:-8px;transform:translateY(-2px);top:calc(100% + 8px);max-width:min(360px,80vw);white-space:nowrap;padding:var(--s-2) var(--s-3);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-control);box-shadow:0 4px 16px rgba(37,42,56,.08);font-size:var(--fs-12);line-height:1.7;transition:opacity .12s,transform .12s}
+.info-tip .tip{left:auto;right:-8px;transform:translateY(-2px);top:calc(100% + 8px);max-width:min(360px,calc(100vw - 32px));white-space:normal;padding:var(--s-2) var(--s-3);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-control);box-shadow:0 4px 16px rgba(37,42,56,.08);font-size:var(--fs-12);line-height:1.7;transition:opacity .12s,transform .12s}
 .info-tip:hover .tip,.info-tip:focus-within .tip{transform:translateY(0)}
-.info-tip .tip:after{content:'';position:absolute;left:14px;top:-5px;width:8px;height:8px;background:var(--surface);border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}
+.info-tip .tip:after{content:'';position:absolute;right:14px;top:-5px;width:8px;height:8px;background:var(--surface);border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}
 .info-tip .tip a{color:var(--info);text-decoration:underline;text-decoration-thickness:1px;text-decoration-color:var(--info-line);text-underline-offset:3px}
 .info-tip .tip a:hover{text-decoration-color:var(--info)}
 .info-btn:hover i,.info-tip:focus-within .info-btn i{color:var(--ink)}
