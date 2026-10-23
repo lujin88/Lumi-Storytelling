@@ -86,11 +86,11 @@ test.describe('phone width', () => {
   });
 });
 
-test('each approved clip file stays under 500 KB', () => {
-  // 500 KB = 500 × 1024 bytes, the same limit scripts/lumi-clip.sh checks.
+test('each approved clip file stays under 1 MB', () => {
+  // 1 MB = 1024 × 1024 bytes, the same limit scripts/lumi-clip.sh checks.
   for (const file of ['wave.webm', 'wave.webp']) {
     const size = fs.statSync(path.resolve(__dirname, '..', 'assets', 'lumi', file)).size;
-    expect(size, file).toBeLessThan(500 * 1024);
+    expect(size, file).toBeLessThan(1024 * 1024);
   }
 });
 

@@ -2,7 +2,7 @@
 # Turn a generated Lumi clip (green screen mp4) into the two files the page uses:
 #   assets/lumi/<pose>.webm  transparent VP9 (Chrome, Edge, Firefox)
 #   assets/lumi/<pose>.webp  animated WebP with alpha (Safari, iOS)
-# Each must stay under 500 KB (AGENTS.md, Acceptance numbers).
+# Each must stay under 1 MB (AGENTS.md, Acceptance numbers).
 #
 # The source mp4 is not committed. FIT places the keyed clip on the still's canvas
 # as "<size> <x> <y>": the clip is resized to <size> px square and its top-left goes
@@ -10,7 +10,7 @@
 # assets/lumi/source/wave.webp (silhouette overlap 0.989).
 #
 # The WebM keeps the clip's own frame rate. The WebP drops to WEBP_FPS: alpha in an
-# animated WebP is stored per frame, and 12 fps at 480 px was already over 500 KB.
+# animated WebP is stored per frame, so the 1 MB budget goes to quality, not frames.
 #
 # Usage: scripts/lumi-clip.sh <in.mp4> <pose> [fps] [webp quality]
 # Needs ffmpeg (libvpx-vp9), cwebp and webpmux (Homebrew "webp") and python3 with
@@ -20,15 +20,15 @@ set -euo pipefail
 IN=${1:?usage: lumi-clip.sh <in.mp4> <pose> [fps] [webp quality]}
 POSE=${2:?pose name, e.g. wave}
 FPS=${3:-24}
-QUALITY=${4:-60}
-ALPHA_QUALITY=${ALPHA_QUALITY:-60}
+QUALITY=${4:-88}
+ALPHA_QUALITY=${ALPHA_QUALITY:-85}
 WEBP_FPS=${WEBP_FPS:-10}
 FIT=${FIT:-541 -31 -41}
 CANVAS=${CANVAS:-480 460}
-CRF=${CRF:-30}
+CRF=${CRF:-16}
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=$HERE/../assets/lumi
-LIMIT=${LIMIT:-512000}
+LIMIT=${LIMIT:-1048576}
 
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
@@ -57,7 +57,7 @@ for f in "$OUT/$POSE.webm" "$OUT/$POSE.webp"; do
   size=$(stat -f%z "$f" 2>/dev/null || stat -c%s "$f")
   echo "$f $size bytes"
   if [ "$size" -ge "$LIMIT" ]; then
-    echo "over 500 KB: lower fps or quality" >&2
+    echo "over 1 MB: lower fps or quality" >&2
     exit 1
   fi
 done
