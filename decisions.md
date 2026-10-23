@@ -4,6 +4,7 @@ Project manager writes this. One line each, newest first.
 
 | 日期 | 决定 | 原因 |
 |---|---|---|
+| 2026-10-23 | Wave approved (Lu merged #15). Next: only **idle** with Seedance 2.0 mini (about 24 credits, measured with `dreamina user_credit` before and after). The other 4 clips (head tilt, thinking, jump, cheer) wait for Lu to review idle | See one more clip before spending the rest. Lu chose B, #lumi-storytelling event e78831e4 |
 | 2026-10-23 | Mic without Gemini uses the browser's own speech recognition and shows one line that Gemini is more accurate; where the browser has none (Firefox), it shows inline "Connect Gemini in Settings". Overrides PRD 8.13 "Mic needs Gemini" | Voice input keeps working with no key. PRD §2 and 8.13 disagreed. Lu chose A, #lumi-storytelling event 72c8f1fa |
 | 2026-10-23 | Step 3 composer: one Claude call edits slides and script and says whether the request targets the image; OpenAI is called only for image edits. No new control | No extra call or UI. PM decided, told Lu with no objection, #lumi-storytelling event 72c8f1fa |
 | 2026-10-23 | Opened as a `file://` page, Lumi keeps autosaving the story but shows a one-line notice that other local pages can read it and that opening via a web address is safer, with a button to the local `server/` address when it is running. The current project moves with the user | Story text is far less harmful to expose than keys; losing unsaved work is worse. Options 2 (no autosave) and 3 (password) rejected. Lu chose 1, #lumi-storytelling event 10b94052 |
