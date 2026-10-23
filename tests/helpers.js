@@ -53,4 +53,48 @@ async function storyScore(page) {
   return Number(m[1]);
 }
 
-module.exports = { APP_URL, HTTP_APP_URL, openApp, fillStepOne, storyScore };
+// Fake keys for mocked provider calls. Tests must never see a real key.
+const KEYS = {
+  claude: 'FAKE-CLAUDE-KEY-FOR-TEST-ONLY',
+  openai: 'FAKE-OPENAI-KEY-FOR-TEST-ONLY',
+  gemini: 'FAKE-GEMINI-KEY-FOR-TEST-ONLY',
+};
+const CLAUDE = 'https://api.anthropic.com/v1/messages';
+// The page re-checks saved keys on load (PRD 8.12); these answer that check with "valid".
+const KEY_CHECKS = [
+  'https://api.anthropic.com/v1/models**',
+  'https://api.openai.com/v1/models**',
+  'https://generativelanguage.googleapis.com/v1beta/models?**',
+];
+
+/** Open over http with the given keys saved; the load-time key check passes. */
+async function openWithKeys(page, ids) {
+  for (const url of KEY_CHECKS) await page.route(url, (route) => route.fulfill({ json: { data: [], models: [] } }));
+  const keys = Object.fromEntries(ids.map((id) => [id, KEYS[id]]));
+  const errors = await openApp(page, { http: true, storage: { 'lumi-api-keys-v1': JSON.stringify(keys) } });
+  for (const id of ids) await expect.poll(() => page.evaluate((id) => state.providerStatus[id], id)).toBe('connected');
+  const logs = [];
+  page.on('console', (m) => logs.push(m.text()));
+  return { errors, logs };
+}
+
+/** A Messages API reply as server-sent events (stream: true), with the text split over two deltas. */
+function claudeSSE(text) {
+  const ev = (type, data) => `event: ${type}\ndata: ${JSON.stringify({ type, ...data })}\n\n`;
+  const half = Math.ceil(text.length / 2);
+  return ev('message_start', { message: { id: 'msg_test', type: 'message', role: 'assistant', content: [], stop_reason: null } })
+    + ev('content_block_start', { index: 0, content_block: { type: 'text', text: '' } })
+    + ev('ping', {})
+    + ev('content_block_delta', { index: 0, delta: { type: 'text_delta', text: text.slice(0, half) } })
+    + ev('content_block_delta', { index: 0, delta: { type: 'text_delta', text: text.slice(half) } })
+    + ev('content_block_stop', { index: 0 })
+    + ev('message_delta', { delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 1 } })
+    + ev('message_stop', {});
+}
+
+/** Fulfill a Claude route with `output` as a streamed JSON reply. */
+function fulfillClaude(route, output) {
+  return route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream' }, body: claudeSSE(JSON.stringify(output)) });
+}
+
+module.exports = { APP_URL, HTTP_APP_URL, KEYS, CLAUDE, openApp, openWithKeys, fillStepOne, storyScore, claudeSSE, fulfillClaude };
