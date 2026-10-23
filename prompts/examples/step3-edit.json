@@ -1,0 +1,12 @@
+{
+  "about": "A text request on the sample story. The model shortens slide 1's title and leaves the rest alone.",
+  "request": "把第 1 页标题改短一点",
+  "modelOutput": {
+    "target": "text",
+    "reply": "我把第 1 页的标题改短了。",
+    "image_instruction": "",
+    "slides": [{ "index": 0, "title": "三天的流程压到半天", "body": "" }],
+    "script": ""
+  },
+  "expect": { "slide": 0, "title": "三天的流程压到半天" }
+}

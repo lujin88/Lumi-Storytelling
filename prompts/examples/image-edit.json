@@ -1,0 +1,12 @@
+{
+  "about": "A request about the picture. Claude routes it to OpenAI with an English instruction; OpenAI returns the edited image.",
+  "request": "把图里的背景换成深蓝色",
+  "claudeOutput": {
+    "target": "image",
+    "reply": "我让 OpenAI 把背景换成了深蓝色。",
+    "image_instruction": "Change the background to deep navy blue.",
+    "slides": [],
+    "script": ""
+  },
+  "expect": { "promptStartsWith": "Change the background to deep navy blue." }
+}

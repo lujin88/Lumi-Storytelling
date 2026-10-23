@@ -1,0 +1,5 @@
+{
+  "about": "A short Chinese recording. Gemini returns the words as spoken; the page puts them in the input box.",
+  "modelOutput": "以前从访谈到给客户演示要三天。",
+  "expect": { "inputBox": "以前从访谈到给客户演示要三天。" }
+}
