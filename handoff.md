@@ -3,8 +3,7 @@
 Project manager writes this. Current state only, one page max. Lu's decisions go in `decisions.md`.
 
 ## 现在在做什么
-- Lu | task 9, Lumi wave: lujin88/Lumi-Storytelling#15 (eb89a0e) ready. QA: main + #11 + #12 + #15 = e66dc73, 41 tests pass. Visual: real Safari 26.6.2 light and dark, WebP, transparent, no green edge; on-model. Later: clip can stop mid-wave on slow networks; no real iPhone check.
-- Lu | merge lujin88/Lumi-Storytelling#11, then lujin88/Lumi-Storytelling#12. Both passed QA and visual review.
+- Developer | task 11, Lumi wave: lujin88/Lumi-Storytelling#15 held; re-export under 1MB (decided 2026-10-23), then Lu reviews.
 - Developer | task 10, backend v1: key storage merged (#20); key check + Jimeng `server/` in lujin88/Lumi-Storytelling#23, in QA (523b84e, 49 tests pass).
 - Developer | task 14 (new): page AI calls still go to `/api/...` with nothing behind them; move Claude, OpenAI and Gemini calls to the browser, prompts into `prompts/`. Call map first.
 
