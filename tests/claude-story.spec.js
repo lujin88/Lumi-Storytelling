@@ -443,6 +443,90 @@ test.describe('busy line and cancel', () => {
     expect(errors).toEqual([]);
   });
 
+  /** Holds each Claude call until `answer` fulfils it by prompt id. */
+  async function holdClaude(page) {
+    const held = [];
+    await page.route(CLAUDE, (route) => { held.push(route); });
+    const answer = async (outputs) => {
+      for (const route of held.splice(0)) {
+        const id = Object.keys(outputs).find((k) => route.request().postDataJSON().system === prompt(k));
+        await (id ? fulfillClaude(route, outputs[id]) : route.abort());
+      }
+    };
+    return { held, answer };
+  }
+  const REVIEWED = {
+    'review-answers': { followups: [{ id: 'decision', question: '你具体放弃了什么？' }] },
+    'score-story': { dims: ['tension', 'decision', 'pivot', 'signal', 'afterlife'].map((id) => ({ id, score: 0, quote: '', reason: '' })) },
+  };
+
+  test('typing goes on after the Next review lands, and is saved to the row being answered, not the follow-up', async ({ page }) => {
+    const { errors } = await openSample(page);
+    await page.click('#sidebar [data-page="story"]');
+    await page.evaluate(() => { state.found.challenge.text = ''; render(); });
+    const { held, answer } = await holdClaude(page);
+    await page.click('#footer [data-action="next"]');
+    await page.click('#modal [data-action="continueGaps"]');
+    await expect.poll(() => held.length).toBe(2);
+    await page.click('#guideText');
+    await page.keyboard.type('我在打字');
+    await markComposer(page);
+    await answer(REVIEWED);
+    await expect.poll(() => page.evaluate(() => state.storyReviewPass)).toBe(true);
+    // The follow-up is on the page; the composer was left alone and still answers the open row.
+    await expect(page.locator('#content .fu-head')).toBeVisible();
+    expect(await page.evaluate(() => state.focus)).toBe('challenge');
+    await composerKept(page);
+    await page.keyboard.type('继续');
+    await expect(page.locator('#guideText')).toHaveValue('我在打字继续');
+    await page.click('#footer [data-action="send"]');
+    await expect.poll(() => page.evaluate(() => state.found.challenge)).toEqual({ text: '我在打字继续' });
+    expect(await page.evaluate(() => state.followups.map((x) => x.text))).toEqual(['']);
+    expect(errors).toEqual([]);
+  });
+
+  test('with every row answered, typing goes on after the Next review lands and is not taken as the follow-up answer', async ({ page }) => {
+    const { errors } = await openSample(page);
+    await page.click('#sidebar [data-page="story"]');
+    const { held, answer } = await holdClaude(page);
+    await page.click('#footer [data-action="next"]');
+    await expect.poll(() => held.length).toBe(2);
+    await page.click('#guideText');
+    await page.keyboard.type('我在打字');
+    await markComposer(page);
+    await answer(REVIEWED);
+    await expect.poll(() => page.evaluate(() => state.storyReviewPass)).toBe(true);
+    await expect(page.locator('#content .fu-head')).toBeVisible();
+    expect(await page.evaluate(() => state.focus)).toBe(null);
+    await composerKept(page);
+    await page.keyboard.type('继续');
+    await expect(page.locator('#guideText')).toHaveValue('我在打字继续');
+    await page.click('#footer [data-action="send"]');
+    await expect.poll(() => page.evaluate(() => state.answers.at(-1))).toBe('[story] 我在打字继续');
+    expect(await page.evaluate(() => state.followups.map((x) => x.text))).toEqual(['']);
+    expect(errors).toEqual([]);
+  });
+
+  test('when a draft fills every row, the kept composer says to click a row, not the first-row prompt', async ({ page }) => {
+    const ex = example('draft-answers');
+    await openWithKeys(page, ['claude']);
+    let pending = null;
+    await page.route(CLAUDE, (route) => { pending = route; });
+    await fillStepOne(page, ex.notes);
+    await page.click('#footer [data-action="next"]');
+    await expect.poll(() => pending !== null).toBe(true);
+    await page.click('#guideText');
+    await markComposer(page);
+    await expect(page.locator('#guideText')).toHaveAttribute('placeholder', '当时的情况是…');
+    const quote = ex.notes.trim().slice(0, 8);
+    const answers = ['stake', 'reframe', 'challenge', 'decision', 'outcome', 'wisdom'].map((id) => ({ id, text: id + ' 初稿', quote }));
+    await fulfillClaude(pending, { answers });
+    await expect.poll(() => page.evaluate(() => storyComplete())).toBe(true);
+    await composerKept(page);
+    await expect(page.locator('#guideText')).toHaveAttribute('placeholder', '点任意一行直接修改');
+    await expect(page.locator('#guideText')).toHaveAttribute('data-ghost', '');
+  });
+
   test('the kept composer is rebuilt once focus leaves the footer', async ({ page }) => {
     const ex = example('draft-answers');
     await openWithKeys(page, ['claude']);
