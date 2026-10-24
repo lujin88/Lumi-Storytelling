@@ -8,7 +8,6 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 
 ## 等 Lu 决定的事
 1. Whether step 2 gets a full-body Lumi; until then head tilt, thinking and jump have no place on the page.
-2. Swap OpenAI image models before `gpt-image-1` shuts down 2026-12-01 (asked, PM recommends A).
 
 ## 最近完成的
 - lujin88/Lumi-Storytelling#26: task 14, Claude/OpenAI/Gemini from the browser (QA pass 6f7d231). #27: its follow-ups and docs.
@@ -20,5 +19,6 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 ## 下一步
 1. Developer | cheer clip PR (clip already generated, task b3e4fd1f); Lu reviews.
 2. Developer | after #29 merges: remove the step 2 gaps modal (decisions.md 2026-10-24); the review names every empty row with and without Claude, tests cover both; plus the two #29 follow-ups that send text to notes. QA reviews.
-3. Developer | task 12: step 5 save dialog; then QA's two small fixes; then task 13 (`file://` notice).
-4. Other clips only after Lu decides on a full-body Lumi in step 2.
+3. Developer | after #29 merges: OpenAI image models to `gpt-image-2.5-sunburst` / `gpt-image-2.5-flare` in Settings, default from OpenAI docs (decisions.md 2026-10-24); must land before 2026-12-01. QA reviews.
+4. Developer | task 12: step 5 save dialog; then QA's two small fixes; then task 13 (`file://` notice).
+5. Other clips only after Lu decides on a full-body Lumi in step 2.
