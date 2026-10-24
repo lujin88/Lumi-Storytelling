@@ -46,7 +46,7 @@ test('leaving step 1 stops the wave; coming back starts it again', async ({ page
 test('a re-render past the clip length keeps the loop going from the right place', async ({ page }) => {
   await openApp(page);
   // Pretend the wave started 9.5 s ago, then rebuild the page as render() does after any edit.
-  await page.evaluate(() => { lumiAnim.since = performance.now() - 9500; render(); });
+  await page.evaluate(() => { lumiAnim.starts.wave = performance.now() - 9500; render(); });
   const video = page.locator('video[data-lumi-video]');
   await expect.poll(() => video.evaluate((v) => v.readyState)).toBeGreaterThan(0);
   const t = await video.evaluate((v) => v.currentTime);
@@ -150,6 +150,53 @@ test('Lumi thinks while the user types, then goes back to waving on step 1', asy
   await page.locator('#guideText').pressSequentially('我重新设计了');
   expect(await lumiState(page)).toBe('think');
   await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('wave');
+});
+
+/** Reads a <video> handle: still in the page, shown, and where it is in the clip. */
+const videoInfo = (handle) => handle.evaluate((v) => ({
+  connected: v.isConnected, shown: v.getClientRects().length > 0, paused: v.paused, t: v.currentTime, src: v.getAttribute('src'),
+}));
+
+test('typing on step 1 keeps the same wave playing (no think clip yet)', async ({ page }) => {
+  await openApp(page);
+  const video = page.locator('video[data-lumi-video]');
+  await expect.poll(() => video.evaluate((v) => v.currentTime)).toBeGreaterThan(0.5);
+  const wave = await video.elementHandle();
+  const before = (await videoInfo(wave)).t;
+  await page.locator('#guideText').pressSequentially('我重新设计了');
+  expect(await lumiState(page)).toBe('think');
+  // While typing: the wave is the only Lumi on screen, still playing, the still stays hidden.
+  let info = await videoInfo(wave);
+  expect(info).toMatchObject({ connected: true, shown: true, paused: false, src: 'assets/lumi/wave.webm' });
+  await expect(page.locator('img.intro-lumi[data-lumi]')).toBeHidden();
+  await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('wave');
+  // After typing: the same element, and the clip went on instead of starting over.
+  info = await videoInfo(wave);
+  expect(info).toMatchObject({ connected: true, shown: true, paused: false });
+  await expect(video).toHaveCount(1);
+  const elapsed = info.t < before ? info.t + 4 : info.t;
+  expect(elapsed - before).toBeGreaterThan(0.5);
+});
+
+test('with a think clip, typing switches clips and the wave picks up where it was', async ({ page }) => {
+  await openApp(page);
+  // Stand-in for the think clip until it is approved.
+  await page.evaluate(() => { LUMI_CLIPS.think = { webm: 'assets/lumi/cheer.webm', webp: 'assets/lumi/cheer.webp' }; });
+  const video = page.locator('video[data-lumi-video]');
+  await expect.poll(() => video.evaluate((v) => v.currentTime)).toBeGreaterThan(0.5);
+  const wave = await video.elementHandle();
+  const before = (await videoInfo(wave)).t;
+  await page.locator('#guideText').pressSequentially('我重新设计了');
+  const think = page.locator('video[data-lumi-video][src="assets/lumi/cheer.webm"]');
+  await expect(think).toBeVisible();
+  // The wave is hidden, not removed.
+  expect(await videoInfo(wave)).toMatchObject({ connected: true, shown: false });
+  await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('wave');
+  const info = await videoInfo(wave);
+  expect(info).toMatchObject({ connected: true, shown: true, paused: false });
+  await expect(think).toBeHidden();
+  const elapsed = info.t < before ? info.t + 4 : info.t;
+  expect(elapsed - before).toBeGreaterThan(0.5);
 });
 
 test('typing an API key does not trigger thinking', async ({ page }) => {
