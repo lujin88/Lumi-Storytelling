@@ -8,12 +8,14 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 - Developer | jump and thinking clips (mini, 1 run each from `standing.webp`, about 24 credits each, Lu approved 2026-10-24); start and end on the same pose; credit before/after in the PR.
 - Developer | small fixes from Lu's review (decisions.md 2026-10-24, 8 points): wave and cheer loop, settings key error pushes the divider down, composer bar full width with equal padding. QA reviews.
 - Visual designer | in the same #35 update: score face micro-animation (CSS only), step 2 single active row + composer placeholder naming the question, thinking clip as loading state. Uses the Duolingo study. Then visual QA.
-- PM | Mobbin study of Duolingo mascot animation (Lu asked).
+- PM | Mobbin study of Duolingo mascot animation: done, `RESEARCH/DUOLINGO_MASCOT_ANIMATION_MOBBIN.md` (PM workspace), sent to the designer.
+- Harness Manager | review rules: first review lists everything; re-review checks fixes and regressions only; check at Lu's ~1900px window before Lu sees it (Lu asked, event de09e390).
 - Lu | merge lujin88/Lumi-Storytelling#29 (task 15 + score card; QA pass 30bca60, 114 tests). Real-key trial: drafting and review run end to end; a one-character quote passes; single Chinese numerals (三位, 两小时) are not replaced with [待补].
 
 ## 等 Lu 决定的事
 1. Clicking the Lumi logo: go to step 1, or a new welcome screen.
 2. Step 5 deck: real, good-looking `.pptx` (how: in-browser library or Claude Skills); developer spike first.
+4. Tracking platform: A reuse Supabase + Brevo with a new Supabase project (PM recommends) | B inside Gratula's Supabase project | C PostHog/Plausible. Then PM writes the detailed plan.
 3. The enlarged Lumi sizes come back to Lu with the updated #35.
 
 ## 最近完成的
