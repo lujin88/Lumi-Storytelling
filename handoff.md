@@ -7,9 +7,8 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 - Developer | task 15: lujin88/Lumi-Storytelling#29 (draft), rebase onto main now that #26 is merged, plus a test that a late draft does not overwrite a row the user answered; then QA.
 
 ## 等 Lu 决定的事
-1. Score card in #29: which score to show and the label when Claude gives 0 but the user wrote something (asked, PM recommends A).
-2. Whether step 2 gets a full-body Lumi; until then head tilt, thinking and jump have no place on the page.
-3. Swap OpenAI image models before `gpt-image-1` shuts down 2026-12-01 (asked, PM recommends A).
+1. Whether step 2 gets a full-body Lumi; until then head tilt, thinking and jump have no place on the page.
+2. Swap OpenAI image models before `gpt-image-1` shuts down 2026-12-01 (asked, PM recommends A).
 
 ## 最近完成的
 - lujin88/Lumi-Storytelling#26: task 14, Claude/OpenAI/Gemini from the browser (QA pass 6f7d231). #27: its follow-ups and docs.
@@ -20,6 +19,6 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 
 ## 下一步
 1. Developer | cheer clip PR; Lu reviews.
-2. Developer | rebase #29; QA; Lu's real-key trial checklist from PM; Lu merges.
+2. Developer | #29: QA fixes, then score card (Lu chose A); QA re-review; Lu's real-key trial checklist from PM; Lu merges.
 3. Developer | task 12: step 5 save dialog; then QA's two small fixes; then task 13 (`file://` notice).
 4. Other clips only after Lu decides on a full-body Lumi in step 2.
