@@ -15,7 +15,7 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 ## 等 Lu 决定的事
 1. Clicking the Lumi logo: go to step 1, or a new welcome screen.
 2. Step 5 deck: real, good-looking `.pptx` (how: in-browser library or Claude Skills); developer spike first.
-4. Tracking platform: A reuse Supabase + Brevo with a new Supabase project (PM recommends) | B inside Gratula's Supabase project | C PostHog/Plausible. Then PM writes the detailed plan.
+4. Tracking: Lu chose PostHog. Lu creates the PostHog account (EU cloud) and says which channel the portfolio work happens in.
 3. The enlarged Lumi sizes come back to Lu with the updated #35.
 
 ## 最近完成的
