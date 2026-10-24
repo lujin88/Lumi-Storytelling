@@ -5,42 +5,18 @@
 const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('@playwright/test');
-const { openApp } = require('./helpers');
+const { KEYS, CLAUDE, openWithKeys, claudeSSE, fulfillClaude } = require('./helpers');
 
 const ROOT = path.resolve(__dirname, '..');
 const prompt = (id) => fs.readFileSync(path.join(ROOT, 'prompts', id + '.md'), 'utf8').trim();
 const example = (id) => JSON.parse(fs.readFileSync(path.join(ROOT, 'prompts', 'examples', id + '.json'), 'utf8'));
 
-const KEYS = {
-  claude: 'FAKE-CLAUDE-KEY-FOR-TEST-ONLY',
-  openai: 'FAKE-OPENAI-KEY-FOR-TEST-ONLY',
-  gemini: 'FAKE-GEMINI-KEY-FOR-TEST-ONLY',
-};
-const CLAUDE = 'https://api.anthropic.com/v1/messages';
 const OPENAI = 'https://api.openai.com/v1/images/edits';
 const GEMINI = 'https://generativelanguage.googleapis.com/v1beta/models/**';
 // OpenAI's "edited" image: a marker, so the test can tell it from the upload.
 const EDITED_B64 = Buffer.from('edited-image').toString('base64');
 // 1×1 PNG, the uploaded image.
 const PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNg+M/wHwAEAQH/7yMK/wAAAABJRU5ErkJggg==';
-
-// The page re-checks saved keys on load (PRD 8.12); these answer that check with "valid".
-const KEY_CHECKS = [
-  'https://api.anthropic.com/v1/models**',
-  'https://api.openai.com/v1/models**',
-  'https://generativelanguage.googleapis.com/v1beta/models?**',
-];
-
-/** Open over http with the given keys saved; the load-time key check passes. */
-async function openWithKeys(page, ids) {
-  for (const url of KEY_CHECKS) await page.route(url, (route) => route.fulfill({ json: { data: [], models: [] } }));
-  const keys = Object.fromEntries(ids.map((id) => [id, KEYS[id]]));
-  const errors = await openApp(page, { http: true, storage: { 'lumi-api-keys-v1': JSON.stringify(keys) } });
-  for (const id of ids) await expect.poll(() => page.evaluate((id) => state.providerStatus[id], id)).toBe('connected');
-  const logs = [];
-  page.on('console', (m) => logs.push(m.text()));
-  return { errors, logs };
-}
 
 async function openBuild(page, ids) {
   const out = await openWithKeys(page, ids);
@@ -55,11 +31,11 @@ async function sendOnBuild(page, text) {
   await page.click('#footer [data-action="send"]');
 }
 
-/** Claude replies the way the Messages API does with structured output. */
+/** Claude replies the way the Messages API streams structured output. */
 function claudeReplies(page, output, seen = []) {
   return page.route(CLAUDE, (route) => {
     seen.push({ headers: route.request().headers(), body: route.request().postDataJSON() });
-    return route.fulfill({ json: { type: 'message', role: 'assistant', content: [{ type: 'text', text: JSON.stringify(output) }], stop_reason: 'end_turn' } });
+    return fulfillClaude(route, output);
   });
 }
 
@@ -92,6 +68,7 @@ test.describe('step 3 send', () => {
     expect(headers['anthropic-version']).toBe('2023-06-01');
     expect(headers['anthropic-dangerous-direct-browser-access']).toBe('true');
     expect(body.model).toBe('claude-opus-5-5');
+    expect(body.stream).toBe(true);
     expect(body.system).toBe(prompt('step3-edit'));
     expect(body.output_config.format.type).toBe('json_schema');
     const input = JSON.parse(body.messages[0].content);
@@ -129,6 +106,30 @@ test.describe('step 3 send', () => {
     expect(errors).toEqual([]);
   });
 
+  test('cancelling while OpenAI edits the image aborts that request; a late image is not used', async ({ page }) => {
+    const ex = example('image-edit');
+    const { errors } = await openBuild(page, ['claude', 'openai']);
+    await uploadImage(page);
+    const before = await page.evaluate(() => state.generatedImage);
+    await claudeReplies(page, ex.claudeOutput);
+    let pending = null;
+    const aborted = [];
+    page.on('requestfailed', (r) => { if (r.url() === OPENAI) aborted.push(r.failure()?.errorText); });
+    await page.route(OPENAI, (route) => { pending = route; });
+    await sendOnBuild(page, ex.request);
+    await expect.poll(() => pending !== null).toBe(true);
+    await expect(page.locator('#footer #aiStatus')).toContainText('Lumi 正在改你的图片…');
+    await page.locator('#footer #aiStatus').getByRole('button', { name: '取消' }).click();
+    // The OpenAI request itself is aborted, not only ignored.
+    await expect.poll(() => aborted.length).toBe(1);
+    expect(aborted[0]).toContain('ABORTED');
+    await pending.fulfill({ json: { created: 0, data: [{ b64_json: EDITED_B64 }] } }).catch(() => {});
+    await page.waitForTimeout(300);
+    expect(await page.evaluate(() => state.generatedImage)).toBe(before);
+    await expect(inlineError(page)).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
   test('an image request with no image says to upload one, without calling OpenAI', async ({ page }) => {
     const { errors } = await openBuild(page, ['claude', 'openai']);
     await page.evaluate(() => { state.generatedImage = null; });
@@ -156,10 +157,11 @@ test.describe('step 3 send', () => {
     ['wrong key', (route) => route.fulfill({ status: 401, json: { type: 'error', error: { type: 'authentication_error', message: 'invalid x-api-key' } } }), 'Claude 不认这个密钥。重新复制一个再试。', true],
     ['no credit', (route) => route.fulfill({ status: 400, json: { type: 'error', error: { type: 'invalid_request_error', message: 'Your credit balance is too low to access the Anthropic API.' } } }), 'Claude 账户没有额度了。充值后再试。', true],
     ['network', (route) => route.abort('internetdisconnected'), '连不上 Claude。检查网络后再试。', false],
-    ['unusable reply', (route) => route.fulfill({ json: { content: [{ type: 'text', text: '{"target":' }], stop_reason: 'max_tokens' } }), 'Claude 这次没有给出结果。再试一次。', false],
-    ['unknown target', (route) => route.fulfill({ json: { content: [{ type: 'text', text: JSON.stringify({ target: 'video', reply: '好了', image_instruction: '', slides: [], script: '' }) }], stop_reason: 'end_turn' } }), 'Claude 这次没有给出结果。再试一次。', false],
+    ['unusable reply', (route) => route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream' }, body: claudeSSE('{"target":') }), 'Claude 这次没有给出结果。再试一次。', false],
+    ['unknown target', (route) => fulfillClaude(route, { target: 'video', reply: '好了', image_instruction: '', slides: [], script: '' }), 'Claude 这次没有给出结果。再试一次。', false],
     ['too many requests', (route) => route.fulfill({ status: 429, json: { type: 'error', error: { type: 'rate_limit_error', message: 'Rate limited' } } }), 'Claude 现在请求太多，或到了用量上限。过一会儿再试。', false],
     ['overloaded', (route) => route.fulfill({ status: 529, json: { type: 'error', error: { type: 'overloaded_error', message: 'Overloaded' } } }), 'Claude 暂时没有响应。过一会儿再试。', false],
+    ['overloaded mid-stream', (route) => route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream' }, body: 'event: message_start\ndata: {"type":"message_start","message":{"content":[]}}\n\nevent: error\ndata: {"type":"error","error":{"type":"overloaded_error","message":"Overloaded"}}\n\n' }), 'Claude 暂时没有响应。过一会儿再试。', false],
     ['server error', (route) => route.fulfill({ status: 500, json: { type: 'error', error: { type: 'api_error', message: 'Internal server error' } } }), 'Claude 暂时没有响应。过一会儿再试。', false],
   ];
   for (const [name, reply, text, settingsLink] of claudeFailures) {
@@ -199,7 +201,7 @@ test.describe('step 3 edge cases', () => {
     await page.route(CLAUDE, async (route) => {
       sentLanguage = JSON.parse(route.request().postDataJSON().messages[0].content).language;
       await gate;
-      return route.fulfill({ json: { content: [{ type: 'text', text: JSON.stringify({ target: 'text', reply: '我把第 1 页标题改短了。', image_instruction: '', slides: [{ index: 0, title: '中文新标题', body: '中文新正文' }], script: '' }) }], stop_reason: 'end_turn' } });
+      return fulfillClaude(route, { target: 'text', reply: '我把第 1 页标题改短了。', image_instruction: '', slides: [{ index: 0, title: '中文新标题', body: '中文新正文' }], script: '' });
     });
     await sendOnBuild(page, '把第 1 页标题改短一点');
     await expect.poll(() => sentLanguage).toBe('zh');

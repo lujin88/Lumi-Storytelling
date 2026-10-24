@@ -11,7 +11,7 @@ const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const prompts = fs.readdirSync(path.join(ROOT, 'prompts')).filter((f) => f.endsWith('.md'));
 
 test('every prompt in prompts/ is embedded in index.html unchanged', () => {
-  expect(prompts.sort()).toEqual(['image-edit.md', 'step3-edit.md', 'transcribe.md']);
+  expect(prompts.sort()).toEqual(['draft-answers.md', 'draft-defend.md', 'image-edit.md', 'review-answers.md', 'score-story.md', 'step3-edit.md', 'transcribe.md']);
   for (const f of prompts) {
     const id = f.slice(0, -3);
     const m = html.match(new RegExp(`<script type="text/plain" id="prompt-${id}">([\\s\\S]*?)</script>`));
