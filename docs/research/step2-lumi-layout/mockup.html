@@ -5,69 +5,36 @@
 <title>Lumi Step 2 full-body layout proposal</title>
 <style>
   :root {
-    --paper:#f7f5f0;
-    --surface:#ffffff;
-    --sunken:#eeede8;
-    --line:#e3e1db;
-    --ink:#252a38;
-    --muted:#677181;
-    --blue:#7e8fae;
-    --soft:#e7ecf3;
-    --ok:#4f7a4d;
-    --ok-line:#a9c3a7;
-    --info:#526787;
-    --info-line:#b9c6d8;
-    --action-bg:#e7ecf3;
-    --action-line:#7e8fae;
-    --action-ink:#526787;
-    --s-1:4px;
-    --s-2:8px;
-    --s-3:12px;
-    --s-4:16px;
-    --s-5:24px;
-    --s-6:32px;
-    --s-7:48px;
-    --side:232px;
-    --r-chip:4px;
-    --r-control:6px;
-    --r-surface:8px;
+    --paper:#f7f5f0; --surface:#ffffff; --sunken:#eeede8; --line:#e3e1db;
+    --ink:#252a38; --muted:#677181; --blue:#7e8fae; --soft:#e7ecf3;
+    --ok:#4f7a4d; --ok-line:#a9c3a7; --warn:#9b712e; --warn-line:#d7c195;
+    --info:#526787; --info-line:#b9c6d8; --action-bg:#e7ecf3;
+    --action-line:#7e8fae; --action-ink:#526787;
+    --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:24px;
+    --s-6:32px; --s-7:48px; --side:232px; --r-chip:4px;
+    --r-control:6px; --r-surface:8px;
     --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
   }
   html.dark {
-    --paper:#17191f;
-    --surface:#1f2229;
-    --sunken:#1b1d23;
-    --line:#2c3039;
-    --ink:#e9e6df;
-    --muted:#9aa1ad;
-    --blue:#9fb0cf;
-    --soft:#232a36;
-    --ok:#9cc39a;
-    --ok-line:#37503a;
-    --info:#a9bbd6;
-    --info-line:#3d4a5e;
-    --action-bg:#232a36;
-    --action-line:#9fb0cf;
-    --action-ink:#a9bbd6;
-    color-scheme:dark;
+    --paper:#17191f; --surface:#1f2229; --sunken:#1b1d23; --line:#2c3039;
+    --ink:#e9e6df; --muted:#9aa1ad; --blue:#9fb0cf; --soft:#232a36;
+    --ok:#9cc39a; --ok-line:#37503a; --warn:#d7b878; --warn-line:#594a30;
+    --info:#a9bbd6; --info-line:#3d4a5e; --action-bg:#232a36;
+    --action-line:#9fb0cf; --action-ink:#a9bbd6; color-scheme:dark;
   }
   * { box-sizing:border-box; }
   html,body { margin:0; min-height:100%; background:var(--paper); color:var(--ink); font:14px/1.6 var(--font-sans); }
   button,textarea { font:inherit; color:inherit; }
   button { border:0; background:transparent; }
   .shell { min-height:100vh; }
-  .sidebar {
-    position:fixed; inset:0 auto 0 0; width:var(--side); padding:var(--s-5) var(--s-4);
-    display:flex; flex-direction:column; background:var(--paper); border-right:1px solid var(--line);
-  }
+  .sidebar { position:fixed; inset:0 auto 0 0; width:var(--side); padding:var(--s-5) var(--s-4); display:flex; flex-direction:column; background:var(--paper); border-right:1px solid var(--line); }
   .brand-row { display:flex; align-items:center; justify-content:space-between; gap:var(--s-3); }
   .brand { display:flex; align-items:center; gap:var(--s-2); font-size:22px; font-weight:700; letter-spacing:-.5px; }
   .brand img { width:32px; height:32px; object-fit:contain; }
   .language { display:flex; align-items:center; padding:2px; background:var(--sunken); border-radius:var(--r-control); font-size:12px; }
   .language span { display:grid; place-items:center; width:32px; height:28px; border-radius:4px; color:var(--muted); }
   .language .on { color:var(--action-ink); background:var(--action-bg); box-shadow:inset 0 0 0 1px var(--action-line); font-weight:600; }
-  .phase { margin:var(--s-6) var(--s-3) var(--s-2); font-size:11px; color:var(--muted); }
-  .nav { display:grid; gap:4px; }
+  .nav { display:grid; gap:4px; margin-top:var(--s-6); }
   .nav-row { height:40px; display:grid; grid-template-columns:24px 1fr 16px; align-items:center; gap:var(--s-2); padding:0 var(--s-3); border-radius:var(--r-control); color:var(--muted); }
   .nav-row b { font-size:12px; font-weight:500; }
   .nav-row.active { background:var(--action-bg); color:var(--ink); font-weight:600; }
@@ -75,58 +42,86 @@
   .sidebar-bottom { margin-top:auto; display:grid; gap:4px; }
   .sidebar-bottom div { height:40px; display:flex; align-items:center; gap:var(--s-3); padding:0 var(--s-3); color:var(--muted); }
 
-  .mobile-topbar { display:none; }
-  .mobile-title { display:none; }
+  .mobile-topbar,.compact-title { display:none; }
   .main { min-height:100vh; margin-left:var(--side); }
-  .page { max-width:1152px; margin:0 auto; padding:var(--s-6) var(--s-6) 152px; }
+  .page { max-width:1152px; margin:0 auto; padding:var(--s-6) var(--s-6) 136px; }
   .story-grid { display:grid; grid-template-columns:minmax(0,1fr) 280px; gap:var(--s-6); align-items:start; }
   .story-main { min-width:0; }
-  h1 { margin:0 0 var(--s-5); font-size:24px; line-height:1.35; font-weight:600; letter-spacing:0; }
+  h1 { margin:0 0 var(--s-5); font-size:24px; line-height:1.35; font-weight:600; }
   .part-head { display:grid; grid-template-columns:24px minmax(0,1fr); gap:var(--s-3); align-items:center; margin:var(--s-4) 0 var(--s-2); padding:0 var(--s-4); }
   .part-head .n { width:24px; height:24px; display:grid; place-items:center; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:12px; }
   .part-head h2 { margin:0; font-size:16px; line-height:24px; font-weight:600; }
   .foundation { list-style:none; margin:0; padding:0; border-top:1px solid var(--line); }
-  .foundation li { display:grid; grid-template-columns:24px minmax(0,1fr) auto; gap:var(--s-3); align-items:start; min-height:66px; padding:var(--s-3) var(--s-4); border-bottom:1px solid var(--line); }
+  .foundation li { display:grid; grid-template-columns:24px minmax(0,1fr) auto; gap:var(--s-3); align-items:start; min-height:66px; padding:var(--s-3) var(--s-4); border-bottom:1px solid var(--line); scroll-margin-top:72px; }
   .row-n { color:var(--muted); font-size:13px; line-height:21px; text-align:center; }
   .row-body strong { display:block; font-size:14px; line-height:1.5; font-weight:600; }
   .row-body p { margin:3px 0 0; color:var(--muted); font-size:13px; line-height:1.55; }
-  .chip { align-self:center; padding:2px 7px; border:1px solid var(--ok-line); border-radius:var(--r-chip); color:var(--ok); font-size:12px; line-height:1.4; }
+  .chip { align-self:center; padding:2px 7px; border:1px solid var(--ok-line); border-radius:var(--r-chip); color:var(--ok); font-size:12px; line-height:1.4; white-space:nowrap; }
+  .gap-chip { border-color:var(--warn-line); color:var(--warn); }
+  .gap-answer { font-style:italic; }
   .three { margin-top:var(--s-5); }
   .three .foundation li { min-height:48px; align-items:center; }
 
   .coach-rail { position:sticky; top:var(--s-6); display:grid; gap:var(--s-4); }
-  .score-card { width:100%; background:var(--paper); border:1px solid var(--line); border-radius:var(--r-surface); }
+  .score-card { width:100%; background:var(--paper); border:1px solid var(--line); border-radius:var(--r-surface); overflow:hidden; }
   .score-head { display:grid; grid-template-columns:48px minmax(0,1fr) 16px; gap:var(--s-3); align-items:center; min-height:72px; padding:var(--s-2) var(--s-3); }
   .score-ring { position:relative; width:48px; height:48px; }
   .score-ring svg { position:absolute; inset:0; transform:rotate(-90deg); }
   .score-ring img { position:absolute; inset:7px; width:34px; height:34px; object-fit:contain; }
   .score-copy { display:grid; line-height:1.25; }
-  .score-copy small { color:var(--muted); font-size:12px; font-weight:500; }
-  .score-value { font-size:14px; }
-  .score-value strong { font-size:16px; font-weight:600; }
-  .score-note { margin-top:3px; color:var(--muted); font-size:11px; line-height:1.35; }
+  .score-copy small,.score-note { color:var(--muted); font-size:12px; font-weight:500; }
+  .score-value { font-size:13px; color:var(--muted); }
+  .score-value strong { margin-right:1px; color:var(--ink); font-size:16px; font-weight:600; }
+  .score-value em { margin-left:var(--s-2); color:var(--warn); font-size:12px; font-style:normal; }
+  .score-note { margin-top:3px; line-height:1.35; font-weight:400; }
   .chev { color:var(--muted); font-size:16px; }
+  .score-dims { display:none; list-style:none; margin:0; padding:var(--s-2) var(--s-3); border-top:1px solid var(--line); }
+  .score-dims li { display:grid; grid-template-columns:80px 52px minmax(0,1fr) auto; gap:var(--s-2); align-items:center; min-height:32px; font-size:13px; }
+  .score-dn { color:var(--ink); }
+  .score-bars { display:flex; gap:2px; }
+  .score-bars b { width:14px; height:4px; border-radius:2px; background:var(--line); }
+  .score-bars .on { background:var(--warn); }
+  .score-bars.full b { background:var(--ok); }
+  .score-status { color:var(--muted); font-size:12px; }
+  .score-fix { min-height:32px; padding:0; color:var(--info); font-size:12px; font-weight:500; text-decoration:underline; text-underline-offset:4px; }
+  .is-expanded .score-card { background:var(--surface); }
+  .is-expanded .score-dims { display:block; }
+  .is-expanded .chev { transform:rotate(180deg); }
 
-  .lumi-stage { position:relative; height:272px; display:grid; place-items:end center; overflow:visible; }
-  .lumi-stage::before {
-    content:"动画安全区 · 232 × 272"; position:absolute; inset:0 24px; border:1px dashed color-mix(in srgb,var(--blue) 70%,transparent);
-    border-radius:var(--r-surface); color:var(--info); font-size:11px; line-height:1; padding:8px; text-align:center;
-  }
-  .lumi-stage img { position:relative; z-index:1; width:216px; height:216px; object-fit:contain; filter:drop-shadow(0 14px 18px #252a3814); }
-  .motion-labels { position:absolute; z-index:2; inset:0 24px; pointer-events:none; }
-  .motion-labels span { position:absolute; right:8px; padding:2px 6px; border-radius:var(--r-chip); background:var(--paper); color:var(--info); font-size:10px; border:1px solid var(--info-line); }
-  .motion-labels .jump { top:32px; }
-  .motion-labels .think { bottom:10px; }
+  .lumi-stage { position:relative; width:256px; height:256px; justify-self:center; display:grid; place-items:center; overflow:visible; }
+  .lumi-stage::before { content:"舞台 256 · 画布 240"; position:absolute; inset:0; border:1px dashed color-mix(in srgb,var(--blue) 70%,transparent); border-radius:var(--r-surface); color:var(--info); font-size:11px; line-height:1; padding:8px; text-align:center; }
+  .lumi-stage::after { content:"可见像素 ≤ 208 × 200"; position:absolute; z-index:2; inset:36px 24px 20px; border:1px dotted color-mix(in srgb,var(--info) 55%,transparent); color:var(--info); font-size:9px; text-align:center; pointer-events:none; }
+  .lumi-stage img { position:relative; z-index:1; width:240px; height:240px; object-fit:contain; filter:drop-shadow(0 14px 18px #252a3814); }
+  .motion-labels { position:absolute; z-index:3; inset:0; pointer-events:none; }
+  .motion-labels span { position:absolute; right:12px; padding:2px 6px; border-radius:var(--r-chip); background:var(--paper); color:var(--info); font-size:10px; border:1px solid var(--info-line); }
+  .motion-labels .jump { top:28px; }
+  .motion-labels .think { bottom:20px; }
   .design-note { margin:0; color:var(--muted); font-size:11px; text-align:center; }
 
   .footer { position:fixed; z-index:30; left:var(--side); right:0; bottom:0; padding:var(--s-3) var(--s-6) var(--s-4); background:linear-gradient(transparent,var(--paper) 14%); }
   .footer-inner { max-width:1088px; margin:0 auto; display:flex; align-items:stretch; gap:10px; }
-  .composer { flex:1; min-width:0; min-height:64px; display:grid; grid-template-columns:40px 1fr 40px 40px; align-items:center; gap:6px; padding:7px 10px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-surface); }
-  .composer .icon { display:grid; place-items:center; width:40px; height:40px; color:var(--muted); font-size:18px; }
+  .composer { flex:1; min-width:0; min-height:48px; display:grid; grid-template-columns:36px 1fr 36px 36px; align-items:center; gap:var(--s-1); padding:6px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-surface); }
+  .composer .icon { display:grid; place-items:center; width:36px; height:36px; color:var(--muted); font-size:18px; }
   .composer .placeholder { color:var(--muted); }
-  .next { min-width:112px; border-radius:var(--r-control); background:var(--ink); color:var(--paper); font-weight:600; }
-
+  .next { min-width:112px; min-height:48px; border-radius:var(--r-control); background:var(--ink); color:var(--paper); font-weight:600; }
   .desktop-tag { position:fixed; z-index:80; top:12px; right:12px; padding:5px 8px; border-radius:var(--r-chip); background:var(--ink); color:var(--paper); font-size:10px; letter-spacing:.2px; opacity:.78; }
+
+  /* Two columns only when 232 sidebar + 64 gutters + 640 story + 32 gap + 280 rail fit. */
+  @media (max-width:1247px) {
+    .page { max-width:960px; }
+    .compact-title { display:block; margin:0 0 var(--s-4); }
+    .story-grid { display:flex; flex-direction:column; align-items:stretch; gap:0; }
+    .story-main>h1 { display:none; }
+    .coach-rail { position:static; order:-1; display:grid; grid-template-columns:minmax(0,1fr) 128px; gap:var(--s-4); align-items:center; width:100%; margin-bottom:var(--s-4); }
+    .lumi-stage { width:128px; height:128px; }
+    .lumi-stage::before { content:"舞台 128 · 画布 120"; padding:5px; font-size:9px; }
+    .lumi-stage::after { inset:18px 12px 10px; font-size:8px; }
+    .lumi-stage img { width:120px; height:120px; }
+    .motion-labels span { right:5px; padding:1px 4px; font-size:8px; }
+    .motion-labels .jump { top:14px; }
+    .motion-labels .think { bottom:10px; }
+    .design-note { grid-column:1/-1; }
+  }
 
   @media (max-width:720px) {
     .sidebar { display:none; }
@@ -136,70 +131,66 @@
     .mobile-topbar strong { font-size:13px; font-weight:600; }
     .mobile-topbar .language { justify-self:end; }
     .page { padding:var(--s-4) var(--s-4) 150px; }
-    .mobile-title { display:block; margin:0 0 var(--s-4); font-size:24px; line-height:1.35; font-weight:600; }
-    .story-grid { display:flex; flex-direction:column; gap:0; }
-    .story-main>h1 { display:none; }
-    .coach-rail { position:sticky; z-index:20; top:56px; order:-1; display:grid; grid-template-columns:minmax(0,1fr) 104px; gap:var(--s-3); align-items:center; width:100%; padding-bottom:var(--s-3); background:var(--paper); }
+    .compact-title { margin:0 0 var(--s-4); font-size:24px; line-height:1.35; font-weight:600; }
+    .coach-rail { position:sticky; z-index:20; top:56px; grid-template-columns:minmax(0,1fr) 104px; gap:var(--s-3); margin:0; padding-bottom:var(--s-3); background:var(--paper); }
     .score-head { grid-template-columns:40px minmax(0,1fr) 14px; min-height:96px; gap:var(--s-2); padding:var(--s-2); }
     .score-ring { width:40px; height:40px; }
     .score-ring svg { width:40px; height:40px; }
     .score-ring img { inset:6px; width:28px; height:28px; }
-    .score-copy small { font-size:11px; }
-    .score-value strong { font-size:16px; }
-    .score-note { font-size:10px; }
-    .lumi-stage { height:104px; }
-    .lumi-stage::before { content:"动画区 104 × 104"; inset:0; padding:4px; font-size:9px; }
-    .lumi-stage img { width:88px; height:88px; }
-    .motion-labels { inset:0; }
+    .score-copy small,.score-note { font-size:12px; }
+    .score-dims { padding:var(--s-2); }
+    .score-dims li { grid-template-columns:minmax(72px,1fr) 46px 48px 28px; gap:6px; min-height:34px; }
+    .score-bars b { width:12px; }
+    .lumi-stage { width:104px; height:104px; }
+    .lumi-stage::before { content:"舞台 104 · 画布 96"; padding:4px; font-size:8px; }
+    .lumi-stage::after { content:"可见 ≤ 82 × 79"; inset:16px 11px 9px; font-size:7px; }
+    .lumi-stage img { width:96px; height:96px; }
     .motion-labels span { right:4px; padding:1px 4px; font-size:8px; }
-    .motion-labels .jump { top:16px; }
-    .motion-labels .think { bottom:4px; }
+    .motion-labels .jump { top:12px; }
+    .motion-labels .think { bottom:9px; }
     .design-note { display:none; }
+    .is-expanded .coach-rail { position:static; grid-template-columns:minmax(0,1fr) 104px; }
+    .composer-active .coach-rail { position:static; }
+    .is-expanded .score-card { grid-column:1/-1; }
+    .is-expanded .lumi-stage { grid-column:2; }
     .part-head { margin-top:var(--s-4); padding:0 var(--s-2); gap:var(--s-2); }
-    .foundation li { grid-template-columns:28px minmax(0,1fr); min-height:0; padding:var(--s-3) var(--s-2); gap:var(--s-2); }
+    .foundation li { grid-template-columns:24px minmax(0,1fr) auto; min-height:0; padding:var(--s-3) var(--s-4); gap:var(--s-3); scroll-margin-top:176px; }
+    .is-expanded .foundation li { scroll-margin-top:72px; }
     .row-body strong { font-size:14px; }
     .row-body p { font-size:12px; line-height:1.55; }
-    .chip { display:none; }
+    .chip { font-size:12px; }
     .three { margin-top:var(--s-4); }
     .footer { left:0; padding:9px var(--s-4) var(--s-3); }
-    .footer-inner { display:grid; gap:6px; }
-    .composer { min-height:54px; grid-template-columns:34px 1fr 34px 34px; padding:5px 7px; }
-    .composer .icon { width:34px; height:34px; }
+    .footer-inner { display:grid; gap:var(--s-2); }
+    .composer { min-height:48px; grid-template-columns:36px 1fr 36px 36px; padding:6px; }
+    .composer .icon { width:36px; height:36px; }
     .composer .placeholder { font-size:13px; }
     .next { min-height:48px; }
     .desktop-tag { display:none; }
+  }
+  @media (max-width:720px) and (max-height:699px) {
+    .coach-rail { position:static; }
+    .foundation li { scroll-margin-top:72px; }
   }
 </style>
 <body>
   <div class="desktop-tag">设计稿 · 1280</div>
   <div class="shell">
     <aside class="sidebar">
-      <div class="brand-row">
-        <div class="brand"><img src="../../../assets/lumi/source/logo.webp" alt="">Lumi</div>
-        <div class="language"><span class="on">中</span><span>EN</span></div>
-      </div>
-      <div class="phase">构思</div>
+      <div class="brand-row"><div class="brand"><img src="../../../assets/lumi/source/logo.webp" alt="">Lumi</div><div class="language"><span class="on">中</span><span>EN</span></div></div>
       <div class="nav">
         <div class="nav-row"><b>01</b><span>收集素材</span><span class="check">✓</span></div>
         <div class="nav-row active"><b>02</b><span>找到故事</span><span class="check">✓</span></div>
-      </div>
-      <div class="phase">制作</div>
-      <div class="nav"><div class="nav-row"><b>03</b><span>页面和讲稿</span><span></span></div></div>
-      <div class="phase">讲述</div>
-      <div class="nav">
+        <div class="nav-row"><b>03</b><span>页面和讲稿</span><span></span></div>
         <div class="nav-row"><b>04</b><span>追问准备</span><span></span></div>
         <div class="nav-row"><b>05</b><span>下载文件</span><span></span></div>
       </div>
       <div class="sidebar-bottom"><div>ⓘ　帮助</div><div>⚙　设置</div></div>
     </aside>
-
     <main class="main">
-      <header class="mobile-topbar">
-        <span class="menu">☰</span><strong>找到故事</strong>
-        <div class="language"><span class="on">中</span><span>EN</span></div>
-      </header>
+      <header class="mobile-topbar"><span class="menu">☰</span><strong>找到故事</strong><div class="language"><span class="on">中</span><span>EN</span></div></header>
       <div class="page">
-        <h1 class="mobile-title">故事的地基有了。</h1>
+        <h1 class="compact-title">故事的地基有了。</h1>
         <div class="story-grid">
           <section class="story-main">
             <h1>故事的地基有了。</h1>
@@ -207,10 +198,10 @@
             <ol class="foundation">
               <li><span class="row-n">01</span><div class="row-body"><strong>这个项目为什么重要？如果不做，客户或公司会失去什么？</strong><p>客户每周要等三天才能看到研究结论，两个大客户因此推迟了续约讨论。</p></div><span class="chip">你的回答</span></li>
               <li><span class="row-n">02</span><div class="row-body"><strong>一开始大家以为问题是什么？后来发现真正的问题是什么？</strong><p>大家以为是工具太多，其实是步骤之间没人负责交接。</p></div><span class="chip">你的回答</span></li>
-              <li><span class="row-n">03</span><div class="row-body"><strong>什么让它真的很难？谁反对过，或者现实哪里打乱了计划？</strong><p>研究负责人反对，他担心 AI 生成的结论不可信，客户会质疑。</p></div><span class="chip">你的回答</span></li>
+              <li><span class="row-n">03</span><div class="row-body"><strong>什么让它真的很难？谁反对过，或者现实哪里打乱了计划？</strong><p class="gap-answer">还没有回答</p></div><span class="chip gap-chip">缺失</span></li>
               <li><span class="row-n">04</span><div class="row-body"><strong>你最后选了什么、放弃了什么？是什么证据让你这么选？</strong><p>我放弃了全自动生成，改成每一步由研究员确认，代价是比纯自动慢一些。</p></div><span class="chip">你的回答</span></li>
               <li><span class="row-n">05</span><div class="row-body"><strong>结果是什么？哪些数字或反馈是你能确认的？</strong><p>试点四周后，从三天缩短到四小时；研究团队开始复用我们的模板。</p></div><span class="chip">你的回答</span></li>
-              <li><span class="row-n">06</span><div class="row-body"><strong>你从中学到了什么？下次会怎么做不一样？</strong><p>我学到先让人信任流程，再谈效率。下次我会更早把反对的人拉进来。</p></div><span class="chip">你的回答</span></li>
+              <li><span class="row-n">06</span><div class="row-body"><strong>你从中学到了什么？下次会怎么做不一样？</strong><p class="gap-answer">还没有回答</p></div><span class="chip gap-chip">缺失</span></li>
             </ol>
             <section class="three">
               <div class="part-head"><span class="n">2</span><h2>让对方记住三件事</h2></div>
@@ -221,38 +212,33 @@
               </ol>
             </section>
           </section>
-
-          <aside class="coach-rail" aria-label="Lumi 教练侧栏">
+          <aside class="coach-rail" aria-label="Lumi 教练区">
             <div class="score-card">
               <div class="score-head">
-                <span class="score-ring">
-                  <svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="none" stroke="var(--line)" stroke-width="3"/><circle cx="24" cy="24" r="20" fill="none" stroke="var(--ok)" stroke-width="3" stroke-linecap="round" stroke-dasharray="125 126"/></svg>
-                  <img src="../../../assets/lumi/source/face-top.webp" alt="">
-                </span>
-                <span class="score-copy"><small>故事评分 · 预估</small><span class="score-value"><strong>10</strong>/10</span><span class="score-note">只看完整度，内容还要你来打磨</span></span>
-                <span class="chev">⌄</span>
+                <span class="score-ring"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="none" stroke="var(--line)" stroke-width="3"/><circle cx="24" cy="24" r="20" fill="none" stroke="var(--ok)" stroke-width="3" stroke-linecap="round" stroke-dasharray="101 126"/></svg><img src="../../../assets/lumi/source/face-good.webp" alt=""></span>
+                <span class="score-copy"><small>故事评分</small><span class="score-value"><strong>8</strong>/10<em>2 项可加强</em></span><span class="score-note">只看完整度，内容还要你来打磨</span></span><span class="chev">⌄</span>
               </div>
+              <ul class="score-dims">
+                <li><span class="score-dn">冲突</span><span class="score-bars"><b class="on"></b><b></b><b></b></span><span class="score-status">还不够</span><button class="score-fix">去补</button></li>
+                <li><span class="score-dn">取舍</span><span class="score-bars full"><b></b><b></b><b></b></span><span class="score-status">充足</span><span></span></li>
+                <li><span class="score-dn">转折</span><span class="score-bars full"><b></b><b></b><b></b></span><span class="score-status">充足</span><span></span></li>
+                <li><span class="score-dn">你的角色</span><span class="score-bars full"><b></b><b></b><b></b></span><span class="score-status">充足</span><span></span></li>
+                <li><span class="score-dn">结果与反思</span><span class="score-bars"><b class="on"></b><b></b><b></b></span><span class="score-status">还不够</span><button class="score-fix">去补</button></li>
+              </ul>
             </div>
-            <div class="lumi-stage" aria-hidden="true">
-              <div class="motion-labels"><span class="jump">jump ↑</span><span class="think">thinking ↺</span></div>
-              <img src="../../../assets/lumi/source/standing.webp" alt="">
-            </div>
+            <div class="lumi-stage" aria-hidden="true"><div class="motion-labels"><span class="jump">jump ↑</span><span class="think">thinking ↺</span></div><img src="../../../assets/lumi/source/standing.webp" alt=""></div>
             <p class="design-note">虚线和标签只用于标注，不进入产品 UI</p>
           </aside>
         </div>
       </div>
     </main>
-
-    <footer class="footer">
-      <div class="footer-inner">
-        <div class="composer"><span class="icon">＋</span><span class="placeholder">点任意一行直接修改</span><span class="icon">↵</span><span class="icon">♩</span></div>
-        <button class="next">下一步</button>
-      </div>
-    </footer>
+    <footer class="footer"><div class="footer-inner"><div class="composer"><span class="icon">＋</span><span class="placeholder">点任意一行直接修改</span><span class="icon">↵</span><span class="icon">♩</span></div><button class="next">下一步</button></div></footer>
   </div>
 <script>
   const params = new URLSearchParams(location.search);
   document.documentElement.classList.toggle('dark', params.get('theme') === 'dark');
+  document.body.classList.toggle('is-expanded', params.get('state') === 'expanded');
+  document.body.classList.toggle('composer-active', params.get('state') === 'keyboard');
 </script>
 </body>
 </html>
