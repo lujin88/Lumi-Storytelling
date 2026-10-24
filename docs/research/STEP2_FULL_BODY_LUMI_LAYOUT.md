@@ -8,7 +8,7 @@ Use StoryScore and a full-body Lumi as one coaching region beside, or above, the
 
 - At 1280px, keep a 280px coach rail beside the story. StoryScore stays first. Lumi stands below it in a 256px square stage.
 - Below 1248px, move the coaching region above the rows. This is the first viewport where the 232px sidebar, 64px page gutters, 640px story, 32px column gap, and 280px rail no longer all fit.
-- At 390px, use a closed 104px-high coaching band below the 56px top bar. When StoryScore is open, or the software keyboard is likely present, put the coaching region back in normal document flow.
+- At 390px, use a closed coaching band below the 56px top bar. Its 104px content plus 12px bottom padding makes the sticky region 116px tall. When StoryScore is open, or the software keyboard is likely present, put the coaching region back in normal document flow.
 - Keep the face inside StoryScore. The face communicates the score tier; the full-body render is Lumi's coaching presence and the animation anchor. They have different jobs.
 - Use `assets/lumi/source/standing.webp` without changing the face, hair, scarf, colours, or clay texture.
 
@@ -49,7 +49,7 @@ No new token is required.
 | Secondary text | `#677181` | `#9aa1ad` | `muted` |
 | Motion annotation / focus | `#7e8fae` | `#9fb0cf` | `blue` / `action-line` |
 
-Typography stays on the design-system sans stack. Page title is 24/600; section title is 16/600; question and answer text remain 14px; StoryScore labels, notes, status, and action links remain 12px. Georgia is not introduced.
+Typography stays on the design-system sans stack. Page title is 24/600; section title and question text remain 16/600 and 14px respectively; answer text remains 13px; StoryScore labels, notes, status, and action links remain 12px. Georgia is not introduced.
 
 ## Layout and spacing
 
@@ -76,7 +76,7 @@ Typography stays on the design-system sans stack. Page title is 24/600; section 
 - Closed StoryScore: the coaching band is `minmax(0, 1fr) 104px` with an `s-3` = 12px gap. It may stick directly below the top bar only when the layout viewport height is at least 700px and the Composer is not focused.
 - Open StoryScore: the card spans the full width, retains all five dimension rows, statuses, and `去补` links, and the full-body Lumi moves to a normal-flow row below it. The card stays open until the user closes it; the layout must not override disclosure intent.
 - Short viewport or Composer focus: remove sticky positioning from the whole coaching band. Use `window.visualViewport` where available; treat `visualViewport.height < 700px`, or a material contraction after Composer focus, as keyboard/short-viewport mode. Restore stickiness only after blur and viewport recovery.
-- Closed sticky band: row and review targets use `scroll-margin-top: 176px` = 56px top bar + 104px coaching band + 16px breathing room.
+- Closed sticky band: row and review targets use `scroll-margin-top: 188px` = 56px top bar + 116px coaching band + 16px breathing room.
 - Open or non-sticky band: `scroll-margin-top: 72px` = 56px top bar + 16px breathing room. A `去补` target therefore lands below the top bar without being covered.
 - Mobile rows keep `24px minmax(0,1fr) auto`, `s-3` = 12px gap, and `s-4` = 16px horizontal padding. Status chips, including the three-item `初稿` source status, remain visible.
 - Composer stays at `composer-h` = 48px with 6px padding and 36px icon controls. The step CTA remains 48px.
