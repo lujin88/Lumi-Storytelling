@@ -31,6 +31,7 @@ Read harness-core's `AGENTS.md` first (https://github.com/lujin88/harness-core),
 - Sizes, spacing, type, radius: `design-system/tokens.json`.
 - Lumi animation clips: each file under 1MB (Lu, 2026-10-23, see decisions.md; was 500KB).
 - To confirm: contrast, performance, API latency and cost limits.
+- Check widths (检查宽度; every first review and every rework screenshot covers all of them, light and dark): ~1900 (Lu's window, read from Lu's screenshot on 2026-10-24; exact value to confirm), 1280 and 390 (widths used in reviews so far, PR #35).
 
 ## How to run and test
 - Run: open `index.html` in a browser.
