@@ -59,6 +59,12 @@ test('a wrong key shows a one-line error in its row and is not marked connected'
   const err = page.locator('.prov-err');
   await expect(err).toHaveCount(1);
   await expect(err).toHaveText('Claude 不认这个密钥。重新复制一个再试。');
+  // The error sits inside its row, so the row grows and its divider moves below the text.
+  await expect(claudeRow(page).locator('.prov-err')).toHaveCount(1);
+  const [errBox, rowBox, inputBox] = await Promise.all([err.boundingBox(), claudeRow(page).boundingBox(), page.locator('#key-claude').boundingBox()]);
+  const rowPadBottom = await claudeRow(page).evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom));
+  expect(errBox.y).toBeGreaterThanOrEqual(inputBox.y + inputBox.height);
+  expect(errBox.y + errBox.height).toBeLessThanOrEqual(rowBox.y + rowBox.height - rowPadBottom + 0.5);
   // Typing a new key clears the old error.
   await page.fill('#key-claude', CLAUDE_KEY + '-2');
   await expect(err).toHaveCount(0);
@@ -125,7 +131,7 @@ test('each failure kind has its own one-line message', async ({ page }) => {
     await page.click(`[data-action="connectApi:${id}"]`);
     const row = page.locator('.prov-row', { has: page.locator(`[data-action="connectApi:${id}"]`) });
     await expect(row.locator('.connection-status')).toHaveText('连接失败');
-    await expect(row.locator('xpath=following-sibling::*[1]')).toHaveText(message);
+    await expect(row.locator('.prov-err')).toHaveText(message);
   }
   expect(errors).toEqual([]);
 });
