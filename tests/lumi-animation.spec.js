@@ -216,6 +216,33 @@ test('typing shows the think clip; the wave comes back where it stopped', async 
   await expect(videos).toHaveCount(2);
 });
 
+test('after a few rounds of typing, a re-render keeps the wave on the same frame', async ({ page }) => {
+  await openApp(page);
+  const videos = page.locator('video[data-lumi-video]');
+  await expect.poll(() => videos.first().evaluate((v) => v.currentTime)).toBeGreaterThan(0.5);
+  // Each round hides the wave behind the think clip; Chrome pauses it while it is hidden,
+  // so the wall-clock start time would drift by the length of every round.
+  for (const word of ['我重新', '设计了', '团队的']) {
+    await page.locator('#guideText').pressSequentially(word);
+    await expect.poll(() => lumiState(page)).toBe('think');
+    await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('wave');
+    await page.waitForTimeout(300);
+  }
+  // Rebuild the page as render() does after any edit (e.g. sending the brief), then compare
+  // the new wave with where the old one was, carried forward by the time that passed.
+  const gap = await page.evaluate(async () => {
+    const shown = () => [...document.querySelectorAll('video[data-lumi-video]')].find((v) => v.getClientRects().length && v.getAttribute('src') === 'assets/lumi/wave.webm');
+    const old = shown(), t0 = old.currentTime, d = old.duration, n0 = performance.now();
+    render();
+    const v = shown();
+    if (v === old) throw new Error('render() did not rebuild the video');
+    await new Promise((ok) => { if (v.readyState > 0 && !v.seeking) ok(); else v.addEventListener('seeked', ok, { once: true }); setTimeout(ok, 3000); });
+    const want = (t0 + (performance.now() - n0) / 1000) % d, diff = Math.abs(v.currentTime - want);
+    return Math.min(diff, d - diff);
+  });
+  expect(gap).toBeLessThan(0.3);
+});
+
 test('typing an API key does not trigger thinking', async ({ page }) => {
   await openApp(page);
   await page.click('#sidebar [data-page="settings"]');
