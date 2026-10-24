@@ -188,6 +188,16 @@
     .download-card { grid-template-columns:minmax(240px,1fr) 220px; }
     .result-preview { grid-column:1/-1; }
   }
+  @media (max-width:900px) and (min-width:721px) {
+    .gather-hero { position:relative; display:block; min-height:184px; }
+    .gather-copy { padding-right:204px; }
+    .gather-setup { width:calc(100% + 204px); }
+    .hero-stage { position:absolute; top:0; right:0; width:180px; height:180px; }
+    .hero-stage img { width:168px; height:168px; }
+    .download-card { grid-template-columns:1fr; }
+    .download-stage { justify-self:center; }
+    .result-preview { grid-column:auto; }
+  }
   @media (max-width:720px) {
     .sidebar { display:none; }
     .main { margin-left:0; }

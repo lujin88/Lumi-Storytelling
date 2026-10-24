@@ -28,6 +28,13 @@ All reference images live in `docs/research/step2-lumi-layout/`. The visible mot
 
 `mockup.html` renders these states with `?page=gather|story|download&theme=light|dark&state=busy|expanded|keyboard`.
 
+Narrow-tablet references cover the two pages whose desktop columns become unsafe before the mobile breakpoint:
+
+| Page | 768 × 1100, light / dark | 721 × 1100, light / dark |
+| --- | --- | --- |
+| Step 1 | `gather-768-light.png`, `gather-768-dark.png` | `gather-721-light.png`, `gather-721-dark.png` |
+| Step 5 | `download-768-light.png`, `download-768-dark.png` | `download-721-light.png`, `download-721-dark.png` |
+
 ## Existing colour and type system
 
 No new design token is required.
@@ -57,7 +64,8 @@ Typography stays on the design-system sans stack. Page titles are 24/600, except
 ### Desktop
 
 - At 1500px and wider, use `minmax(0, 1fr) 420px` with a 48px gap. Reserve a 400px square stage and render the transparent square asset at 380px.
-- From 721px through 1499px, use a 340px character column, a 320px stage, and a 300px render.
+- From 901px through 1499px, use a 340px character column, a 320px stage, and a 300px render.
+- From 721px through 900px, reserve a compact 180px stage at the upper right and render Lumi at 168px. Keep 204px clear on the right of the title and lead, then let the setup controls use the full content width below that top block. This prevents the copy column from collapsing beside the desktop character column.
 - The copy, setup controls, material guide, and Composer keep their existing components. Enlarging Lumi does not reduce a control, font, or hit target.
 
 ### Mobile
@@ -129,6 +137,12 @@ Use one full-width `sunken` result surface with three related parts: file packag
 - The preview contains the first generated slide thumbnail and the final story score. It is read-only and does not introduce editing at Step 5.
 - Keep download as the primary action inside the package column. Step 5 has no Composer.
 
+### Narrow tablet: 721–900px
+
+- Switch the result surface to one column before the 721px mobile breakpoint. Stack file package, the 240px cheer stage, and the output preview.
+- Keep 32px card padding and 24px gaps. The widest fixed element remains 240px, so the card fits the 425px content width at 721px without horizontal scrolling.
+- Keep the desktop sidebar and 32px page gutters in this range; only the result surface changes its internal columns.
+
 ### Mobile
 
 - Stack cheer, package, then preview inside the same card. Use a 184px stage and a 176px render. Keeping the file package before the read-only preview preserves the download action's priority.
@@ -186,7 +200,7 @@ Use only the approved clay renders in `assets/lumi/source/`. Keep Lumi's face, h
 7. Keep the existing `lumiAnim` state machine. Give busy thinking priority over typing thinking; let jump interrupt idle/thinking once, then return to the current state.
 8. Gate face motion and all media playback with the same reduced-motion preference.
 9. For looping wave and cheer, insert the pause on the neutral start frame, not the last frame.
-10. Test at 1900, 1500, 1499, 1280, 1272, 1271, 1024, and 390 widths. At 390, cover score closed/open, two incomplete dimensions, `去补`, Composer focus, a contracted viewport, busy state, dark mode, and reduced motion.
+10. Test at 1900, 1500, 1499, 1280, 1272, 1271, 1024, 901, 900, 800, 768, 721, 720, and 390 widths. At 390, cover score closed/open, two incomplete dimensions, `去补`, Composer focus, a contracted viewport, busy state, dark mode, and reduced motion.
 11. Visual QA must compare the implementation with every reference image, then exercise real focus, scroll, offscreen media pause/resume, and software-keyboard behaviour.
 
 ## Sources reviewed
