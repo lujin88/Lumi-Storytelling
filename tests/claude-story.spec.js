@@ -156,6 +156,60 @@ test.describe('step 2 review and score', () => {
     expect(await page.evaluate(() => window.__sets)).not.toContain('jump');
   });
 
+  test('the card says estimate until Claude reviews, and "not specific enough yet" only where the user wrote something', async ({ page }) => {
+    const { errors } = await openSample(page);
+    await page.click('#sidebar [data-page="story"]');
+    const label = () => page.locator('.sc-label').innerText();
+    const levels = async () => {
+      if ((await page.locator('.score-card.open').count()) === 0) await page.click('.sc-head');
+      return page.evaluate(() => Object.fromEntries([...document.querySelectorAll('.sc-dims li')].map((li) => [li.querySelector('.sc-dn').textContent, li.querySelector('.sc-st').textContent])));
+    };
+    // Before review, a row the user left empty: the rule score, marked as an estimate; the empty row says missing.
+    await page.evaluate(() => { state.found.challenge.text = ''; render(); });
+    expect(await page.evaluate(() => foundationValue(FOUNDATION.find((f) => f.id === 'challenge')).src)).toBe('missing');
+    expect(await label()).toBe('故事评分 · 预估');
+    await expect(page.locator('.sc-note')).toHaveText('只看完整度。点「下一步」后 Lumi 会细看');
+    expect(await storyScore(page)).toBe(await page.evaluate(() => ruleAudit().total));
+    expect((await levels())['冲突']).toBe('缺材料');
+    expect(Object.values(await levels())).not.toContain('还不够具体');
+    // After review: Claude's score. Claude gives decision 0, but the user wrote a decision.
+    await page.evaluate(() => { state.found.challenge.text = '这件事很难，推进很慢。'; render(); });
+    const dims = [['tension', '这件事很难'], ['decision', ''], ['pivot', '其实是步骤之间没人负责交接'], ['signal', '我放弃了全自动生成'], ['afterlife', '从三天缩短到四小时']].map(([id, quote]) => ({ id, score: quote ? 2 : 0, quote, reason: '' }));
+    await claudeByPrompt(page, { 'review-answers': { followups: [{ id: 'decision', question: '你具体放弃了什么？' }] }, 'score-story': { dims } });
+    await page.click('#footer [data-action="next"]');
+    await expect.poll(() => page.evaluate(() => !!state.claudeScore)).toBe(true);
+    await expect(page.locator('.sc-label')).toHaveText('故事评分');
+    await expect(page.locator('.sc-note')).toHaveText('Lumi 看过，也看了写得够不够具体');
+    expect(await storyScore(page)).toBe(8);
+    const reviewed = await levels();
+    expect(reviewed['取舍']).toBe('还不够具体');
+    expect(reviewed['冲突']).toBe('充足');
+    // English copy for the same review.
+    await page.evaluate(() => { state.lang = 'en'; render(); });
+    expect(await label()).toBe('Story score');
+    expect((await levels())['Trade-off']).toBe('Not specific enough yet');
+    await page.evaluate(() => { state.lang = 'zh'; render(); });
+    // Edited after the review: back to the rule score, marked as an estimate again.
+    await page.evaluate(() => { state.found.wisdom.text += ' 下次我会先找反对的人聊。'; render(); });
+    expect(await label()).toBe('故事评分 · 预估');
+    expect(await storyScore(page)).toBe(await page.evaluate(() => ruleAudit().total));
+    expect(Object.values(await levels())).not.toContain('还不够具体');
+    await page.evaluate(() => { state.lang = 'en'; render(); });
+    expect(await label()).toBe('Story score · estimate');
+    // A row left empty: Next asks first; after "continue with gaps" Claude reviews, and that row still says missing.
+    await page.evaluate(() => { state.lang = 'zh'; state.found.challenge.text = ''; state.storyReviewPass = false; render(); });
+    await page.click('#footer [data-action="next"]');
+    await expect(page.locator('#modal h2')).toHaveText('还有 1 项没回答');
+    await page.click('#modal [data-action="continueGaps"]');
+    await expect.poll(() => page.evaluate(() => state.claudeScore.key === storyKey())).toBe(true);
+    expect(await page.evaluate(() => state.page)).toBe('story');
+    expect(await label()).toBe('故事评分');
+    const empty = await levels();
+    expect(empty['冲突']).toBe('缺材料');
+    expect(empty['取舍']).toBe('还不够具体');
+    expect(errors).toEqual([]);
+  });
+
   test('if the Claude review fails, the rules review and the error shows on step 2', async ({ page }) => {
     const { errors } = await openSample(page);
     await page.click('#sidebar [data-page="story"]');
