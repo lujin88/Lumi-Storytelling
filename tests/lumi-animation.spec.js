@@ -447,7 +447,7 @@ test('a clip whose files do not load falls back to the still, on step 1 and the 
 
 test('the download page shows the preview card and Lumi on a fixed stage, same box for the still and the clip', async ({ page }) => {
   let clipBox;
-  for (const [w, h, stage] of [[1900, 1000, [520, 570]], [1280, 900, [360, 380]], [390, 844, [64, 56]]]) {
+  for (const [w, h, stage] of [[1900, 1000, [416, 456]], [1280, 900, [360, 380]], [390, 844, [64, 56]]]) {
     await page.setViewportSize({ width: w, height: h });
     for (const reduce of [false, true]) {
       await page.emulateMedia({ reducedMotion: reduce ? 'reduce' : 'no-preference' });

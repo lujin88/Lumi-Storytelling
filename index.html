@@ -1077,7 +1077,7 @@ html body #content .aud-row button.aud-chip.on{border-color:var(--action-line)!i
 
 /* Download page (#35): files and a preview of what downloads in one card, Lumi on a fixed stage to the right.
    The still and the clip share one media box (.dl-lumi), so swapping them never shifts Lumi. */
-#content .page-publish .dl-layout{display:grid;grid-template-columns:minmax(0,1fr) 520px;gap:var(--s-6);align-items:start;margin-top:var(--s-6)}
+#content .page-publish .dl-layout{display:grid;grid-template-columns:minmax(0,1fr) 416px;gap:var(--s-6);align-items:start;margin-top:var(--s-6)}
 #content .page-publish .dl-mobile-title{display:none}
 #content .page-publish .dl-card{display:grid;grid-template-columns:300px minmax(0,1fr);gap:var(--s-6);align-items:center;min-width:0;padding:var(--s-6);border-radius:var(--r-surface);background:var(--sunken)}
 #content .page-publish .pub-body{display:grid;gap:var(--s-5);justify-items:start}
@@ -1098,8 +1098,8 @@ html body #content .aud-row button.aud-chip.on{border-color:var(--action-line)!i
 #content .page-publish .dl-ready{color:var(--ok);font-size:12px}
 /* The media box is wider than the stage, so it is centered with left/top, not transform: the fallback still keeps its lumiCheer transform animation without leaving the stage. The page clips the overflow at the viewport edge, past Lumi's outline. */
 #content:has(.page-publish){overflow-x:clip}
-/* On the big stage the cheer clip's raised star reaches 68px past the stage's right edge (frame 74 of cheer.webm), which sits one gutter from the viewport edge. The box moves in by whatever the gutter lacks, so the star always keeps 8px to the edge and Lumi holds the same screen position when the gutter grows at 1600px. */
-#content .page-publish .dl-stage{--lw:673px;--lh:680px;--lshift:max(0px,76px - var(--gutter));position:relative;width:520px;height:570px;justify-self:end}
+/* On the big stage the cheer clip's raised star reaches 56px past the stage's right edge (frame 74 of cheer.webm, 68px at the earlier 673px size scaled to 540px), which sits one gutter from the viewport edge. The box moves in by whatever the gutter lacks, so the star always keeps 8px to the edge and Lumi holds the same screen position when the gutter grows at 1600px. */
+#content .page-publish .dl-stage{--lw:540px;--lh:544px;--lshift:max(0px,64px - var(--gutter));position:relative;width:416px;height:456px;justify-self:end}
 #content .page-publish .dl-lumi{position:absolute;left:calc(50% - var(--lw)/2 - var(--lshift,0px));top:calc(50% - var(--lh)/2);width:var(--lw)!important;height:var(--lh)!important;max-width:none!important;margin:0!important;object-fit:contain;pointer-events:none;filter:drop-shadow(0 18px 24px #252a3814)!important}
 /* Up to 1699 the big stage leaves the slide under ~330px wide: three 26px lines do not fit. */
 @media(min-width:1500px) and (max-width:1699px){#content .page-publish .dl-slide h3{-webkit-line-clamp:2;font-size:20px}}
