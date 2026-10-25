@@ -77,7 +77,7 @@ The wide and standard layouts therefore keep the same right-column x coordinate 
 
 - At 1500px and wider, use `minmax(0, 1fr) 560px` with a 48px gap. Reserve a 520 × 570px stage and render the transparent source at 640px high. The source's alpha bounds produce an approximately 444 × 572px visible character, filling Lu's marked zone without cropping hair, scarf, star, or feet.
 - From 901px through 1499px, use a 380px character column, a 360 × 380px stage, and a 430px-high render. At the 1280px reference this produces an approximately 298 × 384px visible character.
-- From 721px through 900px, reserve a compact 196 × 212px stage at the upper right and render Lumi at 236px high. Keep 220px clear on the right of the title and lead, then let the setup controls use the full content width below that top block. This prevents the copy column from collapsing beside the desktop character column.
+- From 721px through 900px, reserve a compact 200 × 220px stage at the upper right and render Lumi at 250px high. Keep 232px clear on the right of the title and lead, then let the setup controls use the full content width below that top block. This prevents the copy column from collapsing beside the desktop character column.
 - The copy, setup controls, material guide, and Composer keep their existing components. Enlarging Lumi does not reduce a control, font, or hit target.
 
 ### Mobile
@@ -109,7 +109,7 @@ The wide and standard layouts therefore keep the same right-column x coordinate 
 
 - Move the coaching region above the story rows in normal document flow.
 - StoryScore takes the flexible column; Lumi uses a 200 × 220px stage with a 250px-high render.
-- Do not keep a side rail if it would push the story below 640px.
+- Do not keep a side rail if it would push the story below the 592px width accepted by the 1280px reference.
 
 ### Mobile: 390px reference
 
@@ -216,7 +216,7 @@ Use only the approved clay renders in `assets/lumi/source/`. Keep Lumi's face, h
 7. Keep the existing `lumiAnim` state machine. Give busy thinking priority over typing thinking; let jump interrupt idle/thinking once, then return to the current state.
 8. Gate face motion and all media playback with the same reduced-motion preference.
 9. For looping wave and cheer, insert the pause on the neutral start frame, not the last frame.
-10. Give wave, static, thinking, jump and cheer one stage component whose rectangle is fixed per breakpoint. Media uses `width: 100%`, `height: 100%`, `object-fit: contain`; swapping source or animation state must not change x, y, width or height.
+10. Give wave, static, thinking, jump and cheer one stage component whose rectangle is fixed per breakpoint, and size the centred media layer separately from that frame. At 1500px and wider, the shared stage is 520 × 570px; render Step 1 media at 640px high, Step 2 at 650px, and Step 5 at 680px. From 1272px through 1499px, the shared stage is 360 × 380px; render Step 1 and Step 2 media at 430px high and Step 5 at 440px. In compact flow, use a 200 × 220px stage with 250px-high media. At mobile, use a 64 × 56px stage and a 64 × 56px media box with `object-fit: contain`. Apply the same dimensions and centring to static images and video elements; swapping source or animation state must not change the stage or media-layer x, y, width, or height.
 11. Test at 1900, 1500, 1499, 1280, 1272, 1271, 1024, 901, 900, 800, 768, 721, 720, and 390 widths. At 390, cover score closed/open, two incomplete dimensions, `去补`, Composer focus, a contracted viewport, busy state, dark mode, and reduced motion.
 12. Visual QA must compare the implementation with every reference image, then exercise real focus, scroll, offscreen media pause/resume, and software-keyboard behaviour.
 
