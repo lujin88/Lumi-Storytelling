@@ -13,7 +13,7 @@ GitHub bot account is 403 (suspended): no PRs, no pushes. All work is committed 
 
 ## 等 Lu 决定的事
 1. Dark mode palette (`design/dark-mode-system` d72e5c9 + 65fd2ea, passed visual QA spec review).
-2. `bar.md` v2 (`research/bar-md-v2` `5626227`, UX researcher): approve, then merge first once GitHub works. Old #50 (`302c390`, Lu said "好的" 2026-10-25 but never merged) is superseded; closing it is Lu's call.
+2. `bar.md` v2 (`research/bar-md-v2`, latest `3928cc0`, bar 2 still to change; UX researcher): approve the final commit, then merge first once GitHub works. Old #50 (`302c390`, Lu said "好的" 2026-10-25 but never merged) is superseded; closing it is Lu's call.
 3. harness-core rule branch `rule/full-review-trigger-bar-gate` `387ff70` (full-page review before every delivery to Lu; unmerged `bar.md` counts as missing): merge once GitHub works.
 
 ## 最近完成的
