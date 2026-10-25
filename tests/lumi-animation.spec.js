@@ -573,3 +573,22 @@ test('the download preview title shows whole lines and stays inside the slide at
     expect(bottomGap, `${w} inside the slide`).toBeGreaterThanOrEqual(0);
   }
 });
+
+test('the download page Lumi takes the same box whether the clip plays or the still falls back', async ({ browser }) => {
+  const box = async (w, h, blocked) => {
+    const page = await browser.newPage({ viewport: { width: w, height: h } });
+    if (blocked) await page.context().route(/assets\/lumi\//, (route) => route.abort());
+    await openApp(page);
+    await page.evaluate(() => go('publish'));
+    const media = page.locator(blocked ? '.dl-stage img[data-lumi="clip"]' : '.dl-stage video[data-lumi-video][src="assets/lumi/cheer.webm"]');
+    await expect(media).toBeVisible();
+    if (blocked) await expect.poll(() => media.evaluate((el) => el.getAttribute('src').startsWith('data:'))).toBe(true);
+    // Layout box, not the bounding rect: the fallback still runs the lumiCheer transform.
+    const size = await media.evaluate((el) => [el.offsetLeft, el.offsetTop, el.offsetWidth, el.offsetHeight, el.parentElement.offsetWidth, el.parentElement.offsetHeight]);
+    await page.close();
+    return size;
+  };
+  for (const [w, h] of [[1900, 1000], [1280, 900], [390, 844]]) {
+    expect(await box(w, h, true), `${w}`).toEqual(await box(w, h, false));
+  }
+});
