@@ -138,7 +138,7 @@ test.describe('step 3 send', () => {
       await page.click('#sidebar [data-page="settings"]');
       const select = page.locator('select[data-model="openai"]');
       await expect(select).toHaveValue('gpt-image-2.5-sunburst');
-      await expect(select.locator('option')).toHaveText(['GPT Image 2.5 Sunburst', 'GPT Image 2.5 Flare']);
+      await expect(select.locator('option')).toHaveText(['Image 2.5 Sunburst', 'Image 2.5 Flare']);
       expect(errors).toEqual([]);
     });
   }
