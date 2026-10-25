@@ -2,24 +2,25 @@
 
 Project manager writes this. Current state only, one page max. Lu's decisions go in `decisions.md`.
 
-## 现在在做什么
-- Developer | Lumi cheer clip (mini, about 24 credits, Lu chose A): from `cheer.webp`, plays when the download page opens; before/after credit in the PR.
-- Visual designer | step 2 full-body Lumi layout proposal from `design-system/` (Lu chose C); then visual QA; then Lu approves.
-- Lu | merge lujin88/Lumi-Storytelling#29 (task 15 + score card; QA pass 30bca60, 114 tests). Real-key trial: drafting and review run end to end; a one-character quote passes; single Chinese numerals (三位, 两小时) are not replaced with [待补].
+Deadline: Lu presents on 2026-10-26. Today's order is set by what the demo needs.
 
-## 等 Lu 决定的事
-1. Step 2 full-body Lumi layout proposal, once the designer delivers it.
+## 现在在做什么
+1. Developer | P0: download page shows a broken Lumi image (alt text "Lumi" in the grey box). Reproduce on main and on #38→#39→#41, fix, add a test that every step's Lumi image loads.
+2. Developer | P0: download page per #35 (`8b4015f`): download-preview card inside the grey box, Lumi moved to the right column at the same box as steps 1 and 2. Started before visual QA passes #35, to save time; follow up any deviations.
+3. Developer | Settings: Claude / OpenAI / Gemini / Volcengine (optional); Volcengine key filled → video uses Volcengine, else OpenAI; remove Jimeng and `server/` (#43). Key row, browser key check and routing only; video generation stays in the Backlog.
+4. Developer | PostHog in LuJin-Portfolio, after 1–3.
+5. Visual QA | #35 (priority), then #42. QA | #42.
+
+## 等 Lu 的事
+1. Merge #38 → #39 → #41 (QA and visual QA passed; 390 to re-check after #35 shows Lumi at 390).
+2. When Volcengine is filled, do images also switch to Volcengine, or only video? PM recommends video only.
+3. Approve #35 after visual QA passes.
 
 ## 最近完成的
-- lujin88/Lumi-Storytelling#26: task 14, Claude/OpenAI/Gemini from the browser (QA pass 6f7d231). #27: its follow-ups and docs.
-- lujin88/Lumi-Storytelling#28: idle clip, kept open as an archive, not merged (Lu chose A).
-- lujin88/Lumi-Storytelling#15: Lumi wave clip (≤1MB re-export).
-- lujin88/Lumi-Storytelling#23: browser key check + local Jimeng `server/` (QA pass 523b84e).
-- lujin88/Lumi-Storytelling#20: keys and GitHub token saved only over http(s).
+- #41: Lumi stays on screen through re-renders (QA 93 tests on `7a71673`; visual QA 1900/1280 pass).
+- #42 opened: follow-up rows use the story-question format (83 tests on `eddcaab`).
 
 ## 下一步
-1. Developer | cheer clip PR (clip already generated, task b3e4fd1f); Lu reviews.
-2. Developer | after #29 merges: remove the step 2 gaps modal (decisions.md 2026-10-24); the review names every empty row with and without Claude, tests cover both; plus the two #29 follow-ups that send text to notes. QA reviews.
-3. Developer | after #29 merges: OpenAI image models to `gpt-image-2.5-sunburst` / `gpt-image-2.5-flare` in Settings, default from OpenAI docs (decisions.md 2026-10-24); must land before 2026-12-01. QA reviews.
-4. Developer | task 12: step 5 save dialog; then QA's two small fixes; then task 13 (`file://` notice).
-5. Developer | jump and thinking clips (paid, Lu's OK per run) only after Lu approves the step 2 layout.
+1. Developer | after #41 merges: QA follow-ups 1 and 2 on #41 (hand over only when the new clip shows its first frame; no repeated think.webm requests after a failed preload), with tests.
+2. Developer | after #29 merges: remove the step 2 gaps modal; OpenAI image models to `gpt-image-2.5-sunburst` / `gpt-image-2.5-flare` before 2026-12-01.
+3. Developer | jump clip (paid, Lu's OK per run).
