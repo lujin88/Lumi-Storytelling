@@ -1,0 +1,19 @@
+# 改到这些路径的 PR 算设计 PR，只由 Lu 合并。规则见 harness-core AGENTS.md「合并」。
+# 一行一个模式，* 可以跨目录。从默认分支读取，改这个文件本身也归 Lu。
+# 以 ! 开头的是排除，优先于上面的模式：调研和验收截图不是给用户看的界面。
+!docs/research/*
+# 只在 Lumi：index.html 里逻辑和界面在一起，改到它都交给 Lu。
+index.html
+design-system/*
+*.css
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.svg
+*.gif
+*.webm
+*.mp4
+*.mov
+*.riv
+*.lottie
