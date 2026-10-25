@@ -5,15 +5,16 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 GitHub bot account is 403 (suspended): no PRs, no pushes. All work is committed on local branches; Lu is handling the account. The app Lu sees is the local demo branch `demo/2026-10-26` on `http://127.0.0.1:4317`.
 
 ## 现在在做什么
-- Developer | homework blockers from visual QA review `68aa709` (`review/de57eae-full-site`, `DESIGN_REVIEW.md`), on top of `de57eae`: D1 step 5 "第一页预览" must use the shared slide renderer (`slideHTML`) so it matches step 3; D2 step 1 headline back to 32px/600 (designer decided 2026-10-26, spec unchanged); D3 "连接 Claude" button 44.39px -> 40px. Then full test suite, visual QA re-check, PM repackages Lu's homework.
-- Visual QA | spec review of `design/system-production-audit` `4f834c6`; after the D1-D3 commit, sign the homework package.
-- UX researcher | `bar.md` v2 `3928cc0` (bar 1 = fixed 96px done); bar 2: designer chose vertically centred on `.dump-left` (centre Y diff <= 8px); UX researcher makes one more commit, then Lu approves.
-- Visual designer | one spec commit: 208px column vs 192/150px figure breakpoints; mobile CTA 48px exception (visual QA spec recheck of `4f834c6` not passed).
-- Full-site list (not homework blockers, next batch): dark "连接 Claude" contrast ~1.25:1, dark step 3 thumbnails ~1.14:1, 390 empty step 4 overflow 9px, 390 step 3 toolbar wraps, empty download page says ready with 0/10; Material Symbols -> Remix Icon in `index.html`; drop trailing arrow on bottom CTA.
+- Visual QA | re-check D1 on `d292c30` (`demo/2026-10-26`, 4317 serves it): step 5 first slide h2 / p / stat match step 3, same line breaks; shared selector did not change step 3 thumbnails. D2, D3 and Lumi centring passed on `1b8a7d8`. If D1 passes, sign the homework package; PM then repackages Lu's homework.
+- Developer | D1-D3 done: `1b8a7d8` (D2 32px/600, D3 40px, D1 `slideHTML`), `d292c30` (step 3 slide text rules shared with `.dl-slide`). Tests 147/147 on `d292c30` (first run 146/147, known flaky test below). Log: `WORK_LOGS/LUMI_D1_SHARED_SLIDE_STYLES_D292C30_2026_10_26.md`.
+- Spec | designer `2f5f14d` (`design/system-production-audit`): Lumi centred on task column, column/figure widths per breakpoint, mobile CTA 48px exception. Visual QA static recheck passed; no code change needed on `de57eae`.
+- UX researcher | `bar.md` v2 final is `d2fce3a` (`research/bar-md-v2`), waiting for Lu.
+- Full-site list (not homework blockers, next batch): dark "连接 Claude" contrast ~1.25:1, dark step 3 thumbnails ~1.14:1, 390 empty step 4 overflow 9px, 390 step 3 toolbar wraps, empty download page says ready with 0/10; Material Symbols -> Remix Icon in `index.html`; drop trailing arrow on bottom CTA; step 3 zoom modal slide title 51px / margin 8px vs thumbnail 38px / 15px (`.modal .deck-zoom-scale .slide` misses step 3 text rules, 1512, `d292c30`).
+- Test stability (next batch): `tests/lumi-animation.spec.js:448` "下载页 Lumi 静图和动图同框" flakes at 1280, x off by 1px (-14 / -13). `d292c30`: 1 of 8 runs failed; `1b8a7d8`: at least 3 of 16 failed (pre-existing).
 
 ## 等 Lu 决定的事
 1. Dark mode palette (`design/dark-mode-system` d72e5c9 + 65fd2ea, passed visual QA spec review).
-2. `bar.md` v2 (`research/bar-md-v2`, latest `3928cc0`, bar 2 still to change; UX researcher): approve the final commit, then merge first once GitHub works. Old #50 (`302c390`, Lu said "好的" 2026-10-25 but never merged) is superseded; closing it is Lu's call.
+2. `bar.md` v2 (`research/bar-md-v2`, final `d2fce3a`, bars 1-2 match designer spec `2f5f14d`; UX researcher): approve, then merge first once GitHub works. Old #50 (`302c390`, Lu said "好的" 2026-10-25 but never merged) is superseded; closing it is Lu's call.
 3. harness-core rule branch `rule/full-review-trigger-bar-gate` `387ff70` (full-page review before every delivery to Lu; unmerged `bar.md` counts as missing): merge once GitHub works.
 
 ## 最近完成的
