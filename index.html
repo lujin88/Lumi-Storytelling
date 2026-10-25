@@ -851,7 +851,7 @@ html.dark :is(.deck-scale,.deck-thumb,.thumb,.slide,.slide-stage,.modal .deck-zo
 @media(max-width:900px){#content .prov-head{display:none}#content .prov-row{grid-template-columns:1fr}#content .prov-err{margin-left:0}}
 /* deck v4: compact rows */
 @media(min-width:1001px){#content .deck-row{grid-template-columns:24px 224px minmax(0,1fr) 28px!important;gap:var(--s-4)!important;padding:var(--s-3) 0!important}
-#content .deck-thumb{width:224px!important}}
+#content .deck-thumb{width:224px!important}#content .deck-scale{transform:scale(.23334)}}
 #content .deck-title{font-size:var(--fs-14)!important;line-height:1.5!important}
 #content .deck-points li{font-size:var(--fs-13)!important;line-height:1.55!important}
 #content .deck-points li[data-deck-field]:before{top:10px}
@@ -1260,6 +1260,9 @@ function openZoom(i){const sc=getScenes(),s=sc[i];if(!s)return;const type=sceneT
 function playAnim(i){const m=$('#modal .deck-zoom .slide');if(m&&$('#modal').open){m.classList.remove('play');void m.offsetWidth;m.classList.add('play')}const el=$(`#content .deck-row[data-deck="${i}"] .slide`);if(!el)return;el.classList.remove('play');void el.offsetWidth;el.classList.add('play')}
 function deckRow(s,i){const src=deckSrc(),type=sceneType(s,i),pts=deckPoints(s),ev=s.ev||'stated';return `<li class="deck-row ${ev==='missing'?'is-missing':''}" draggable="true" data-deck="${i}"><div class="deck-num">${String(i+1).padStart(2,'0')}</div><button class="deck-thumb tpl-${src}" ${styleVars()} data-action="deckZoom:${i}" aria-label="${t('放大预览第 ','Preview slide ')}${i+1}${t(' 页','')}"><div class="deck-scale">${slideHTML(s,i)}</div><span class="deck-edit">${icon('edit-line')}${t('编辑','Edit')}</span></button><div class="deck-body">${ev==='missing'||ev==='inferred'?`<div class="deck-meta">${evMark(ev)}</div>`:''}<h3 class="deck-title" data-deck-field="title" data-i="${i}" data-ph="${t('这一页要说的结论','The point of this slide')}">${esc(s[state.lang]||'')}</h3><ul class="deck-points">${pts.map((p,k)=>`<li data-deck-field="pt" data-i="${i}" data-k="${k}">${esc(p)}</li>`).join('')}<li class="deck-addpt ${pts.length?'':'is-empty'}" data-action="deckPt:${i}">${pts.length?t('加一条要点','Add a point'):t('添加要点','Add points')}</li></ul>${state.scriptMode==='full'?`<div class="deck-say-wrap"><p class="deck-say ${s[state.lang+'s']?'':'is-draft'}" title="${t('点击修改这一页要说的话','Click to edit what you say')}" data-deck-field="say" data-i="${i}" contenteditable="plaintext-only" spellcheck="false">${esc(sayText(s))}</p></div>`:''}</div><button class="icon quiet deck-del" data-action="deckDel:${i}" aria-label="${t('删除这一页','Delete slide')}" title="${t('删除这一页','Delete slide')}">${icon('delete-bin-line')}</button></li>`}
 function deckView(){const sc=getScenes();return heading(t('页面和讲稿','Slides & script'),'')+`${state.deckUndo?`<div class="map-banner warn deck-undo">${icon('delete-bin-line')}<span>${t('已删除第 ','Deleted slide ')}${state.deckUndo.i+1}${t(' 页。','.')}</span><button data-action="deckUndo">${t('撤销','Undo')}</button></div>`:''}<div class="section-head"><span class="setup-label">${t('页面','Slides')}</span><span class="section-count">${sc.length} ${t('页','slides')}${(()=>{const b=budget();return b?` · ${t('每页约 ','~')}${mmss(b.per)}${t('','/slide')}`:''})()}</span>${styleSelect()}<div class="seg script-seg" role="group" aria-label="${t('讲稿形式','Script format')}"><button type="button" class="${state.scriptMode==='full'?'':'on'}" data-action="scriptMode:outline">${t('要点','Outline')}</button><button type="button" class="${state.scriptMode==='full'?'on':''}" data-action="scriptMode:full">${t('逐字稿','Full script')}</button></div></div><ol class="deck">${sc.map((s,i)=>deckRow(s,i)).join('')}</ol><button class="deck-add" data-action="deckAdd">${t('添加一页','Add a slide')}</button>`}
+// Each thumbnail shows a 960px slide; scale it to the thumbnail's real width so
+// nothing is cut off (the mobile thumbnail is fluid, so a fixed CSS scale cannot fit it).
+function fitDeckThumbs(){document.querySelectorAll('#content .deck-thumb').forEach(b=>{const sc=b.querySelector('.deck-scale');if(sc&&b.clientWidth)sc.style.transform=`scale(${b.clientWidth/960})`})}
 function deckRefresh(i){const row=$(`#content .deck-row[data-deck="${i}"]`),s=getScenes()[i];if(row&&s)row.querySelector('.deck-scale').innerHTML=slideHTML(s,i)}
 function deckCommit(){state.scriptEdited={};state.script={};state.mapStale=false;persist()}
 function ghost(p){if(p==='story'&&state.focus?.startsWith?.('fu'))return '';const g={dump:t('先写这是什么项目…','Start with what the project was…'),story:t('当时的情况是…','At the time…'),build:t('把第 1 页改成开门见山','Make slide 1 open with the point'),talk:t('开头更快进入冲突','Get to the tension sooner')}[p];return g||''}
@@ -1324,7 +1327,7 @@ function render(){if(state.page==='map')state.page='story';if(state.page==='talk
  const guide=$('#guideText');if(guide){guide.style.lineHeight='1.5';guide.style.overflowY='auto'}
  const menu=$('#topbar .mobilemenu');if(menu)menu.title=t('打开导航','Open navigation');
  if(state.page==='dump'){const upload=$('#footer [data-action="upload"]');const label=t('添加 Markdown 或 Lumi 项目 ZIP','Add Markdown or a Lumi project ZIP');if(upload){upload.setAttribute('aria-label',label);upload.title=label}}
- if(state.page==='build')initBuildNavigation();
+ if(state.page==='build'){initBuildNavigation();fitDeckThumbs()}
  lumiAnim.afterRender();
  persist()
 }
@@ -1512,5 +1515,5 @@ document.addEventListener('dragover',e=>{let composer=e.target.closest?.('#compo
 document.addEventListener('dragleave',e=>{let composer=e.target.closest?.('#composer');if(composer&&!composer.contains(e.relatedTarget))composer.classList.remove('dragging')});
 document.addEventListener('drop',e=>{let composer=e.target.closest?.('#composer');if(!composer)return;e.preventDefault();composer.classList.remove('dragging');handleFile(e.dataTransfer?.files?.[0])});
 async function autoValidateProviders(){for(const id of ['claude','openai','gemini']){if(state.keys[id])await connectProvider(id)}}
-window.addEventListener('beforeunload',()=>{capture();stopMic()});render();restoreGithubSession();setTimeout(autoValidateProviders,0);
+window.addEventListener('resize',fitDeckThumbs);window.addEventListener('beforeunload',()=>{capture();stopMic()});render();restoreGithubSession();setTimeout(autoValidateProviders,0);
 </script></body></html>
