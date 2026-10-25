@@ -14,6 +14,7 @@ Read harness-core's `AGENTS.md` first (https://github.com/lujin88/harness-core),
 | `decisions.md` | What Lu decided |
 | `handoff.md` | Current state (project manager only) |
 | `design-system/` | Tokens, components, rules. The standard for design and code |
+| `bar.md` | Quality bar: 5–7 checkable mechanisms from 1–3 references. Not written yet; UX researcher drafts it, Lu merges |
 | `docs/product-specs/prd.md` | PRD (exported from Claude Docs; this copy is what agents read) |
 | `docs/research/` | Research docs |
 | `docs/plans/` | Plans: `active/`, `completed/`, `tech-debt-tracker.md` |
