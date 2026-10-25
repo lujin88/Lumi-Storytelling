@@ -121,3 +121,55 @@ test('follow-up rows use the same row format as the story questions', async ({ p
   await expect(page.locator('[data-action="fuFocus:0"]')).toHaveAttribute('aria-current', 'step');
   expect(await look(page.locator('[data-action="fuFocus:0"]'))).toBe(storySelected);
 });
+
+/** Step 2 with two open follow-ups and one answered, as Lumi's review leaves them. */
+async function storyWithFollowups(page) {
+  await openApp(page);
+  await fillStepOne(page, NOTES);
+  await page.click('#footer [data-action="next"]');
+  await page.evaluate(() => {
+    state.followups = [
+      { parent: 'outcome', q: '你写了「我们」。这里面哪个判断是你自己做的？', text: '' },
+      { parent: 'stake', q: '续约推迟了多久？', text: '推迟了一个季度。' },
+      { parent: 'decision', q: '你放弃了什么？', text: '' },
+    ];
+    state.three = ['', '', ''];
+    state.focus = null; state.editing = null; render();
+  });
+}
+
+test('clicking any row opens the editor in that row, in all three groups', async ({ page }) => {
+  await storyWithFollowups(page);
+  // Empty and answered rows alike: story question, follow-up, "three things".
+  for (const action of ['focus:reframe', 'focus:stake', 'fuFocus:0', 'fuFocus:1', 'three:0', 'three:2']) {
+    const row = page.locator(`[data-action="${action}"]`);
+    await row.click();
+    await expect(row.locator('.inline-edit'), action).toBeFocused();
+    await expect(row).toHaveAttribute('aria-current', 'step');
+    // Only one row editor at a time.
+    await expect(page.locator('#content .inline-edit')).toHaveCount(1);
+  }
+});
+
+test('an answer typed in the row saves it and moves the composer to the next open follow-up', async ({ page }) => {
+  await storyWithFollowups(page);
+  await page.click('[data-action="fuFocus:0"]');
+  await page.locator('[data-action="fuFocus:0"] .inline-edit').fill('分组方式是我定的。');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('[data-action="fuFocus:0"] .f-text')).toHaveText('分组方式是我定的。');
+  await expect(page.locator('[data-action="fuFocus:2"]')).toHaveAttribute('aria-current', 'step');
+  await expect(page.locator('#guideText')).toHaveAttribute('placeholder', '回答这个追问…');
+});
+
+test('the composer answers the row that is open in the editor', async ({ page }) => {
+  await storyWithFollowups(page);
+  await page.click('[data-action="fuFocus:2"]');
+  // Moving to the composer saves and closes the row editor, so the two never edit at once.
+  await page.click('#guideText');
+  await expect(page.locator('#content .inline-edit')).toHaveCount(0);
+  await page.keyboard.type('全自动生成。');
+  await expect(page.locator('#guideText')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('[data-action="fuFocus:2"] .f-text')).toHaveText('全自动生成。');
+  expect(await page.evaluate(() => state.followups[0].text)).toBe('');
+});
