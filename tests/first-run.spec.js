@@ -166,34 +166,78 @@ for (const width of [1900, 1512, 1280, 390]) {
   });
 }
 
-// Visual review of #38 at 1280px: the English "Connection failed" label ran
-// under the model dropdown. Every status label, in both languages, has to end
-// before the dropdown starts, at every desktop width.
-for (const width of [1001, 1280, 1905]) {
+// Visual review of #38: at 1280px the English "Connection failed" label ran
+// under the model dropdown, and squeezing the status in beside the key left
+// the key field 77px wide at 1001px. Below 1200px the status sits under the
+// key field; above, it has its own column that must end before the dropdown.
+const STATUSES = ['disconnected', 'checking', 'configured', 'connected', 'error'];
+
+/** Put every provider row in `status`, open Settings, and measure each key row. */
+function settingsRows(page, lang, status) {
+  return page.evaluate(({ lang, status }) => {
+    state.lang = lang;
+    for (const id of ['claude', 'openai', 'gemini', 'jimeng']) {
+      state.providerStatus[id] = status;
+      if (status === 'error') state.providerMessage[id] = providerErrorText(id, id === 'jimeng' ? 'login' : 'credit');
+    }
+    go('settings');
+    return [...document.querySelectorAll('.prov-row')].filter((row) => row.querySelector('.connection-status')).map((row) => {
+      const label = row.querySelector('.connection-status');
+      const text = document.createRange();
+      text.selectNodeContents(label);
+      const t = text.getBoundingClientRect();
+      const s = row.querySelector('select').getBoundingClientRect();
+      const input = row.querySelector('input[id^="key-"]');
+      const box = input?.getBoundingClientRect();
+      const style = input && getComputedStyle(input);
+      const ctx = document.createElement('canvas').getContext('2d');
+      if (style) ctx.font = style.font;
+      return {
+        label: label.textContent,
+        clear: t.bottom <= s.top || t.top >= s.bottom || s.left - t.right >= 4,
+        id: input?.id,
+        width: box?.width,
+        placeholderFits: !input || ctx.measureText(input.placeholder).width
+          <= box.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
+      };
+    });
+  }, { lang, status });
+}
+
+for (const width of [901, 1001]) {
+  test(`the key field keeps its room and takes a click in the middle at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const errors = await openApp(page);
+    for (const lang of ['en', 'zh']) {
+      for (const status of STATUSES) {
+        const rows = await settingsRows(page, lang, status);
+        for (const row of rows) {
+          expect(row.clear, `${lang} ${status} ${row.label}`).toBe(true);
+          if (!row.id) continue;
+          // 109px is the key field's width on main before #38.
+          expect(row.width, `${lang} ${status} #${row.id}`).toBeGreaterThanOrEqual(109);
+          expect(row.placeholderFits, `${lang} ${status} #${row.id} placeholder`).toBe(true);
+        }
+      }
+    }
+    for (const id of ['key-claude', 'key-openai', 'key-gemini']) {
+      await page.locator(`#${id}`).click({ position: await page.locator(`#${id}`).evaluate((el) => ({ x: el.offsetWidth / 2, y: el.offsetHeight / 2 })) });
+      await expect(page.locator(`#${id}`)).toBeFocused();
+    }
+    expect(errors).toEqual([]);
+  });
+}
+
+for (const width of [1280, 1512, 1905]) {
   test(`connection status labels stay clear of the model dropdown at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.emulateMedia({ reducedMotion: 'reduce' });
     const errors = await openApp(page);
     for (const lang of ['en', 'zh']) {
-      for (const status of ['disconnected', 'checking', 'configured', 'connected', 'error']) {
-        const overlaps = await page.evaluate(({ lang, status }) => {
-          state.lang = lang;
-          for (const id of ['claude', 'openai', 'gemini', 'jimeng']) {
-            state.providerStatus[id] = status;
-            if (status === 'error') state.providerMessage[id] = providerErrorText(id, id === 'jimeng' ? 'login' : 'credit');
-          }
-          go('settings');
-          return [...document.querySelectorAll('.prov-row')].flatMap((row) => {
-            const label = row.querySelector('.connection-status');
-            const select = row.querySelector('select');
-            if (!label || !select) return [];
-            const text = document.createRange();
-            text.selectNodeContents(label);
-            const gap = select.getBoundingClientRect().left - text.getBoundingClientRect().right;
-            return gap < 4 ? [`${label.textContent}: ${Math.round(gap)}px`] : [];
-          });
-        }, { lang, status });
-        expect(overlaps, `${lang} ${status}`).toEqual([]);
+      for (const status of STATUSES) {
+        const rows = await settingsRows(page, lang, status);
+        expect(rows.filter((r) => !r.clear).map((r) => r.label), `${lang} ${status}`).toEqual([]);
       }
     }
     expect(errors).toEqual([]);
