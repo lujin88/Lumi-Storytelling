@@ -9,12 +9,15 @@ const NOTES = '我重新设计了团队的研究流程。产品经理反对，�
 /** Animation state shown on the first Lumi image on screen. */
 const lumiState = (page) => page.locator('img[data-lumi]').first().getAttribute('data-lumi-state');
 
+/** The wave clip; step 1 also keeps the think clip loaded (hidden) so typing shows it at once. */
+const WAVE = 'video[data-lumi-video][src="assets/lumi/wave.webm"]';
+
 const animationName = (locator) => locator.evaluate((el) => getComputedStyle(el).animationName);
 
 test('Lumi keeps waving on step 1 with a looping transparent WebM', async ({ page }) => {
   const errors = await openApp(page);
   const still = page.locator('img.intro-lumi[data-lumi]');
-  const video = page.locator('video[data-lumi-video]');
+  const video = page.locator(WAVE);
   expect(await lumiState(page)).toBe('wave');
   // The clip replaces the CSS placeholder: the <video> takes the still's place, the <img> is hidden.
   await expect(video).toHaveAttribute('src', 'assets/lumi/wave.webm');
@@ -33,21 +36,20 @@ test('Lumi keeps waving on step 1 with a looping transparent WebM', async ({ pag
 
 test('leaving step 1 stops the wave; coming back starts it again', async ({ page }) => {
   await openApp(page);
-  const video = page.locator('video[data-lumi-video]');
-  await expect(video).toHaveAttribute('src', 'assets/lumi/wave.webm');
+  await expect(page.locator(WAVE)).toBeVisible();
   await page.click('#sidebar [data-page="settings"]');
   expect(await page.evaluate(() => lumiAnim.state)).toBe('idle');
-  await expect(video).toHaveCount(0);
+  await expect(page.locator('video[data-lumi-video]')).toHaveCount(0);
   await page.click('#sidebar [data-page="dump"]');
   expect(await lumiState(page)).toBe('wave');
-  await expect(video).toHaveAttribute('src', 'assets/lumi/wave.webm');
+  await expect(page.locator(WAVE)).toBeVisible();
 });
 
-test('a re-render past the clip length keeps the loop going from the right place', async ({ page }) => {
+test('a wave clip made after the loop began joins it at the right place', async ({ page }) => {
   await openApp(page);
-  // Pretend the wave started 9.5 s ago, then rebuild the page as render() does after any edit.
-  await page.evaluate(() => { lumiAnim.starts.wave = performance.now() - 9500; render(); });
-  const video = page.locator('video[data-lumi-video]');
+  // Pretend the wave started 9.5 s ago and its <video> is gone, so the next apply() makes a new one.
+  await page.evaluate(() => { document.querySelectorAll('video[data-lumi-video]').forEach((v) => v.remove()); document.querySelector('img.intro-lumi').style.display = ''; lumiAnim.starts.wave = performance.now() - 9500; lumiAnim.apply(); });
+  const video = page.locator(WAVE);
   await expect.poll(() => video.evaluate((v) => v.readyState)).toBeGreaterThan(0);
   const t = await video.evaluate((v) => v.currentTime);
   expect(t).toBeGreaterThan(1);
@@ -166,7 +168,7 @@ const played = (a, b) => (b.t - a.t + a.d) % a.d;
 test('without a think clip, typing keeps the same wave playing', async ({ page }) => {
   await openApp(page);
   await page.evaluate(() => { LUMI_CLIPS.think = null; });
-  const video = page.locator('video[data-lumi-video]');
+  const video = page.locator(WAVE);
   await expect.poll(() => video.evaluate((v) => v.currentTime)).toBeGreaterThan(1);
   const wave = await video.elementHandle();
   const before = await clock(wave);
@@ -179,7 +181,7 @@ test('without a think clip, typing keeps the same wave playing', async ({ page }
   // After typing: the same element, and it played on with the clock the whole time.
   const after = await clock(wave);
   expect(await videoInfo(wave)).toMatchObject({ connected: true, shown: true, paused: false });
-  await expect(video).toHaveCount(1);
+  await expect(page.locator('video[data-lumi-video]')).toHaveCount(1);
   expect(after.now - before.now).toBeLessThan(before.d - 0.5);
   expect(Math.abs(played(before, after) - (after.now - before.now))).toBeLessThan(0.3);
 });
@@ -187,14 +189,14 @@ test('without a think clip, typing keeps the same wave playing', async ({ page }
 test('typing shows the think clip; the wave comes back where it stopped', async ({ page }) => {
   await openApp(page);
   const videos = page.locator('video[data-lumi-video]');
-  const wave = await videos.elementHandle();
+  const wave = await page.locator(WAVE).elementHandle();
   await expect.poll(() => wave.evaluate((v) => v.currentTime)).toBeGreaterThan(1);
   const before = await clock(wave);
   await page.locator('#guideText').pressSequentially('我重新设计了');
   const think = page.locator('video[data-lumi-video][src="assets/lumi/think.webm"]');
   await expect(think).toBeVisible();
-  // The wave is hidden, not removed; the think clip plays from its start.
-  expect(await videoInfo(wave)).toMatchObject({ connected: true, shown: false });
+  // The wave is hidden (once the think clip has a frame on screen), not removed; the think clip plays from its start.
+  await expect.poll(() => videoInfo(wave)).toMatchObject({ connected: true, shown: false });
   await expect.poll(() => think.evaluate((v) => v.currentTime)).toBeGreaterThan(0.2);
   expect(await think.evaluate((v) => v.loop)).toBe(true);
   const thinkEl = await think.elementHandle();
@@ -228,19 +230,92 @@ test('after a few rounds of typing, a re-render keeps the wave on the same frame
     await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('wave');
     await page.waitForTimeout(300);
   }
-  // Rebuild the page as render() does after any edit (e.g. sending the brief), then compare
-  // the new wave with where the old one was, carried forward by the time that passed.
-  const gap = await page.evaluate(async () => {
+  // Rebuild the page as render() does after any edit (e.g. sending the brief). The same
+  // <video> goes back into the new page, still playing: a new one would show nothing until
+  // its first frame loads, which is the flash Lu saw.
+  const result = await page.evaluate(async () => {
     const shown = () => [...document.querySelectorAll('video[data-lumi-video]')].find((v) => v.getClientRects().length && v.getAttribute('src') === 'assets/lumi/wave.webm');
     const old = shown(), t0 = old.currentTime, d = old.duration, n0 = performance.now();
     render();
     const v = shown();
-    if (v === old) throw new Error('render() did not rebuild the video');
-    await new Promise((ok) => { if (v.readyState > 0 && !v.seeking) ok(); else v.addEventListener('seeked', ok, { once: true }); setTimeout(ok, 3000); });
+    await new Promise((ok) => setTimeout(ok, 300));
     const want = (t0 + (performance.now() - n0) / 1000) % d, diff = Math.abs(v.currentTime - want);
-    return Math.min(diff, d - diff);
+    return { same: v === old, paused: v.paused, inPage: !!v.closest('#content .page'), gap: Math.min(diff, d - diff) };
   });
-  expect(gap).toBeLessThan(0.3);
+  expect(result).toMatchObject({ same: true, paused: false, inPage: true });
+  expect(result.gap).toBeLessThan(0.3);
+});
+
+test('a re-render on the same page keeps Lumi and does not fade the page in again', async ({ page }) => {
+  await openApp(page);
+  await expect(page.locator(WAVE)).toBeVisible();
+  const before = await page.evaluate(() => {
+    const img = document.querySelector('img.intro-lumi'), vs = [...document.querySelectorAll('video[data-lumi-video]')];
+    window.__lumiNodes = [img, ...vs];
+    return vs.length;
+  });
+  // Sending the brief rebuilds the page with render().
+  await page.fill('#guideText', '我重新设计了团队的研究流程。');
+  await page.press('#guideText', 'Enter');
+  const after = await page.evaluate(() => ({
+    same: window.__lumiNodes.every((n) => n.isConnected && n.closest('#content .page')),
+    img: document.querySelector('img.intro-lumi') === window.__lumiNodes[0],
+    count: document.querySelectorAll('video[data-lumi-video]').length,
+    pageAnimation: getComputedStyle(document.querySelector('#content .page')).animationName,
+  }));
+  expect(after).toEqual({ same: true, img: true, count: before, pageAnimation: 'none' });
+  // Changing page still fades the new page in.
+  await page.click('#sidebar [data-page="settings"]');
+  expect(await page.evaluate(() => getComputedStyle(document.querySelector('#content .page')).animationName)).toBe('arrive');
+  await page.click('#sidebar [data-page="dump"]');
+  expect(await page.evaluate(() => getComputedStyle(document.querySelector('#content .page')).animationName)).toBe('arrive');
+});
+
+test('step 1 loads the think clip before the first keystroke', async ({ page }) => {
+  await openApp(page);
+  const think = page.locator('video[data-lumi-video][src="assets/lumi/think.webm"]');
+  await expect(think).toHaveCount(1);
+  await expect(think).toBeHidden();
+  await expect.poll(() => think.evaluate((v) => v.readyState)).toBeGreaterThanOrEqual(2);
+  expect(await think.evaluate((v) => v.paused)).toBe(true);
+});
+
+test('a clip switch keeps the old clip in place until the new one has a frame', async ({ page }) => {
+  await openApp(page);
+  await expect(page.locator(WAVE)).toBeVisible();
+  // Hold back the "frame drawn" callbacks so the switch stays half-way until we release it.
+  const r = await page.evaluate(async () => {
+    const held = [];
+    HTMLVideoElement.prototype.requestVideoFrameCallback = function (cb) { held.push(cb); return held.length; };
+    const box = (v) => { const b = v.getBoundingClientRect(); return [b.x, b.y, b.width, b.height].map(Math.round).join(','); };
+    const wave = document.querySelector('video[src="assets/lumi/wave.webm"]'), think = document.querySelector('video[src="assets/lumi/think.webm"]');
+    const before = box(wave), css = wave.style.cssText;
+    lumiAnim.think();
+    lumiAnim.think(); // the next keystroke must not force the switch through
+    const during = { wave: wave.getClientRects().length > 0, waveBox: box(wave), thinkBox: box(think), thinkOpacity: think.style.opacity };
+    // Release the held callbacks once the think clip has finished seeking to its first frame.
+    await new Promise((ok) => (think.seeking ? think.addEventListener('seeked', ok, { once: true }) : ok()));
+    held.splice(0).forEach((cb) => cb(performance.now(), {}));
+    const after = { wave: wave.getClientRects().length > 0, think: think.getClientRects().length > 0, thinkOpacity: think.style.opacity, css: wave.style.cssText.replace(/display: none;?\s*/, '') };
+    return { before, css: css.replace(/display: block;?\s*/, ''), during, after };
+  });
+  expect(r.during).toEqual({ wave: true, waveBox: r.before, thinkBox: r.before, thinkOpacity: '0.01' });
+  expect(r.after).toMatchObject({ wave: false, think: true, thinkOpacity: '' });
+  // The pin (position, size, offsets) is gone again once the wave is hidden.
+  expect(r.after.css).toBe(r.css);
+});
+
+test('a think clip that fails to preload leaves the wave WebM alone', async ({ page }) => {
+  await openApp(page);
+  await expect(page.locator(WAVE)).toBeVisible();
+  await page.evaluate(() => {
+    document.querySelector('video[src="assets/lumi/think.webm"]').remove();
+    LUMI_CLIPS.think = { webm: 'assets/lumi/missing.webm', webp: 'assets/lumi/think.webp' };
+    lumiAnim.apply();
+  });
+  await expect(page.locator('video[src="assets/lumi/missing.webm"]')).toHaveCount(0);
+  await expect(page.locator(WAVE)).toBeVisible();
+  expect(await page.locator('img.intro-lumi').getAttribute('data-lumi-webm')).toBeNull();
 });
 
 test('typing an API key does not trigger thinking', async ({ page }) => {
