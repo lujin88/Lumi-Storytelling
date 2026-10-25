@@ -88,3 +88,36 @@ test('download excludes saved API keys and GitHub token', async ({ page }) => {
     expect(zip.includes(Buffer.from(marker)), `${name} secret leaked into the download`).toBe(false);
   }
 });
+
+test('follow-up rows use the same row format as the story questions', async ({ page }) => {
+  await openApp(page);
+  await fillStepOne(page, NOTES);
+  await page.click('#footer [data-action="next"]');
+  // Two follow-ups as Lumi's review leaves them: one open, one answered.
+  await page.evaluate(() => {
+    state.followups = [
+      { parent: 'outcome', q: '你写了「我们」。这里面哪个判断是你自己做的？', text: '' },
+      { parent: 'stake', q: '续约推迟了多久？', text: '推迟了一个季度。' },
+    ];
+    state.focus = null; state.editing = null; render();
+  });
+  const fuRow = page.locator('ol.fu-list > li').first();
+  await expect(fuRow).toBeVisible();
+  await expect(fuRow.locator('.f-num')).toHaveText('01');
+  await expect(page.locator('ol.fu-list .fu-from')).toHaveCount(0);
+  const look = (row) => row.evaluate((el) => {
+    const s = getComputedStyle(el), q = getComputedStyle(el.querySelector('.f-q')), n = getComputedStyle(el.querySelector('.f-num'));
+    // Only the number column: the chip column is as wide as its label.
+    return [s.gridTemplateColumns.split(' ')[0], s.columnGap, s.padding, s.borderBottom, s.backgroundColor, s.boxShadow, q.fontSize, q.fontWeight, n.fontSize, n.color].join(' | ');
+  });
+  // Neither row selected: identical. Then both selected in turn: identical too.
+  await page.click('[data-action="focus:stake"]');
+  const answeredFu = page.locator('ol.fu-list > li').nth(1);
+  await expect(answeredFu.locator('.f-text')).toHaveText('推迟了一个季度。');
+  const storyRow = page.locator('ol.foundation:not(.fu-list) > li').nth(1);
+  expect(await look(fuRow)).toBe(await look(storyRow));
+  const storySelected = await look(page.locator('[data-action="focus:stake"]'));
+  await page.click('[data-action="fuFocus:0"]');
+  await expect(page.locator('[data-action="fuFocus:0"]')).toHaveAttribute('aria-current', 'step');
+  expect(await look(page.locator('[data-action="fuFocus:0"]'))).toBe(storySelected);
+});
