@@ -673,6 +673,31 @@ test('the download preview shows the same first slide as step 3, scaled to fit a
   }
 });
 
+// Visual recheck of 1b8a7d8 (D1): same HTML is not the same slide if the step 3 text rules do not reach step 5.
+test('the download preview first slide has the same title and text styles and line breaks as step 3', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => { if (!state.sample) loadSample(); });
+  // Computed styles and offset sizes are the unscaled 960x540 slide, before the fitDeckThumbs transform.
+  const read = (root) => page.evaluate((root) => {
+    const slide = document.querySelector(root + ' .slide');
+    return ['h2', 'p', '.stat'].map((sel) => {
+      const el = slide.querySelector(sel);
+      if (!el) return null;
+      const cs = getComputedStyle(el), lh = parseFloat(cs.lineHeight);
+      return { sel, fontSize: cs.fontSize, lineHeight: cs.lineHeight, marginTop: cs.marginTop, marginBottom: cs.marginBottom, width: el.offsetWidth, lines: Math.round(el.offsetHeight / lh) };
+    });
+  }, root);
+  for (const w of [390, 1000, 1512, 1905]) {
+    await page.setViewportSize({ width: w, height: 900 });
+    await page.evaluate(() => go('build'));
+    const build = await read('#content .deck-row[data-deck="0"] .deck-scale');
+    await page.evaluate(() => go('publish'));
+    const publish = await read('.dl-slide .deck-scale');
+    expect(build[0], `${w} step 3 first slide has a title`).not.toBeNull();
+    expect(publish, `${w}`).toEqual(build);
+  }
+});
+
 test('the download page Lumi takes the same box whether the clip plays or the still falls back', async ({ browser }) => {
   const box = async (w, h, blocked) => {
     const page = await browser.newPage({ viewport: { width: w, height: h } });
