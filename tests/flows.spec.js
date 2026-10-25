@@ -151,6 +151,48 @@ test('clicking any row opens the editor in that row, in all three groups', async
   }
 });
 
+test('text typed in a row and then in the composer lands in that same row, in all three groups', async ({ page }) => {
+  await storyWithFollowups(page);
+  const cases = [
+    ['fuFocus:0', () => state.followups[0].text, () => [state.followups[1].text, state.followups[2].text]],
+    ['three:1', () => state.three[1], () => [state.three[0], state.three[2]]],
+    ['focus:reframe', () => state.found.reframe?.text, () => [state.found.wisdom?.text || '']],
+  ];
+  for (const [action, own, others] of cases) {
+    const before = await page.evaluate(`(${others})()`);
+    await page.click(`[data-action="${action}"]`);
+    await page.keyboard.type('PART1');
+    // A "three things" row can start with Lumi's draft in it; the whole row text moves.
+    const typed = await page.locator('#content .inline-edit').inputValue();
+    await page.click('#guideText');
+    await expect(page.locator('#content .inline-edit'), action).toHaveCount(0);
+    await expect(page.locator('#guideText'), action).toBeFocused();
+    await expect(page.locator('#guideText'), action).toHaveValue(typed);
+    await page.keyboard.type('PART2');
+    await page.keyboard.press('Enter');
+    expect(await page.evaluate(`(${own})()`), action).toBe(typed + 'PART2');
+    expect(await page.evaluate(`(${others})()`), action).toEqual(before);
+  }
+});
+
+test('Lumi\'s review and the score card open the row editor on empty rows too', async ({ page }) => {
+  await storyWithFollowups(page);
+  await page.evaluate(() => { delete state.found.reframe; render(); });
+  const go = await page.evaluate(() => {
+    const b = document.createElement('button'); b.dataset.action = 'reviewGo:reframe'; document.body.append(b); b.click(); b.remove();
+    return document.activeElement?.dataset?.edit;
+  });
+  expect(go).toBe('reframe');
+  await expect(page.locator('[data-action="focus:reframe"] .inline-edit')).toBeFocused();
+  await page.keyboard.press('Escape');
+  const jump = await page.evaluate(() => {
+    const b = document.createElement('button'); b.dataset.action = 'auditJump:pivot'; document.body.append(b); b.click(); b.remove();
+    return document.activeElement?.dataset?.edit;
+  });
+  expect(jump).toBe('reframe');
+  await expect(page.locator('#content .inline-edit')).toHaveCount(1);
+});
+
 test('an answer typed in the row saves it and moves the composer to the next open follow-up', async ({ page }) => {
   await storyWithFollowups(page);
   await page.click('[data-action="fuFocus:0"]');
