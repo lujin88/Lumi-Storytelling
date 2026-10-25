@@ -4,6 +4,7 @@ Project manager writes this. One line each, newest first.
 
 | 日期 | 决定 | 原因 |
 |---|---|---|
+| 2026-10-25 | Portfolio PostHog goes live in `memory` mode (A). Session storage (B) is not used without a consent banner; cookieless mode (D) and consent banner (C) stay open | §25 TDDDG covers sessionStorage, so B would need consent (https://datenschutz-generator.de/tdddg-cookies/). Lu: "要你选的A", #lumi-storytelling event 3d6c36fc |
 | 2026-10-25 | #48 (GPT Image 2.5, default Sunburst) goes into the demo branch `demo/2026-10-26` after QA passes, so step 3 image edits work in the demo | `gpt-image-1`, the old default, was shut down on 2026-10-23; without #48 image edits fail. Lu: "A" to PM recommendation, #lumi-storytelling event c693c66e |
 | 2026-10-25 | Monthly model review: on the 1st of each month a scheduled job checks the official model pages of Claude, OpenAI, Gemini and Volcengine; if a newer model fits, it opens a PR that changes the default, with doc links and the price difference. Nothing changes until Lu merges. Models a user has already picked are kept; only the default for new users changes | Newest is not always usable (preview, changed parameters, higher price). Lu: "review 好" to PM recommendation, #lumi-storytelling event d3e4e63c |
 | 2026-10-25 | `gpt-image-2` is not added; the 2026-10-24 GPT Image 2.5 Flare/Sunburst row stands | PM had dispatched image-2 on wrong information and stopped it. Lu: "2.5", #lumi-storytelling event d3e4e63c |
