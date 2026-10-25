@@ -13,7 +13,7 @@ Deadline: Lu presents on 2026-10-26. Today's order is set by what the demo needs
 
 ## 等 Lu 的事
 1. Merge #38 → #39 → #41 (QA and visual QA passed; 390 to re-check after #35 shows Lumi at 390).
-2. When Volcengine is filled, do images also switch to Volcengine, or only video? PM recommends video only.
+2. Portfolio PostHog: GitHub Write invite for `lujinixdbot88`; storage mode A or B.
 3. Approve #35 after visual QA passes.
 
 ## 最近完成的
