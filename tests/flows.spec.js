@@ -175,9 +175,9 @@ test('text typed in a row and then in the composer lands in that same row, in al
   }
 });
 
-test('a draft moved from one row never lands in another row', async ({ page }) => {
+test('a composer draft stays with the row it was written for', async ({ page }) => {
   await storyWithFollowups(page);
-  // A draft typed for fu0, then a different row edited and moved to the composer: only that row's text goes.
+  // A draft typed for fu0 is saved to fu0 when another row opens; that row's own text then moves alone.
   await page.click('[data-action="fuFocus:0"]');
   await page.click('#guideText');
   await page.keyboard.type('DRAFT_A');
@@ -186,7 +186,32 @@ test('a draft moved from one row never lands in another row', async ({ page }) =
   await page.click('#guideText');
   await expect(page.locator('#guideText')).toHaveValue('B_TEXT');
   await page.keyboard.press('Enter');
-  expect(await page.evaluate(() => state.followups.map(x => x.text))).toEqual(['', '推迟了一个季度。', 'B_TEXT']);
+  expect(await page.evaluate(() => state.followups.map(x => x.text))).toEqual(['DRAFT_A', '推迟了一个季度。', 'B_TEXT']);
+  // Same with nothing typed in the second row: the composer is empty, so nothing goes into it.
+  await page.evaluate(() => { state.followups[0].text = ''; state.followups[2].text = ''; state.focus = null; render(); });
+  for (const leave of ['click', 'Escape']) {
+    await page.click('[data-action="fuFocus:0"]');
+    await page.click('#guideText');
+    await page.keyboard.type('DRAFT_A');
+    await page.click('[data-action="fuFocus:2"]');
+    if (leave === 'click') await page.click('#guideText'); else { await page.keyboard.press('Escape'); await page.click('#guideText'); }
+    await expect(page.locator('#guideText'), leave).toHaveValue('');
+    await page.keyboard.press('Enter');
+    expect(await page.evaluate(() => state.followups.map(x => x.text)), leave).toEqual(['DRAFT_A', '推迟了一个季度。', '']);
+    await page.evaluate(() => { state.followups[0].text = ''; state.focus = null; render(); });
+  }
+});
+
+test('Esc in the composer discards a draft moved from a row and leaves the row as it was', async ({ page }) => {
+  await storyWithFollowups(page);
+  await page.click('[data-action="fuFocus:1"]');
+  await page.keyboard.type(' X');
+  await page.click('#guideText');
+  await expect(page.locator('#guideText')).toHaveValue('推迟了一个季度。 X');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#guideText')).toHaveValue('');
+  await page.click('[data-action="fuFocus:0"]');
+  expect(await page.evaluate(() => state.followups.map(x => x.text))).toEqual(['', '推迟了一个季度。', '']);
 });
 
 test('an answered row moved to the composer is not copied when the selection changes', async ({ page }) => {
