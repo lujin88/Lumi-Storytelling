@@ -118,7 +118,7 @@ test.describe('step 3 send', () => {
     await expect.poll(() => sent !== null).toBe(true);
     expect(sent.headers.authorization).toBe('Bearer ' + KEYS.openai);
     expect(sent.headers['content-type']).toMatch(/^multipart\/form-data/);
-    expect(sent.body).toContain('name="model"\r\n\r\ngpt-image-1');
+    expect(sent.body).toContain('name="model"\r\n\r\ngpt-image-2.5-sunburst');
     // FormData sends line breaks inside a text field as CRLF.
     expect(sent.body).toContain('name="prompt"\r\n\r\n' + ex.expect.promptStartsWith + '\r\n\r\n' + prompt('image-edit'));
     expect(sent.body).toContain('name="image"; filename="image.png"');
@@ -126,6 +126,31 @@ test.describe('step 3 send', () => {
     await expect(inlineError(page)).toHaveCount(0);
     expect(await page.evaluate(() => state.generatedImage)).toBe('data:image/png;base64,' + EDITED_B64);
     expectNoKeyIn(logs);
+    expect(errors).toEqual([]);
+  });
+
+  // OpenAI removed gpt-image-1 on 2026-10-23 and removes gpt-image-1-mini on 2026-12-01.
+  for (const old of ['gpt-image-1', 'gpt-image-1-mini']) {
+    test(`a saved ${old} moves to GPT Image 2.5 Sunburst and is saved back`, async ({ page }) => {
+      const errors = await openApp(page, { http: true, storage: { 'lumi-models-v1': JSON.stringify({ claude: 'claude-sonnet-5-5', openai: old }) } });
+      expect(await page.evaluate(() => state.models)).toMatchObject({ claude: 'claude-sonnet-5-5', openai: 'gpt-image-2.5-sunburst' });
+      expect(JSON.parse(await page.evaluate(() => localStorage.getItem('lumi-models-v1')))).toMatchObject({ claude: 'claude-sonnet-5-5', openai: 'gpt-image-2.5-sunburst' });
+      await page.click('#sidebar [data-page="settings"]');
+      const select = page.locator('select[data-model="openai"]');
+      await expect(select).toHaveValue('gpt-image-2.5-sunburst');
+      await expect(select.locator('option')).toHaveText(['GPT Image 2.5 Sunburst', 'GPT Image 2.5 Flare']);
+      expect(errors).toEqual([]);
+    });
+  }
+
+  test('a saved GPT Image 2.5 Flare stays, and choosing a model in Settings is saved', async ({ page }) => {
+    const errors = await openApp(page, { http: true, storage: { 'lumi-models-v1': JSON.stringify({ openai: 'gpt-image-2.5-flare' }) } });
+    expect(await page.evaluate(() => state.models.openai)).toBe('gpt-image-2.5-flare');
+    await page.click('#sidebar [data-page="settings"]');
+    const select = page.locator('select[data-model="openai"]');
+    await expect(select).toHaveValue('gpt-image-2.5-flare');
+    await select.selectOption('gpt-image-2.5-sunburst');
+    expect(JSON.parse(await page.evaluate(() => localStorage.getItem('lumi-models-v1'))).openai).toBe('gpt-image-2.5-sunburst');
     expect(errors).toEqual([]);
   });
 
