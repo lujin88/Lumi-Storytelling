@@ -5,7 +5,7 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 GitHub bot account is 403 (suspended): no PRs, no pushes. All work is committed on local branches; Lu is handling the account. The app Lu sees is the local demo branch `demo/2026-10-26` on `http://127.0.0.1:4317`.
 
 ## 现在在做什么
-- Visual QA | re-check D1 on `d292c30` (`demo/2026-10-26`, 4317 serves it): step 5 first slide h2 / p / stat match step 3, same line breaks; shared selector did not change step 3 thumbnails. D2, D3 and Lumi centring passed on `1b8a7d8`. If D1 passes, sign the homework package; PM then repackages Lu's homework.
+- Homework package delivered 2026-10-26: `~/Desktop/Lumi作业-d292c30` (copy in `~/.buzz/OUTBOX/homework-d292c30`): project zip `d292c30`, harness-core zip `1c75be0`, harness screenshot, step 1 and step 5 screenshots (1512 light, 4317 = `d292c30`). Visual QA signed step 1 / step 5 screenshots on `d292c30` (D1-D3 passed); not a full-site sign-off.
 - Developer | D1-D3 done: `1b8a7d8` (D2 32px/600, D3 40px, D1 `slideHTML`), `d292c30` (step 3 slide text rules shared with `.dl-slide`). Tests 147/147 on `d292c30` (first run 146/147, known flaky test below). Log: `WORK_LOGS/LUMI_D1_SHARED_SLIDE_STYLES_D292C30_2026_10_26.md`.
 - Spec | designer `2f5f14d` (`design/system-production-audit`): Lumi centred on task column, column/figure widths per breakpoint, mobile CTA 48px exception. Visual QA static recheck passed; no code change needed on `de57eae`.
 - UX researcher | `bar.md` v2 final is `d2fce3a` (`research/bar-md-v2`), waiting for Lu.
