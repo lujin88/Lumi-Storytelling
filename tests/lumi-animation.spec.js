@@ -554,7 +554,7 @@ test('the download page shows the preview card and Lumi on a fixed stage, same b
         await expect(page.locator('.dl-stage img[data-lumi]')).toBeHidden();
       }
       const title = await page.evaluate(() => getScenes()[0][state.lang]);
-      await expect(page.locator('.dl-preview .dl-slide h3')).toHaveText(title);
+      await expect(page.locator('.dl-preview .dl-slide .slide.cover h2')).toHaveText(title);
       await expect(page.locator('.dl-preview .dl-score strong')).toContainText('/10');
       // Stage and media are measured in one go, relative to the stage: the page itself may still be sliding in.
       const [st, media] = await page.evaluate(() => {
@@ -654,18 +654,22 @@ test('the cheer clip on the download page stays inside the viewport and the page
   }
 });
 
-test('the download preview title shows whole lines and stays inside the slide at every width', async ({ page }) => {
+// Visual review of de57eae (D1): the "first slide" preview is the step 3 first slide, not a separate mock-up.
+test('the download preview shows the same first slide as step 3, scaled to fit at every width', async ({ page }) => {
   await openApp(page);
-  await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
-  for (const w of [390, 1000, 1280, 1499, 1500, 1512, 1600, 1699, 1700, 1900]) {
+  await page.evaluate(() => { if (!state.sample) loadSample(); go('build'); });
+  const deckFirst = await page.locator('#content .deck-row[data-deck="0"] .deck-scale').innerHTML();
+  await page.evaluate(() => go('publish'));
+  expect(await page.locator('.dl-slide .deck-scale').innerHTML()).toBe(deckFirst);
+  expect(await page.locator('.dl-slide').getAttribute('class')).toBe(await page.evaluate(() => `dl-slide tpl-${deckSrc()}`));
+  for (const w of [390, 1000, 1280, 1499, 1512, 1700, 1900]) {
     await page.setViewportSize({ width: w, height: 900 });
-    const [lines, bottomGap] = await page.locator('.dl-slide h3').evaluate((h) => {
-      const s = h.parentElement.getBoundingClientRect(), b = h.getBoundingClientRect();
-      return [b.height / parseFloat(getComputedStyle(h).lineHeight), s.bottom - parseFloat(getComputedStyle(h.parentElement).paddingBottom) - b.bottom];
-    });
-    // A squeezed title showed half of its second line at 1512.
-    expect(Math.abs(lines - Math.round(lines)), `${w} whole lines (${lines})`).toBeLessThan(0.05);
-    expect(bottomGap, `${w} inside the slide`).toBeGreaterThanOrEqual(0);
+    // The whole 960x540 slide is shown inside the 1px border: nothing cut, nothing left over.
+    // The scale is set on resize, so wait for it to catch up with the new width.
+    await expect.poll(() => page.evaluate(() => {
+      const box = document.querySelector('.dl-slide'), slide = box.querySelector('.slide').getBoundingClientRect();
+      return Math.round(Math.abs(slide.width - box.clientWidth)) <= 1 && slide.height <= box.clientHeight + 0.5;
+    }), { message: `${w} slide fits the box` }).toBe(true);
   }
 });
 

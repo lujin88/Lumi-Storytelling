@@ -318,3 +318,19 @@ test('both step 1 option rows use one ChoiceCard style: 14px/500 labels, 96px bu
     if (width) for (const c of cards) expect(c.width, `${w}px`).toBe(width);
   }
 });
+
+// Visual review of de57eae (D2, D3); designer, 2026-10-26: step 1 is the 32/600 intro headline, other pages
+// keep 24/600 titles, and the card's connect button has the 40px Button height like the options beside it.
+test('step 1 headline is 32px/600, other page titles 24px/600, and the connect button is 40px tall', async ({ page }) => {
+  await page.setViewportSize({ width: 1512, height: 900 });
+  // Measure the settled layout, not a frame of the page's arrive animation.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const errors = await openApp(page);
+  const type = (sel) => page.locator(sel).first().evaluate((el) => [getComputedStyle(el).fontSize, getComputedStyle(el).fontWeight]);
+  expect(await type('#content .page-dump h1')).toEqual(['32px', '600']);
+  const btn = await page.locator('.first-run [data-action="firstRunConnect"]').evaluate((el) => [el.offsetHeight, getComputedStyle(el).paddingLeft]);
+  expect(btn).toEqual([40, '16px']);
+  await page.evaluate(() => go('settings'));
+  expect(await type('#content .page-settings h1')).toEqual(['24px', '600']);
+  expect(errors).toEqual([]);
+});
