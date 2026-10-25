@@ -118,7 +118,7 @@ test.describe('step 3 send', () => {
     await expect.poll(() => sent !== null).toBe(true);
     expect(sent.headers.authorization).toBe('Bearer ' + KEYS.openai);
     expect(sent.headers['content-type']).toMatch(/^multipart\/form-data/);
-    expect(sent.body).toContain('name="model"\r\n\r\ngpt-image-1');
+    expect(sent.body).toContain('name="model"\r\n\r\ngpt-image-2.5-sunburst');
     // FormData sends line breaks inside a text field as CRLF.
     expect(sent.body).toContain('name="prompt"\r\n\r\n' + ex.expect.promptStartsWith + '\r\n\r\n' + prompt('image-edit'));
     expect(sent.body).toContain('name="image"; filename="image.png"');
@@ -126,6 +126,64 @@ test.describe('step 3 send', () => {
     await expect(inlineError(page)).toHaveCount(0);
     expect(await page.evaluate(() => state.generatedImage)).toBe('data:image/png;base64,' + EDITED_B64);
     expectNoKeyIn(logs);
+    expect(errors).toEqual([]);
+  });
+
+  // OpenAI removed gpt-image-1 on 2026-10-23 and removes gpt-image-1-mini on 2026-12-01.
+  // Any saved image model outside the 2.5 list moves to Sunburst. Only the openai entry is
+  // written back: a provider with no saved choice (Claude here) keeps following the default.
+  for (const old of ['gpt-image-1', 'gpt-image-1-mini', '', 'dall-e-3', null]) {
+    test(`a saved image model ${JSON.stringify(old)} moves to Sunburst; other saved models stay`, async ({ page }) => {
+      const errors = await openApp(page, { http: true, storage: { 'lumi-models-v1': JSON.stringify({ gemini: 'gemini-custom', openai: old }) } });
+      expect(await page.evaluate(() => state.models)).toMatchObject({ claude: 'claude-opus-5-5', gemini: 'gemini-custom', openai: 'gpt-image-2.5-sunburst' });
+      expect(JSON.parse(await page.evaluate(() => localStorage.getItem('lumi-models-v1')))).toEqual({ gemini: 'gemini-custom', openai: 'gpt-image-2.5-sunburst' });
+      await page.click('#sidebar [data-page="settings"]');
+      const select = page.locator('select[data-model="openai"]');
+      await expect(select).toHaveValue('gpt-image-2.5-sunburst');
+      await expect(select.locator('option')).toHaveText(['Image 2.5 Sunburst', 'Image 2.5 Flare']);
+      expect(errors).toEqual([]);
+    });
+  }
+
+  test('a saved Claude model is not changed by the image model migration', async ({ page }) => {
+    const errors = await openApp(page, { http: true, storage: { 'lumi-models-v1': JSON.stringify({ claude: 'claude-haiku-5-5', openai: 'gpt-image-1' }) } });
+    expect(JSON.parse(await page.evaluate(() => localStorage.getItem('lumi-models-v1')))).toEqual({ claude: 'claude-haiku-5-5', openai: 'gpt-image-2.5-sunburst' });
+    expect(await page.evaluate(() => state.models.claude)).toBe('claude-haiku-5-5');
+    expect(errors).toEqual([]);
+  });
+
+  test('nothing saved: nothing is written, the default is Sunburst', async ({ page }) => {
+    const errors = await openApp(page, { http: true });
+    expect(await page.evaluate(() => state.models.openai)).toBe('gpt-image-2.5-sunburst');
+    expect(await page.evaluate(() => localStorage.getItem('lumi-models-v1'))).toBeNull();
+    expect(errors).toEqual([]);
+  });
+
+  test('a saved GPT Image 2.5 Flare stays, and choosing a model in Settings is saved', async ({ page }) => {
+    const errors = await openApp(page, { http: true, storage: { 'lumi-models-v1': JSON.stringify({ openai: 'gpt-image-2.5-flare' }) } });
+    expect(await page.evaluate(() => state.models.openai)).toBe('gpt-image-2.5-flare');
+    await page.click('#sidebar [data-page="settings"]');
+    const select = page.locator('select[data-model="openai"]');
+    await expect(select).toHaveValue('gpt-image-2.5-flare');
+    await select.selectOption('gpt-image-2.5-sunburst');
+    expect(JSON.parse(await page.evaluate(() => localStorage.getItem('lumi-models-v1')))).toEqual({ openai: 'gpt-image-2.5-sunburst' });
+    expect(errors).toEqual([]);
+  });
+
+  // Settings writes only the provider the user changed, so the Claude default is never pinned.
+  test('changing only the OpenAI model in Settings saves only openai and keeps a saved Gemini model', async ({ page }) => {
+    const errors = await openApp(page, { http: true, storage: { 'lumi-models-v1': JSON.stringify({ gemini: 'gemini-custom' }) } });
+    await page.click('#sidebar [data-page="settings"]');
+    await page.locator('select[data-model="openai"]').selectOption('gpt-image-2.5-flare');
+    expect(JSON.parse(await page.evaluate(() => localStorage.getItem('lumi-models-v1')))).toEqual({ gemini: 'gemini-custom', openai: 'gpt-image-2.5-flare' });
+    expect(errors).toEqual([]);
+  });
+
+  test('a corrupt saved model entry does not block saving a Settings choice', async ({ page }) => {
+    const errors = await openApp(page, { http: true, storage: { 'lumi-models-v1': '{not json' } });
+    await page.click('#sidebar [data-page="settings"]');
+    await page.locator('select[data-model="openai"]').selectOption('gpt-image-2.5-flare');
+    expect(JSON.parse(await page.evaluate(() => localStorage.getItem('lumi-models-v1')))).toEqual({ openai: 'gpt-image-2.5-flare' });
     expect(errors).toEqual([]);
   });
 

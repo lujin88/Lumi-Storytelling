@@ -45,7 +45,7 @@ Run with `curl` from Lu's Mac on 2026-10-23, `Origin: null`, no key or a made-up
 
 Docs for these calls:
 - Claude structured output (`output_config.format` with `json_schema`; every object needs `additionalProperties: false`; the JSON comes back in the text block): https://platform.claude.com/docs/en/build-with-claude/structured-outputs
-- OpenAI image edits (multipart `model`, `image`, `prompt`; GPT Image models return `b64_json`): https://developers.openai.com/api/docs/guides/image-generation. `gpt-image-1` and `gpt-image-1-mini` are deprecated and removed on 2026-12-01; replacements `gpt-image-2.5-sunburst` / `gpt-image-2.5-flare`: https://developers.openai.com/api/docs/deprecations
+- OpenAI image edits (multipart `model`, `image`, `prompt`; GPT Image models return `b64_json`): https://developers.openai.com/api/docs/guides/image-generation. `gpt-image-1` was removed on 2026-10-23 and `gpt-image-1-mini` is removed on 2026-12-01; replacements `gpt-image-2.5-sunburst` / `gpt-image-2.5-flare` (checked 2026-10-25): https://developers.openai.com/api/docs/deprecations
 - Gemini audio (`generateContent` with `inlineData`; the examples use `gemini-3.8-flash`; requests up to 20 MB including inline files): https://ai.google.dev/gemini-api/docs/generate-content/audio
 
 ## What the docs say
