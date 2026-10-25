@@ -8,10 +8,10 @@ Deadline: Lu presents on 2026-10-26. Lu wants the open work finished tonight (20
 0. Developer | #45: step 5 Lumi to ~80% (Lu 17:06): `--lw:540px;--lh:545px` at ≥1700, 1500–1699 no larger; screenshots 1512 and 1905.
 1. Developer | step 3 first thumbnail text cut off (demo, 4317): fix, PR, into local demo branch.
 2. Developer | step 2 full-body Lumi + enlarge Lumi on steps 1, 2, 5 (#35 `5581a45` visual pass, #36). Static render first; jump plugs in later.
-3. Developer | #44 fallback box size; portfolio #26 footer dot at 390 + full screenshots.
+3. Developer | #44 fallback box size (blocks #45: stacked), merge #44 into #45, report both HEADs once; then portfolio #26 footer dot at 390 + full screenshots.
 4. Developer | Volcengine + Jimeng routes removed, `server/` kept static (PM 定 rows); not merged before the demo.
 5. Video maker (视频制作 Codex) | jump clip, mini, 1 run (#36), files only, credits before/after.
-6. Visual QA | `视觉通过 <sha>` on #38 #39 #41 #42 #44, then #45 after the size change (also at 1905).
+6. Visual QA | #44 and #45 after the developer reports new HEADs (#45 also at 1905).
 7. QA | merge with `scripts/merge-pr.sh` after visual pass: #38→#39→#41→#44→#45 (stacked; retarget the next to main first, no `--delete-branch`), #42 alone. #28 has `hold`.
 8. UX researcher | Lumi `bar.md` (steps 1–5 + settings), `design` PR; background #49.
 9. QA | flaky `flows.spec.js:141` on #46 → #29 `aafbd22` → portfolio #26 (do not merge: Vercel deploys main).
@@ -20,6 +20,7 @@ Deadline: Lu presents on 2026-10-26. Lu wants the open work finished tonight (20
 1. Portfolio PostHog: ship now or wait for a Datenschutzerklärung page.
 
 ## 最近完成的
+- Visual pass on current HEADs: #38 `66aee48`, #39 `dbdb989`, #41 `7a71673`, #42 `7538471`.
 - harness-core#27 merged 17:04 UTC: QA merges design PRs after visual pass. #28 labelled `hold`.
 - #48 in local `demo/2026-10-26` = `2b6c0da`, 132 passed; 4317 settings shows Image 2.5 Sunburst (PM checked HEAD and 4317 200 at 16:48 UTC).
 - #41: Lumi stays on screen through re-renders (QA 93 tests on `7a71673`; visual QA 1900/1280 pass).
