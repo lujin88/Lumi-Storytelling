@@ -473,3 +473,70 @@ test('the download page shows the preview card and Lumi on a fixed stage, same b
     }
   }
 });
+
+/** Sideways overflow of the whole page, in px. */
+const sidewaysScroll = (page) => page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+
+test('without assets/lumi/ the download page still bounces in place and never scrolls sideways', async ({ page }) => {
+  // Same as opening index.html without assets/lumi/ next to it; motion is on, so the CSS placeholder runs.
+  await page.context().route(/assets\/lumi\//, (route) => route.abort());
+  for (const w of [1900, 1512, 1280]) {
+    await page.setViewportSize({ width: w, height: 1000 });
+    await openApp(page);
+    const failed = page.waitForEvent('requestfailed', (r) => r.url().endsWith('assets/lumi/cheer.webp'));
+    await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+    await failed;
+    const still = page.locator('.dl-stage img[data-lumi]');
+    await expect(still).toBeVisible();
+    await expect.poll(() => animationName(still), { message: `${w}` }).toBe('lumiCheer');
+    // lumiCheer lifts by 10px and scales from the bottom centre: while it runs (4 x 0.6 s) the centre stays put
+    // and the bottom moves at most 10px up. Centring with transform let the animation throw Lumi off the stage.
+    const anchor = () => still.evaluate((el) => {
+      const st = el.parentElement.getBoundingClientRect(), b = el.getBoundingClientRect();
+      return [b.x + b.width / 2 - st.x, b.bottom - st.y];
+    });
+    const samples = [];
+    for (let i = 0; i < 8; i++) {
+      samples.push({ at: await anchor(), overflow: await sidewaysScroll(page) });
+      await page.waitForTimeout(170);
+    }
+    await expect.poll(() => animationName(still), { timeout: 4000 }).toBe('lumiCheer');
+    await page.waitForTimeout(2600);
+    const rest = await anchor();
+    for (const { at, overflow } of samples) {
+      expect(at[0], `${w} centre`).toBeCloseTo(rest[0], 0);
+      expect(at[1], `${w} bottom`).toBeGreaterThanOrEqual(rest[1] - 10.5);
+      expect(at[1], `${w} bottom`).toBeLessThanOrEqual(rest[1] + 0.5);
+      expect(overflow, `${w} sideways scroll`).toBe(0);
+    }
+  }
+});
+
+test('the cheer clip on the download page stays inside the viewport and the page does not scroll sideways', async ({ page }) => {
+  // Served over http so the clip frames can be read back from a canvas.
+  for (const w of [1900, 1512]) {
+    await page.setViewportSize({ width: w, height: 1000 });
+    await openApp(page, { http: true });
+    await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+    const video = page.locator('.dl-stage video[data-lumi-video]');
+    await expect(video).toBeVisible();
+    expect(await sidewaysScroll(page), `${w} sideways scroll`).toBe(0);
+    // Rightmost opaque pixel over 2.5 s of the loop, in page coordinates.
+    const right = await video.evaluate(async (v) => {
+      if (v.readyState < 2) await new Promise((res) => v.addEventListener('loadeddata', res, { once: true }));
+      const c = document.createElement('canvas'), x = c.getContext('2d', { willReadFrequently: true });
+      c.width = v.videoWidth; c.height = v.videoHeight;
+      let max = -1;
+      for (let n = 0; n < 25; n++) {
+        x.clearRect(0, 0, c.width, c.height); x.drawImage(v, 0, 0);
+        const d = x.getImageData(0, 0, c.width, c.height).data;
+        for (let i = 3; i < d.length; i += 4) if (d[i] > 128) max = Math.max(max, ((i - 3) / 4) % c.width);
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      // object-fit: contain, and the box has the clip's aspect ratio.
+      const b = v.getBoundingClientRect();
+      return b.x + (max + 1) * (b.width / c.width);
+    });
+    expect(right, `${w} Lumi's right edge`).toBeLessThanOrEqual(w);
+  }
+});
