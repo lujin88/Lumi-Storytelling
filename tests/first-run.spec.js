@@ -135,3 +135,33 @@ test('each failure kind has its own one-line message', async ({ page }) => {
   }
   expect(errors).toEqual([]);
 });
+
+// Lu, 2026-10-25: the card's "try the sample" link lines up with step 1's
+// "load a sample" link below it. If the two card buttons do not fit on one
+// line, the link wraps to its own line, still on the right and inside the card.
+for (const width of [1900, 1512, 1280, 390]) {
+  test(`the card's sample link lines up with the step 1 sample link at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    // Measure the settled layout, not a frame of the page's arrive animation.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const errors = await openApp(page);
+    const box = (sel) => page.locator(sel).boundingBox();
+    const sample = await box('.first-run [data-action="firstRunSample"]');
+    const connect = await box('.first-run [data-action="firstRunConnect"]');
+    const load = await box('[data-action="loadSample"]');
+    const cardBox = await box('.first-run');
+    expect(Math.abs((sample.x + sample.width) - (load.x + load.width))).toBeLessThanOrEqual(1);
+    expect(sample.x).toBeGreaterThanOrEqual(cardBox.x);
+    expect(sample.x + sample.width).toBeLessThanOrEqual(cardBox.x + cardBox.width + 0.5);
+    expect(sample.y + sample.height).toBeLessThanOrEqual(cardBox.y + cardBox.height);
+    const sameLine = sample.y < connect.y + connect.height;
+    if (sameLine) {
+      // Centered on the connect button's line.
+      expect(Math.abs((sample.y + sample.height / 2) - (connect.y + connect.height / 2))).toBeLessThanOrEqual(1);
+      expect(sample.x).toBeGreaterThan(connect.x + connect.width);
+    } else {
+      expect(width).toBeLessThanOrEqual(720);
+    }
+    expect(errors).toEqual([]);
+  });
+}
