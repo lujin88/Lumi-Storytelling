@@ -687,3 +687,15 @@ test('the download page Lumi takes the same box whether the clip plays or the st
     expect(await box(w, h, true), `${w}`).toEqual(await box(w, h, false));
   }
 });
+
+test('step 1 Lumi is 80% of its first size: 192px wide from 1001px up, 150px below', async ({ page }) => {
+  for (const [w, width] of [[1905, 192], [1512, 192], [1001, 192], [1000, 150]]) {
+    await page.setViewportSize({ width: w, height: 900 });
+    const errors = await openApp(page);
+    // The wave clip takes the still's place, so measure whichever one is on screen.
+    const shown = page.locator(`${WAVE}:visible, img.intro-lumi[data-lumi]:visible`).first();
+    await expect(shown).toBeVisible();
+    expect(Math.round((await shown.boundingBox()).width), `${w}px`).toBe(width);
+    expect(errors).toEqual([]);
+  }
+});
