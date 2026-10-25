@@ -8,7 +8,7 @@ Deadline: Lu presents on 2026-10-26. Lu wants the open work finished tonight (20
 0. Developer | #45: step 5 Lumi to ~80% (Lu 17:06): `--lw:540px;--lh:545px` at ≥1700, 1500–1699 no larger; screenshots 1512 and 1905.
 1. Developer | step 3 first thumbnail text cut off (demo, 4317): fix, PR, into local demo branch.
 2. Developer | step 2 full-body Lumi + enlarge Lumi on steps 1, 2, 5 (#35 `5581a45` visual pass, #36). Static render first; jump plugs in later.
-3. Developer | #38 conflicts with main: merge `origin/main` into #38, then cascade merges #39 → #41 → #44; fix #44 fallback box size, merge into #45; report all five HEADs once; then portfolio #26 footer dot at 390 + full screenshots.
+3. Developer | #38 conflicts with main: merge `origin/main` into #38, then cascade merges #39 → #41 → #44; fix #44 fallback box size, merge into #45; report all five HEADs once; then portfolio #26 footer dot at 390 + full screenshots, committed in the PR branch (SHA-pinned links, then removed), no `pr-assets/` branch.
 4. Developer | Volcengine + Jimeng routes removed, `server/` kept static (PM 定 rows); not merged before the demo.
 5. Visual QA → QA | #53 jump clip `e92f738`: on-model check, then QA merges. Also note which wave test timed out once (possible flake).
 6. Visual QA | #38 #39 #41 #44 #45 after the developer reports new HEADs (#45 also at 1905).
@@ -17,6 +17,7 @@ Deadline: Lu presents on 2026-10-26. Lu wants the open work finished tonight (20
 
 ## 等 Lu 的事
 1. #50 `bar.md` (design direction, Lu merges): keep or drop mechanisms 5 (settings ✓ + time) and 6 (download button counts files). PM recommends keep.
+3. Delete portfolio branch `pr-assets/posthog-analytics` (Lu deletes, 2026-10-25): after the developer moves the 8 screenshots into #26 and confirms they show. Strike through once deleted.
 2. Portfolio PostHog: ship now or wait for a Datenschutzerklärung page.
 
 ## 最近完成的
