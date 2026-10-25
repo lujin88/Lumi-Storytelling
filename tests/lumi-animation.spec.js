@@ -444,3 +444,32 @@ test('a clip whose files do not load falls back to the still, on step 1 and the 
     await expect(page.locator('video[data-lumi-video]')).toHaveCount(0);
   }
 });
+
+test('the download page shows the preview card and Lumi on a fixed stage, same box for the still and the clip', async ({ page }) => {
+  let clipBox;
+  for (const [w, h, stage] of [[1900, 1000, [520, 570]], [1280, 900, [360, 380]], [390, 844, [64, 56]]]) {
+    await page.setViewportSize({ width: w, height: h });
+    for (const reduce of [false, true]) {
+      await page.emulateMedia({ reducedMotion: reduce ? 'reduce' : 'no-preference' });
+      await openApp(page);
+      // The sample stays loaded after a reload, so only load it once.
+      await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+      if (!reduce) {
+        await expect(page.locator('.dl-stage video[data-lumi-video]')).toBeVisible();
+        await expect(page.locator('.dl-stage img[data-lumi]')).toBeHidden();
+      }
+      const title = await page.evaluate(() => getScenes()[0][state.lang]);
+      await expect(page.locator('.dl-preview .dl-slide h3')).toHaveText(title);
+      await expect(page.locator('.dl-preview .dl-score strong')).toContainText('/10');
+      // Stage and media are measured in one go, relative to the stage: the page itself may still be sliding in.
+      const [st, media] = await page.evaluate(() => {
+        const st = document.querySelector('.dl-stage').getBoundingClientRect();
+        const m = [...document.querySelectorAll('.dl-stage > *')].find((el) => getComputedStyle(el).display !== 'none').getBoundingClientRect();
+        return [[st.width, st.height], [m.x - st.x, m.y - st.y, m.width, m.height]].map((a) => a.map(Math.round));
+      });
+      expect(st, `${w} stage`).toEqual(stage);
+      if (reduce) expect(media, `${w} still vs clip`).toEqual(clipBox);
+      else clipBox = media;
+    }
+  }
+});
