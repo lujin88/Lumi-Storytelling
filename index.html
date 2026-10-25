@@ -774,18 +774,21 @@ html.dark :is(#content .deck-thumb,.modal .deck-zoom){color:var(--ink)}
 #content .intro{align-items:start!important;padding-top:0!important}
 #content .intro-art{margin-top:calc(-1 * var(--s-3))!important}
 #content .intro-lumi{width:136px}
-/* dump v4: setup stacked on the left, bigger Lumi on the right. Lu, 2026-10-25: 256px from 1280 up; below that the setup rows need the width, so 192px. */
-#content .dump-top{display:grid;grid-template-columns:minmax(0,1fr) 208px;gap:var(--s-6);align-items:center}
+/* dump v4: setup stacked on the left, bigger Lumi on the right. Lu, 2026-10-25: 256px from 1280 up; below that the setup rows need the width, so 192px.
+   Lu, 2026-10-26: the left column only takes the width it needs, so Lumi stands beside the option rows instead of at the far edge of the page. */
+#content .dump-top{display:grid;grid-template-columns:minmax(0,max-content) 208px;justify-content:start;gap:var(--s-6) var(--s-7);align-items:center;max-width:960px}
+/* the interviewer/audience chips wrap inside that width instead of widening it, so Lumi doesn't move when a purpose is picked */
+#content .dump-top .aud-group{contain:inline-size}
 #content .dump-left{min-width:0}
 #content .dump-left .intro{display:block!important;padding:0!important}
 #content .dump-top .intro-art{margin:0!important;justify-content:center}
 #content .dump-top .intro-lumi{width:192px}
-@media(min-width:1280px){#content .dump-top{grid-template-columns:minmax(0,1fr) 256px}#content .dump-top .intro-lumi{width:256px}}
+@media(min-width:1280px){#content .dump-top{grid-template-columns:minmax(0,max-content) 256px}#content .dump-top .intro-lumi{width:256px}}
 #content .page-dump .setup-row{display:flex!important;flex-direction:column;gap:var(--s-5);margin-top:var(--s-6)!important}
-#content .page-dump .setup-row .choice-row{max-width:720px}
-#content .page-dump .setup-row .choice-row.compact{display:grid;grid-template-columns:repeat(4,96px);gap:var(--s-2)}
-@media(max-width:1000px){#content .dump-top{grid-template-columns:minmax(0,1fr) 160px}#content .dump-top .intro-lumi{width:150px}}
-@media(max-width:720px){#content .dump-top{grid-template-columns:1fr}#content .dump-top .intro-art{display:none}#content .page-dump .setup-row .choice-row.compact{grid-template-columns:repeat(4,minmax(0,1fr))}}
+#content .page-dump .setup-row .choice-row{display:grid;grid-template-columns:repeat(3,96px);gap:var(--s-2)}
+#content .page-dump .setup-row .choice-row.compact{grid-template-columns:repeat(4,96px)}
+@media(max-width:1000px){#content .dump-top{grid-template-columns:minmax(0,max-content) 160px}#content .dump-top .intro-lumi{width:150px}}
+@media(max-width:720px){#content .dump-top{grid-template-columns:1fr}#content .dump-top .intro-art{display:none}#content .page-dump .setup-row .choice-row{grid-template-columns:1fr}#content .page-dump .setup-row .choice-row.compact{grid-template-columns:repeat(4,minmax(0,1fr))}}
 /* no top bar: two columns only; language lives next to the logo */
 #sidebar .brand-row{display:flex;align-items:center;justify-content:space-between;gap:var(--s-2);margin-bottom:var(--s-6);padding-right:var(--s-2)}
 #sidebar .brand-row .brand{margin-bottom:0!important}
@@ -950,9 +953,9 @@ html.dark .language-picker button[aria-pressed="true"],html.dark .seg button.on,
 #content .page-story .part-n{width:24px;height:24px;font-size:var(--fs-12)}
 @media(max-width:900px){#content .score-card{position:static;width:auto;margin:0 0 var(--s-4)}#content .page-story .heading{padding-right:0}}
 /* director pass 2 */
-#content .page-dump .choice-row.compact .choice{height:var(--control-h);min-height:0;padding:0 var(--s-3);display:grid;place-items:center}
-#content .page-dump .choice-row.compact .choice strong{font-size:var(--fs-13);font-weight:var(--fw-medium)}
-#content .page-dump .choice-row.compact .choice.selected strong{font-weight:var(--fw-semibold)}
+/* ChoiceCard: one label style for both rows, 14px/500 whether selected or not */
+#content .page-dump .choice-row .choice{height:var(--control-h);min-height:0;padding:0 var(--s-3);display:grid;place-items:center;text-align:center}
+#content .page-dump .choice-row .choice strong{font-size:var(--fs-14);font-weight:var(--fw-medium)}
 @media(max-width:720px){#content .page-dump .choice-row.compact .choice{padding:0 var(--s-1);white-space:nowrap}}
 #content details.q-card[open]{background:transparent!important;box-shadow:none!important;border-left:0!important}
 #content details.q-card[open]>summary{background:transparent!important}
@@ -1042,7 +1045,6 @@ html body #content .aud-row button.aud-chip.on{border-color:var(--action-line)!i
 #content .page-build .section-head{gap:var(--s-3)}
 #content .page-build .section-head .style-select{margin-left:auto}
 #content .page-build .section-head .script-seg{margin-left:0}
-#content .page-dump .choice-row:not(.compact) .choice{min-height:0;height:48px;padding:0 var(--s-4);display:flex;align-items:center}
 #content .pkg-item{grid-template-columns:18px 20px minmax(0,1fr)!important}
 #content .pkg-item .ms,#content .pkg-item i{color:var(--muted);font-size:18px}
 #content .pkg-ext{font-style:normal;color:var(--muted);font-size:var(--fs-12);margin-left:4px}

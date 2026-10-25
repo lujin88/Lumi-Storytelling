@@ -300,3 +300,21 @@ test('the settings rows fit a 390px screen in every connection state', async ({ 
   }
   expect(errors).toEqual([]);
 });
+
+test('both step 1 option rows use one ChoiceCard style: 14px/500 labels, 96px buttons, left-aligned', async ({ page }) => {
+  for (const [w, width] of [[1512, 96], [1001, 96], [390, null]]) {
+    await page.setViewportSize({ width: w, height: 900 });
+    await openApp(page);
+    await page.locator('[data-action="purpose:report"]').click();
+    await page.locator('[data-action="duration:10"]').click();
+    const cards = await page.locator('.dump-left .choice').evaluateAll((els) => els.map((el) => {
+      const s = getComputedStyle(el.querySelector('strong')), r = el.getBoundingClientRect();
+      return { font: `${s.fontSize}/${s.fontWeight}`, left: Math.round(r.left), width: Math.round(r.width) };
+    }));
+    expect(cards).toHaveLength(7);
+    for (const c of cards) expect(c.font, `${w}px`).toBe('14px/500');
+    // First button of each row starts on the same left edge.
+    expect(cards[3].left, `${w}px`).toBe(cards[0].left);
+    if (width) for (const c of cards) expect(c.width, `${w}px`).toBe(width);
+  }
+});
