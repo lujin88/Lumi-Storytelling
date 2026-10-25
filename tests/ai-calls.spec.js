@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('@playwright/test');
-const { KEYS, CLAUDE, openWithKeys, claudeSSE, fulfillClaude } = require('./helpers');
+const { KEYS, CLAUDE, openApp, openWithKeys, claudeSSE, fulfillClaude } = require('./helpers');
 
 const ROOT = path.resolve(__dirname, '..');
 const prompt = (id) => fs.readFileSync(path.join(ROOT, 'prompts', id + '.md'), 'utf8').trim();
