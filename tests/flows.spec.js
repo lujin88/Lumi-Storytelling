@@ -214,6 +214,21 @@ test('Esc in the composer discards a draft moved from a row and leaves the row a
   expect(await page.evaluate(() => state.followups.map(x => x.text))).toEqual(['', '推迟了一个季度。', '']);
 });
 
+test('Esc that closes an input method candidate list keeps the text, in the row and in the composer', async ({ page }) => {
+  await storyWithFollowups(page);
+  const imeEsc = sel => page.evaluate(s => document.querySelector(s).dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', isComposing: true, bubbles: true, cancelable: true })), sel);
+  await page.click('[data-action="fuFocus:1"]');
+  await page.keyboard.type(' X');
+  await imeEsc('#content .inline-edit');
+  await expect(page.locator('#content .inline-edit')).toHaveValue('推迟了一个季度。 X');
+  await page.click('#guideText');
+  await expect(page.locator('#guideText')).toHaveValue('推迟了一个季度。 X');
+  await imeEsc('#guideText');
+  await expect(page.locator('#guideText')).toHaveValue('推迟了一个季度。 X');
+  await page.keyboard.press('Enter');
+  expect(await page.evaluate(() => state.followups[1].text)).toBe('推迟了一个季度。 X');
+});
+
 test('an answered row moved to the composer is not copied when the selection changes', async ({ page }) => {
   await storyWithFollowups(page);
   await page.click('[data-action="fuFocus:1"]');
