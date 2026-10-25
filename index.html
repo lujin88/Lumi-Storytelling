@@ -1090,7 +1090,7 @@ html body #content .aud-row button.aud-chip.on{border-color:var(--action-line)!i
 #content .page-publish .dl-slide{position:relative;display:flex;flex-direction:column;justify-content:space-between;aspect-ratio:16/9;overflow:hidden;padding:var(--s-5);border-radius:var(--r-control);background:#202632;color:#f7f1e7}
 #content .page-publish .dl-slide::after{content:"";position:absolute;right:-3%;top:0;width:42%;height:100%;background:#879dbd;clip-path:polygon(35% 0,100% 0,100% 100%,0 100%)}
 #content .page-publish .dl-slide-index{position:relative;z-index:1;font-size:10px;letter-spacing:1.8px;opacity:.7}
-#content .page-publish .dl-slide h3{position:relative;z-index:1;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;max-width:62%;margin:0 0 8%;font:26px/1.15 Georgia,"Songti SC",serif;color:inherit}
+#content .page-publish .dl-slide h3{position:relative;z-index:1;flex-shrink:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;max-width:62%;margin:0 0 8%;font:26px/1.15 Georgia,"Songti SC",serif;color:inherit}
 #content .page-publish .dl-score{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:var(--s-3);align-items:center;margin-top:var(--s-3);padding-top:var(--s-3);border-top:1px solid var(--line)}
 #content .page-publish .dl-ring{width:48px;height:48px;display:grid;place-items:center;border:3px solid var(--ok);border-radius:50%;font-size:16px;font-weight:600}
 #content .page-publish .dl-score strong{display:block;font-size:14px}
@@ -1102,6 +1102,8 @@ html body #content .aud-row button.aud-chip.on{border-color:var(--action-line)!i
 #content .page-publish .dl-lumi{position:absolute;left:calc(50% - var(--lw)/2 - var(--lshift,0px));top:calc(50% - var(--lh)/2);width:var(--lw)!important;height:var(--lh)!important;max-width:none!important;margin:0!important;object-fit:contain;pointer-events:none;filter:drop-shadow(0 18px 24px #252a3814)!important}
 /* 1500-1599 has the big stage but a 40px gutter: the cheer clip's raised arm would cross the viewport edge, so the box moves 32px into the stage. */
 @media(min-width:1500px) and (max-width:1599px){#content .page-publish .dl-stage{--lshift:32px}}
+/* Up to 1699 the big stage leaves the slide under ~330px wide: three 26px lines do not fit. */
+@media(min-width:1500px) and (max-width:1699px){#content .page-publish .dl-slide h3{-webkit-line-clamp:2;font-size:20px}}
 @media(max-width:1499px){#content .page-publish .dl-layout{grid-template-columns:minmax(0,1fr) 360px}#content .page-publish .dl-card{grid-template-columns:200px minmax(0,1fr);gap:var(--s-5)}#content .page-publish .dl-stage{--lw:435px;--lh:440px;width:360px;height:380px}#content .page-publish .dl-slide h3{-webkit-line-clamp:2;font-size:22px}}
 @media(max-width:1271px){#content .page-publish .dl-layout{grid-template-columns:minmax(0,1fr) 200px}#content .page-publish .dl-card{grid-template-columns:1fr}#content .page-publish .dl-stage{--lw:247px;--lh:250px;width:200px;height:220px}}
 @media(max-width:900px) and (min-width:721px){#content .page-publish .dl-layout{grid-template-columns:1fr}#content .page-publish .dl-stage{grid-row:1}#content .page-publish .dl-card{grid-row:2}}

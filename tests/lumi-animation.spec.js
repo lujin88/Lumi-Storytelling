@@ -540,3 +540,18 @@ test('the cheer clip on the download page stays inside the viewport and the page
     expect(right, `${w} Lumi's right edge`).toBeLessThanOrEqual(w);
   }
 });
+
+test('the download preview title shows whole lines and stays inside the slide at every width', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+  for (const w of [390, 1000, 1280, 1499, 1500, 1512, 1600, 1699, 1700, 1900]) {
+    await page.setViewportSize({ width: w, height: 900 });
+    const [lines, bottomGap] = await page.locator('.dl-slide h3').evaluate((h) => {
+      const s = h.parentElement.getBoundingClientRect(), b = h.getBoundingClientRect();
+      return [b.height / parseFloat(getComputedStyle(h).lineHeight), s.bottom - parseFloat(getComputedStyle(h.parentElement).paddingBottom) - b.bottom];
+    });
+    // A squeezed title showed half of its second line at 1512.
+    expect(Math.abs(lines - Math.round(lines)), `${w} whole lines (${lines})`).toBeLessThan(0.05);
+    expect(bottomGap, `${w} inside the slide`).toBeGreaterThanOrEqual(0);
+  }
+});
