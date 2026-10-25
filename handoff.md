@@ -5,13 +5,13 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 Deadline: Lu presents on 2026-10-26. Today's order is set by what the demo needs.
 
 ## 现在在做什么
-2. Developer | Volcengine row + remove Jimeng and `server/` (#43), new branch from main. The demo branch is not touched, so this no longer waits for the demo.
-3. Developer | jump clip, mini, 1 run (approved in #36), credits before/after.
-4. Developer | step 2 full-body Lumi and enlarge Lumi on steps 1, 2, 5 (#35, #36), if not built yet.
-5. Developer | portfolio PostHog in `memory` mode (bot has Write since 16:41 UTC); moved before item 2.
-5b. Developer | rebase #29 on main: #48 is merged, keep #48's image model lines; `grep gpt-image-1` leaves only comments.
-6. Visual QA | demo walkthrough on 4317 after item 1; #35 if not concluded.
-7. QA | `flows.spec.js:141` flaky check; then review each new PR.
+1. Developer | step 3 first thumbnail text cut off (demo, 4317): fix, PR, into local demo branch.
+2. Developer | step 2 full-body Lumi + enlarge Lumi on steps 1, 2, 5 (#35 `5581a45` visual pass, #36). Static render first; jump plugs in later.
+3. Developer | #44 fallback box size; portfolio #26 footer dot at 390 + full screenshots.
+4. Developer | Volcengine + Jimeng routes removed, `server/` kept static (PM 定 rows); not merged before the demo.
+5. Video maker (视频制作 Codex) | jump clip, mini, 1 run (#36), files only, credits before/after.
+6. Visual QA | #38 #39 playback; #41 390 vs main; #45 per PM 定.
+7. QA | flaky `flows.spec.js:141` on #46 → #29 `aafbd22` → portfolio #26 (do not merge: Vercel deploys main).
 
 ## 等 Lu 的事
 1. Merge harness-core#27 (new merge rule: design PRs auto-merge after QA pass + visual QA comment `视觉通过 <sha>`). Until then the current rule applies.
