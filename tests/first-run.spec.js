@@ -165,3 +165,37 @@ for (const width of [1900, 1512, 1280, 390]) {
     expect(errors).toEqual([]);
   });
 }
+
+// Visual review of #38 at 1280px: the English "Connection failed" label ran
+// under the model dropdown. Every status label, in both languages, has to end
+// before the dropdown starts, at every desktop width.
+for (const width of [1001, 1280, 1905]) {
+  test(`connection status labels stay clear of the model dropdown at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const errors = await openApp(page);
+    for (const lang of ['en', 'zh']) {
+      for (const status of ['disconnected', 'checking', 'configured', 'connected', 'error']) {
+        const overlaps = await page.evaluate(({ lang, status }) => {
+          state.lang = lang;
+          for (const id of ['claude', 'openai', 'gemini', 'jimeng']) {
+            state.providerStatus[id] = status;
+            if (status === 'error') state.providerMessage[id] = providerErrorText(id, id === 'jimeng' ? 'login' : 'credit');
+          }
+          go('settings');
+          return [...document.querySelectorAll('.prov-row')].flatMap((row) => {
+            const label = row.querySelector('.connection-status');
+            const select = row.querySelector('select');
+            if (!label || !select) return [];
+            const text = document.createRange();
+            text.selectNodeContents(label);
+            const gap = select.getBoundingClientRect().left - text.getBoundingClientRect().right;
+            return gap < 4 ? [`${label.textContent}: ${Math.round(gap)}px`] : [];
+          });
+        }, { lang, status });
+        expect(overlaps, `${lang} ${status}`).toEqual([]);
+      }
+    }
+    expect(errors).toEqual([]);
+  });
+}
