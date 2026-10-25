@@ -175,6 +175,54 @@ test('text typed in a row and then in the composer lands in that same row, in al
   }
 });
 
+test('a draft moved from one row never lands in another row', async ({ page }) => {
+  await storyWithFollowups(page);
+  // A draft typed for fu0, then a different row edited and moved to the composer: only that row's text goes.
+  await page.click('[data-action="fuFocus:0"]');
+  await page.click('#guideText');
+  await page.keyboard.type('DRAFT_A');
+  await page.click('[data-action="fuFocus:2"]');
+  await page.keyboard.type('B_TEXT');
+  await page.click('#guideText');
+  await expect(page.locator('#guideText')).toHaveValue('B_TEXT');
+  await page.keyboard.press('Enter');
+  expect(await page.evaluate(() => state.followups.map(x => x.text))).toEqual(['', '推迟了一个季度。', 'B_TEXT']);
+});
+
+test('an answered row moved to the composer is not copied when the selection changes', async ({ page }) => {
+  await storyWithFollowups(page);
+  await page.click('[data-action="fuFocus:1"]');
+  await page.click('#guideText');
+  await expect(page.locator('#guideText')).toHaveValue('推迟了一个季度。');
+  // Another row, Esc, and a page switch all leave the composer empty and fu1 unchanged.
+  await page.click('[data-action="fuFocus:0"]');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#guideText')).toHaveValue('');
+  await page.click('[data-action="fuFocus:1"]');
+  await page.click('#guideText');
+  await page.evaluate(() => { go('dump'); go('story'); });
+  await expect(page.locator('#guideText')).toHaveValue('');
+  await page.click('[data-action="fuFocus:0"]');
+  await page.keyboard.type('NEW0');
+  await page.click('#guideText');
+  await page.keyboard.press('Enter');
+  expect(await page.evaluate(() => state.followups.map(x => x.text))).toEqual(['NEW0', '推迟了一个季度。', '']);
+});
+
+test('a step 4 answer edited in its row and continued in the composer is written once', async ({ page }) => {
+  await storyWithFollowups(page);
+  await page.evaluate(() => { state.defend = { 0: 'ANS' }; go('defend'); });
+  await page.evaluate(() => { document.querySelector('details.q-card[data-def="0"]').open = true; });
+  await page.click('[data-action="defEdit:0"]');
+  await page.keyboard.type(' more');
+  await page.click('#guideText');
+  await expect(page.locator('#content .inline-edit')).toHaveCount(0);
+  await expect(page.locator('#guideText')).toHaveValue('');
+  await page.keyboard.type('PLUS');
+  await page.keyboard.press('Enter');
+  expect(await page.evaluate(() => state.defend[0])).toBe('ANS more。PLUS');
+});
+
 test('Lumi\'s review and the score card open the row editor on empty rows too', async ({ page }) => {
   await storyWithFollowups(page);
   await page.evaluate(() => { delete state.found.reframe; render(); });
