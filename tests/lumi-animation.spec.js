@@ -444,3 +444,22 @@ test('a clip whose files do not load falls back to the still, on step 1 and the 
     await expect(page.locator('video[data-lumi-video]')).toHaveCount(0);
   }
 });
+
+test('the download page Lumi takes the same box whether the clip plays or the still falls back', async ({ browser }) => {
+  const box = async (blocked) => {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    if (blocked) await page.context().route(/assets\/lumi\//, (route) => route.abort());
+    await openApp(page);
+    await page.click('#sidebar [data-page="publish"]');
+    const media = page.locator(blocked ? '#content .pub-art img[data-lumi="clip"]' : '#content .pub-art video[data-lumi-video][src="assets/lumi/cheer.webm"]');
+    await expect(media).toBeVisible();
+    if (blocked) await expect.poll(() => media.evaluate((el) => el.getAttribute('src').startsWith('data:'))).toBe(true);
+    const size = await media.evaluate((el) => [el.offsetWidth, el.offsetHeight, el.parentElement.offsetWidth, el.parentElement.offsetHeight]);
+    await page.close();
+    return size;
+  };
+  const clip = await box(false);
+  const still = await box(true);
+  expect(still).toEqual(clip);
+  expect(clip[0]).toBe(240);
+});

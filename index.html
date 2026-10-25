@@ -1081,9 +1081,9 @@ html body #content .aud-row button.aud-chip.on{border-color:var(--action-line)!i
 #content .page-publish .pub-body .pkg-download{min-width:128px;height:40px;margin:0}
 #content .page-publish .pub-body .gh-link{margin:0;font-size:var(--fs-13);color:var(--muted)}
 #content .page-publish .pub-art{display:flex;justify-content:center;align-items:center}
-#content .page-publish .pub-art img{width:240px!important;height:auto!important;max-width:100%;display:block;filter:none!important}
+#content .page-publish .pub-art img,#content .page-publish .pub-art video[data-lumi-video]{width:240px!important;height:auto!important;max-width:100%;display:block;filter:none!important}
 #content .page-publish .pub-art::before,#content .page-publish .pub-art::after{display:none}
-@media(max-width:720px){#content .page-publish .pub-card{grid-template-columns:1fr;padding:var(--s-5)}#content .page-publish .pub-art{order:-1}#content .page-publish .pub-art img{width:160px!important}}
+@media(max-width:720px){#content .page-publish .pub-card{grid-template-columns:1fr;padding:var(--s-5)}#content .page-publish .pub-art{order:-1}#content .page-publish .pub-art img,#content .page-publish .pub-art video[data-lumi-video]{width:160px!important}}
 
 /* Fix pass */
 #content .choice-row button,#content .purpose-card,#content [aria-label='用途'] button,#content [aria-label='Purpose'] button{min-height:40px!important;height:40px!important;padding-top:0!important;padding-bottom:0!important}
