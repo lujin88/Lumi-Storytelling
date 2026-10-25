@@ -86,9 +86,10 @@ test.describe('phone width', () => {
   });
 });
 
-test('each approved clip file stays under 1 MB', () => {
+test('each clip file stays under 1 MB', () => {
   // 1 MB = 1024 × 1024 bytes, the same limit scripts/lumi-clip.sh checks.
-  for (const file of ['wave.webm', 'wave.webp']) {
+  // idle is not on the page yet (see assets/lumi/README.md) but is held to the same limit.
+  for (const file of ['wave.webm', 'wave.webp', 'idle.webm', 'idle.webp']) {
     const size = fs.statSync(path.resolve(__dirname, '..', 'assets', 'lumi', file)).size;
     expect(size, file).toBeLessThan(1024 * 1024);
   }
