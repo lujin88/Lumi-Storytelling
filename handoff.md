@@ -5,8 +5,7 @@ Project manager writes this. Current state only, one page max. Lu's decisions go
 GitHub bot account is 403 (suspended): no PRs, no pushes. All work is committed on local branches; Lu is handling the account. The app Lu sees is the local demo branch `demo/2026-10-26` on `http://127.0.0.1:4317`.
 
 ## 现在在做什么
-- Developer | homework blockers from visual QA review `68aa709` (`review/de57eae-full-site`, `DESIGN_REVIEW.md`), on top of `de57eae`: D1 step 5 "第一页预览" must use the shared slide renderer (`slideHTML`) so it matches step 3; D3 "连接 Claude" button 44.39px -> 40px. Then full test suite, visual QA re-check, PM repackages Lu's homework.
-- Visual designer | D2: step 1 headline is 24px in `index.html:890` ("design-system pass" override) but 32px/600 in the spec and in audit `4f834c6`. Confirm which one; developer then aligns code or designer updates spec.
+- Developer | homework blockers from visual QA review `68aa709` (`review/de57eae-full-site`, `DESIGN_REVIEW.md`), on top of `de57eae`: D1 step 5 "第一页预览" must use the shared slide renderer (`slideHTML`) so it matches step 3; D2 step 1 headline back to 32px/600 (designer decided 2026-10-26, spec unchanged); D3 "连接 Claude" button 44.39px -> 40px. Then full test suite, visual QA re-check, PM repackages Lu's homework.
 - Visual QA | spec review of `design/system-production-audit` `4f834c6`; after the D1-D3 commit, sign the homework package.
 - UX researcher | `bar.md` v2 bar 1: change "longest label + padding" to fixed 96px (304px / 408px rows), per designer audit `4f834c6`; new commit before Lu approves.
 - Full-site list (not homework blockers, next batch): dark "连接 Claude" contrast ~1.25:1, dark step 3 thumbnails ~1.14:1, 390 empty step 4 overflow 9px, 390 step 3 toolbar wraps, empty download page says ready with 0/10; Material Symbols -> Remix Icon in `index.html`; drop trailing arrow on bottom CTA.
