@@ -552,8 +552,9 @@ h1[tabindex="-1"]:focus{outline:none}
 #content .setting-section.api>div:first-child p{margin:var(--s-1) 0 var(--s-2);font-size:var(--fs-13);color:var(--muted)}
 #content .setting-section .small{font-size:var(--fs-13)}
 #content .setting-section label{font-size:var(--fs-12);font-weight:var(--fw-semibold);margin:0 0 var(--s-2);display:block}
-#content .provider-connect.secondary{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
-#content .provider-connect.secondary:hover{background:var(--selected)}
+/* every secondary button, not only the ones that got their own rule; without this, base button{background:white} wins in dark */
+#content .secondary,.modal .secondary{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+#content .secondary:hover,.modal .secondary:hover{background:var(--selected)}
 #content .provider-connect:disabled{opacity:.45}
 /* talk head: collapsible, darker band, regen merged in */
 #content .talk-head{margin:calc(var(--s-5) * -1) calc(var(--s-6) * -1) var(--s-5);padding:var(--s-4) var(--s-6);background:var(--selected);border-bottom:1px solid var(--line);border-radius:var(--r-surface) var(--r-surface) 0 0}
@@ -720,6 +721,8 @@ html.dark #content .choice.on,html.dark #content .choice[aria-pressed=true]{back
 html.dark #content .template-chip{background:var(--surface)!important;color:var(--ink)!important;border-color:var(--line)!important}
 html.dark #content .template-chip.on,html.dark #content .template-chip[aria-pressed=true]{background:var(--selected)!important;border-color:var(--ink)!important}
 html.dark :is(.deck-scale,.deck-thumb,.thumb,.slide,.slide-stage,.modal .deck-zoom){--paper:#f7f5f0;--ink:#252a38;--muted:#677181;--blue:#7e8fae;--soft:#e7ecf3;--line:#e3e1db;--white:#fff;--surface:#fff;--sunken:#eeede8}
+/* .deck-thumb is all:unset, so its text inherits the dark-mode ink unless set here */
+html.dark #content .deck-thumb{color:var(--ink)}
 /* publish v3: download is the footer CTA, GitHub is an instruction */
 #footer .publish-footer{justify-content:flex-end}
 /* send only lights up when there is something to send */
