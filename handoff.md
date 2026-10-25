@@ -9,13 +9,13 @@ Deadline: Lu presents on 2026-10-26. Today's order is set by what the demo needs
 2. Developer | Volcengine row + remove Jimeng and `server/` (#43), new branch from main. The demo branch is not touched, so this no longer waits for the demo.
 3. Developer | jump clip, mini, 1 run (approved in #36), credits before/after.
 4. Developer | step 2 full-body Lumi and enlarge Lumi on steps 1, 2, 5 (#35, #36), if not built yet.
-5. Developer | portfolio PostHog in `memory` mode, once the GitHub invite arrives.
+5. Developer | portfolio PostHog in `memory` mode (bot has Write since 16:41 UTC); moved before item 2.
+5b. Developer | rebase #29 on main: #48 is merged, keep #48's image model lines; `grep gpt-image-1` leaves only comments.
 6. Visual QA | demo walkthrough on 4317 after item 1; #35 if not concluded.
 7. QA | `flows.spec.js:141` flaky check; then review each new PR.
 
 ## 等 Lu 的事
-1. GitHub Write invite for `lujinixdbot88` on LuJin-Portfolio.
-2. Merge rule: Lu expects all PRs auto-merged (event 75f422ae). Harness Manager is changing the rule; until then #38 #39 #41 #42 #44 #45 #48 and #40 wait.
+1. Merge harness-core#27 (new merge rule: design PRs auto-merge after QA pass + visual QA comment `视觉通过 <sha>`). Until then the current rule applies.
 
 ## 最近完成的
 - #41: Lumi stays on screen through re-renders (QA 93 tests on `7a71673`; visual QA 1900/1280 pass).
