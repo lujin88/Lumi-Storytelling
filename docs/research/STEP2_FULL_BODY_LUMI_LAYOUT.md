@@ -8,9 +8,9 @@ Treat Lumi as a visible coach at the three moments where the product changes mod
 
 - **Step 1 / wave:** a large welcome presence beside the project setup. It signals that the user can start with rough material.
 - **Step 2 / thinking + jump:** a coaching rail paired with StoryScore. The body reacts to work; the face inside StoryScore continues to communicate the score tier.
-- **Step 5 / cheer:** a celebration in the same full-width result surface as the downloadable files and a preview of what the user made.
+- **Step 5 / cheer:** a celebration in the same right-hand character rail as Steps 1 and 2. The recessed result surface contains only the downloadable files and a preview of what the user made.
 
-At about 1900px, the page and Composer expand to a 1600px maximum so the working area uses the same right-hand territory as the enlarged character. The Step 1 character occupies the approximately 526 × 574 CSS-pixel zone Lu marked in her 3820 × 1942 screenshot. At 1280px, the character scales down while the story keeps at least 640px. At 390px, the same hierarchy becomes a compact coach band or a single-column result card.
+At about 1900px, the page and Composer expand to a 1600px maximum so the working area uses the same right-hand territory as the enlarged character. The Step 1 character occupies the approximately 526 × 574 CSS-pixel zone Lu marked in her 3820 × 1942 screenshot. At 1280px, all three pages use the same smaller right-hand rail. At 390px, Lumi moves beside the first section heading instead of taking a separate block.
 
 Mood and personality: calm, observant, warm, precise, lightly playful. The clay character carries the expression; paper, ink, hairlines, and whitespace stay quiet.
 
@@ -59,6 +59,18 @@ Typography stays on the design-system sans stack. Page titles are 24/600, except
 - The Composer and its `下一步` button use the same wrapper and gutters as the page. At 1900px the bar extends through the enlarged Lumi column to its right edge; at 1280px and below it keeps the existing responsive wrapper.
 - Use existing spacing tokens only: 4, 8, 12, 16, 24, 32, 48, and 64px.
 
+### Fixed Lumi frame measurements
+
+The stage is the implementation contract. Wave, standing, thinking, jump and cheer all render with `object-fit: contain` inside the stage for that viewport; changing media state must not change its rectangle.
+
+| Viewport | Step 1 stage | Step 2 stage | Step 5 stage | Shared size |
+| --- | --- | --- | --- | --- |
+| 1900 × 1000 | `x=1306, y=32` | `x=1306, y=126` | `x=1306, y=126.8` | `w=520, h=570` |
+| 1280 × 900 | `x=888, y=32` | `x=888, y=174.4` | `x=888, y=126.8` | `w=360, h=380` |
+| 390 × 844 | `x=310, y=182.8` | `x=310, y=250.4` | `x=310, y=158.8` | `w=64, h=56` |
+
+The wide and standard layouts therefore keep the same right-column x coordinate and frame dimensions across Steps 1, 2 and 5. Their y coordinate follows each page's content: Step 1 starts with the welcome, Step 2 follows StoryScore, and Step 5 follows the page intro. On mobile, each y coordinate is exactly the y coordinate of that step's first section heading.
+
 ## Step 1: wave
 
 ### Desktop
@@ -70,9 +82,10 @@ Typography stays on the design-system sans stack. Page titles are 24/600, except
 
 ### Mobile
 
-- Reserve a 148 × 160px stage at the upper right and render Lumi at 180px high.
-- Keep 160px clear on the right of the title and lead. Let the setup controls return to the full 358px content width below that top block.
+- Use a 64 × 56px stage at the right of `用在哪`, the first section heading. Render the full square asset with `object-fit: contain`; hair, star, scarf and feet stay visible.
+- Keep the page title and lead at the full 358px content width. Only the first choice row reserves 72px on its right for the small stage.
 - The Step 1 Composer continues to use its existing prompt; no new card or bubble is added.
+- Measured against the previous 390px proposal, `上传资料` moves from `y=493.6` to `y=461.2`, saving 32.4px before the next section.
 
 ## Step 2: one current row and coaching rail
 
@@ -85,10 +98,11 @@ Typography stays on the design-system sans stack. Page titles are 24/600, except
 
 ### Wide layout: 1272px and above
 
-- From 1272px through 1499px, use `minmax(0, 1fr) 304px`, with `s-6` = 32px between columns. Stage: 304 × 360px; render: 400px high.
+- From 1272px through 1499px, use `minmax(0, 1fr) 360px`, with `s-6` = 32px between columns. Stage: 360 × 380px; render: 430px high. This is the same frame and x coordinate as Steps 1 and 5 at 1280px.
 - At 1500px and wider, enlarge the coach rail to 520px. Stage: 520 × 570px; render: 650px high. The visible standing character is approximately 464 × 570px.
-- At a 1280px viewport, the 32px page gutters leave a 648px story column. At the 1272px threshold, the story column is 640px.
+- At a 1280px viewport, the 32px page gutters leave a 592px story column. The full question, answer and status remain visible in the reference without reducing type or hit targets.
 - At about 1900px, the 1600px wrapper leaves an approximately 968px story column. Lumi remains connected to StoryScore in the 520px coaching rail while using the previously empty right side of the viewport.
+- At 1500px and wider, StoryScore moves up by the page-title line height plus its 16px following space. Its measured top is `y=32`, matching the `故事的地基有了。` title at `y=32`.
 - The coach rail is sticky at `top: s-6` = 32px. StoryScore remains first; the full-body stage sits below it.
 
 ### Compact layout: 721–1271px
@@ -100,11 +114,10 @@ Typography stays on the design-system sans stack. Page titles are 24/600, except
 ### Mobile: 390px reference
 
 - Top bar: 56px. Page gutter: 16px.
-- Closed coach band: `minmax(0, 1fr) 140px` with a 12px gap. Stage: 140 × 158px; render: 180px high.
-- The closed band may stick below the top bar only when the layout viewport is at least 700px and the Composer is not focused.
-- Its measured height is 170px, including 12px bottom padding. Sticky row targets therefore use `scroll-margin-top: 242px` = 56px top bar + 170px band + 16px breathing room.
-- Open StoryScore, Composer focus, and a short or keyboard-contracted viewport put the band back into normal document flow. These states use `scroll-margin-top: 72px` = 56px top bar + 16px breathing room.
-- Open StoryScore spans the full width and retains all five dimensions, statuses, and `去补` links. Lumi stays below it in the right column.
+- StoryScore uses the full 358px content width below the page title. Open StoryScore retains all five dimensions, statuses and `去补` links.
+- Lumi uses the shared 64 × 56px mobile stage at the right of `1 讲清这个故事`; the entire body is visible and does not occupy a separate coach band.
+- The section heading reserves 72px on its right for Lumi. Row targets use `scroll-margin-top: 72px` = 56px top bar + 16px breathing room.
+- Measured against the previous 390px proposal, the first question row moves from `y=339.4` to `y=315.4`, saving 24px before the work starts. The open-score state uses the same heading placement.
 - Preserve the shared row grid: 24px number column, 12px gap, 16px horizontal padding, 14px question, 13px answer, and visible source status.
 
 ### StoryScore face motion
@@ -128,25 +141,28 @@ Do not pop on first render, score decrease, or a Claude-only score change. The p
 
 ## Step 5: cheer and result preview
 
-Use one full-width `sunken` result surface with three related parts: file package, full-body cheer, and output preview. This fills the right side with useful evidence instead of decoration.
+Move cheer outside the `sunken` result surface and into the right-hand Lumi rail. The surface contains two related parts: the file package and output preview. This keeps the page structure consistent with Steps 1 and 2 and lets the preview move left into the space that cheer previously occupied.
 
 ### Wide and standard desktop
 
-- At 1500px and wider: `300px 520px minmax(340px, 1fr)`, with 32px gaps and 32px card padding. Stage: 520 × 570px; render: 680px high.
-- At 1280px: `260px 320px minmax(300px, 1fr)`, with 24px gaps. Stage: 320 × 380px; render: 440px high.
+- At 1500px and wider, the outer layout is `minmax(0, 1fr) 520px` with a 32px gap. The left `sunken` card is 968px wide and uses `300px minmax(0, 1fr)` for package and preview. Stage: 520 × 570px; render: 680px high.
+- At 1280px, the outer layout is `minmax(0, 1fr) 360px`. The left card is 592px wide and uses `200px minmax(0, 1fr)` for package and preview. Stage: 360 × 380px; render: 440px high.
+- At 1900px the preview moves from `x=1222` to `x=670`; at 1280px it moves from `x=924` to `x=520`.
 - The preview contains the first generated slide thumbnail and the final story score. It is read-only and does not introduce editing at Step 5.
 - Keep download as the primary action inside the package column. Step 5 has no Composer.
 
 ### Narrow tablet: 721–900px
 
-- Switch the result surface to one column before the 721px mobile breakpoint. Stack file package, the 240px cheer stage, and the output preview.
-- Keep 32px card padding and 24px gaps. The widest fixed element remains 240px, so the card fits the 425px content width at 721px without horizontal scrolling.
+- Put the 200 × 220px Lumi stage above the recessed result surface and keep it outside the surface. Stack package and preview inside the surface.
+- Keep 32px card padding and 24px gaps. The card fits the 425px content width at 721px without horizontal scrolling.
 - Keep the desktop sidebar and 32px page gutters in this range; only the result surface changes its internal columns.
 
 ### Mobile
 
-- Stack cheer, package, then preview inside the same card. Use a 220 × 240px stage and a 260px-high render. Keeping the file package before the read-only preview preserves the download action's priority.
+- Put `你要下载的内容` on its own section-heading row and place the shared 64 × 56px Lumi stage at its right. The stage remains outside the recessed result card.
+- Stack package and preview inside the card. Keeping the file package before the read-only preview preserves the download action's priority.
 - Keep the download button at least 40px high and the result preview inside the normal document flow; the page may scroll rather than compress text or controls.
+- Measured against the previous 390px proposal, document height drops from 1230px to 1030px, saving 200px.
 
 ## Animation placement and file constraints
 
@@ -170,7 +186,7 @@ Pause looping media when the page is hidden or the stage is offscreen. Resume fr
 ## Components and interaction
 
 - Reuse StoryScore, QuestionList, Composer, busy line, step CTA, sidebar, and top bar. No new shared component is required.
-- Add only page-local wrappers: character stage, coaching rail/band, and Step 5 result preview.
+- Add only page-local wrappers: character stage, coaching rail, Step 5 two-column result card and result preview.
 - The full-body media is decorative: `alt=""`, `aria-hidden="true"`, and `pointer-events:none`.
 - The preview is labelled as download content and remains read-only.
 - Do not hide status chips, shrink text, alter Composer height, or add a background shape behind Lumi to make space.
@@ -194,14 +210,15 @@ Use only the approved clay renders in `assets/lumi/source/`. Keep Lumi's face, h
 1. Base the rows, StoryScore, Composer, busy line, and file card on the current implementation after PR #29. Preserve their internal anatomy and tokens.
 2. Use the shared max-width wrapper for both page content and footer so the Composer aligns at 1900, 1280, and 390 widths.
 3. Add one active-question state. Let row selection, `去补`, and review suggestions update that state; derive the Composer placeholder from it.
-4. Use `@media (min-width: 1272px)` for the Step 2 side rail. Below it, use the flow layout.
-5. On mobile, add a layout-state class for score-open, Composer-focus, and short-viewport states without changing the user's disclosure choice.
-6. Apply the scroll margins above before calling `scrollIntoView`.
+4. Use `@media (min-width: 1272px)` for the Step 2 side rail. Below it, use the flow layout. At 390px, place the same stage beside the first section heading.
+5. Keep StoryScore full-width on mobile in closed, open, Composer-focus and short-viewport states without changing the user's disclosure choice.
+6. Apply the 72px mobile scroll margin above before calling `scrollIntoView`.
 7. Keep the existing `lumiAnim` state machine. Give busy thinking priority over typing thinking; let jump interrupt idle/thinking once, then return to the current state.
 8. Gate face motion and all media playback with the same reduced-motion preference.
 9. For looping wave and cheer, insert the pause on the neutral start frame, not the last frame.
-10. Test at 1900, 1500, 1499, 1280, 1272, 1271, 1024, 901, 900, 800, 768, 721, 720, and 390 widths. At 390, cover score closed/open, two incomplete dimensions, `去补`, Composer focus, a contracted viewport, busy state, dark mode, and reduced motion.
-11. Visual QA must compare the implementation with every reference image, then exercise real focus, scroll, offscreen media pause/resume, and software-keyboard behaviour.
+10. Give wave, static, thinking, jump and cheer one stage component whose rectangle is fixed per breakpoint. Media uses `width: 100%`, `height: 100%`, `object-fit: contain`; swapping source or animation state must not change x, y, width or height.
+11. Test at 1900, 1500, 1499, 1280, 1272, 1271, 1024, 901, 900, 800, 768, 721, 720, and 390 widths. At 390, cover score closed/open, two incomplete dimensions, `去补`, Composer focus, a contracted viewport, busy state, dark mode, and reduced motion.
+12. Visual QA must compare the implementation with every reference image, then exercise real focus, scroll, offscreen media pause/resume, and software-keyboard behaviour.
 
 ## Sources reviewed
 

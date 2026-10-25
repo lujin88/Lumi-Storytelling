@@ -56,10 +56,11 @@
   .choice.compact { min-width:96px; }
 
   /* Step 1 */
-  .gather-hero { display:grid; grid-template-columns:minmax(0,1fr) 560px; gap:var(--s-7); align-items:start; }
+  .gather-hero { position:relative; min-height:570px; }
+  .gather-copy,.gather-setup { padding-right:568px; }
   .gather-copy h1 { max-width:680px; font-size:32px; }
   .gather-setup { display:grid; gap:var(--s-5); margin-top:var(--s-6); }
-  .hero-stage { position:relative; width:520px; height:570px; justify-self:end; display:grid; place-items:center; }
+  .hero-stage { position:absolute; top:0; right:0; width:520px; height:570px; display:grid; place-items:center; }
   .hero-stage img { position:absolute; left:50%; top:50%; width:auto; max-width:none; height:640px; object-fit:contain; transform:translate(-50%,-50%); filter:drop-shadow(0 18px 24px #252a3814); }
   .motion-tag { position:absolute; right:8px; bottom:8px; padding:3px 7px; border:1px solid var(--action-line); border-radius:var(--r-chip); background:var(--paper); color:var(--action-ink); font-size:10px; }
   .materials { margin-top:var(--s-6); }
@@ -125,7 +126,9 @@
 
   /* Step 5 */
   .download-head { max-width:720px; }
-  .download-card { display:grid; grid-template-columns:300px 520px minmax(340px,1fr); gap:var(--s-6); align-items:center; width:100%; margin-top:var(--s-6); padding:var(--s-6); border-radius:var(--r-surface); background:var(--sunken); }
+  .download-layout { display:grid; grid-template-columns:minmax(0,1fr) 520px; gap:var(--s-6); align-items:start; margin-top:var(--s-6); }
+  .download-card { display:grid; grid-template-columns:300px minmax(0,1fr); gap:var(--s-6); align-items:center; min-width:0; padding:var(--s-6); border-radius:var(--r-surface); background:var(--sunken); }
+  .download-mobile-title { display:none; }
   .package-body { display:grid; gap:var(--s-5); justify-items:start; }
   .pkg-list { list-style:none; margin:0; padding:0; display:grid; gap:var(--s-1); width:100%; }
   .pkg-item { display:grid; grid-template-columns:18px 20px minmax(0,1fr); gap:var(--s-3); align-items:center; padding:6px 0; }
@@ -134,7 +137,7 @@
   .pkg-item small { color:var(--muted); font-size:12px; }
   .download-button { min-width:128px; height:40px; padding:0 var(--s-5); border-radius:var(--r-control); background:var(--ink); color:var(--paper); font-weight:600; }
   .github-link { margin:0; color:var(--muted); font-size:13px; }
-  .download-stage { position:relative; width:520px; height:570px; display:grid; place-items:center; }
+  .download-stage { position:relative; width:520px; height:570px; justify-self:end; display:grid; place-items:center; }
   .download-stage img { position:absolute; left:50%; top:50%; width:auto; max-width:none; height:680px; object-fit:contain; transform:translate(-50%,-50%); filter:drop-shadow(0 18px 24px #252a3814); }
   .result-preview { min-width:0; padding:var(--s-4); border:1px solid var(--line); border-radius:var(--r-surface); background:var(--surface); }
   .preview-label { display:flex; align-items:center; justify-content:space-between; gap:var(--s-3); margin-bottom:var(--s-3); font-size:12px; color:var(--muted); }
@@ -166,19 +169,22 @@
 
   @media (min-width:1500px) {
     .story-grid { grid-template-columns:minmax(0,1fr) 520px; }
+    .coach-rail { margin-top:-48.4px; }
   }
   @media (max-width:1499px) {
     .page,.footer-inner { max-width:1280px; }
     .page { padding-left:var(--s-6); padding-right:var(--s-6); }
     .footer-inner { padding-left:var(--s-6); padding-right:var(--s-6); }
-    .gather-hero { grid-template-columns:minmax(0,1fr) 380px; gap:var(--s-6); }
+    .gather-hero { min-height:380px; }
+    .gather-copy,.gather-setup { padding-right:392px; }
     .hero-stage { width:360px; height:380px; }
     .hero-stage img { width:auto; max-width:none; height:430px; }
-    .story-grid { grid-template-columns:minmax(0,1fr) 304px; }
-    .story-stage { width:304px; height:360px; }
-    .story-stage img { width:auto; max-width:none; height:400px; }
-    .download-card { grid-template-columns:260px 320px minmax(300px,1fr); gap:var(--s-5); }
-    .download-stage { width:320px; height:380px; }
+    .story-grid { grid-template-columns:minmax(0,1fr) 360px; }
+    .story-stage { width:360px; height:380px; }
+    .story-stage img { width:auto; max-width:none; height:430px; }
+    .download-layout { grid-template-columns:minmax(0,1fr) 360px; }
+    .download-card { grid-template-columns:200px minmax(0,1fr); gap:var(--s-5); }
+    .download-stage { width:360px; height:380px; }
     .download-stage img { width:auto; max-width:none; height:440px; }
     .slide-preview h2 { font-size:22px; }
   }
@@ -187,19 +193,20 @@
     .coach-rail { position:static; order:-1; display:grid; grid-template-columns:minmax(0,1fr) 200px; gap:var(--s-4); align-items:center; margin-bottom:var(--s-4); }
     .story-stage { width:200px; height:220px; }
     .story-stage img { width:auto; max-width:none; height:250px; }
-    .download-card { grid-template-columns:minmax(240px,1fr) 220px; }
-    .result-preview { grid-column:1/-1; }
+    .download-layout { grid-template-columns:minmax(0,1fr) 200px; }
+    .download-card { grid-template-columns:1fr; }
+    .download-stage { width:200px; height:220px; }
+    .download-stage img { height:250px; }
   }
   @media (max-width:900px) and (min-width:721px) {
-    .gather-hero { position:relative; display:block; min-height:184px; }
-    .gather-copy { padding-right:220px; }
-    .gather-setup { width:calc(100% + 220px); }
-    .hero-stage { position:absolute; top:0; right:0; width:196px; height:212px; }
-    .hero-stage img { width:auto; max-width:none; height:236px; }
-    .download-card { grid-template-columns:1fr; }
-    .download-stage { justify-self:center; width:240px; height:240px; }
-    .download-stage img { width:auto; max-width:none; height:228px; }
-    .result-preview { grid-column:auto; }
+    .gather-hero { min-height:0; }
+    .gather-copy { padding-right:232px; }
+    .gather-setup { padding-right:0; }
+    .hero-stage { width:200px; height:220px; }
+    .hero-stage img { width:auto; max-width:none; height:250px; }
+    .download-layout { grid-template-columns:1fr; }
+    .download-stage { grid-row:1; width:200px; height:220px; }
+    .download-card { grid-row:2; }
   }
   @media (max-width:720px) {
     .sidebar { display:none; }
@@ -209,39 +216,42 @@
     .page { padding:var(--s-4) var(--s-4) 154px; }
     .desktop-tag { display:none; }
     h1 { font-size:24px; }
-    .gather-hero { position:relative; display:block; min-height:160px; }
-    .gather-copy { padding-right:160px; }
+    .gather-hero { min-height:0; }
+    .gather-copy { padding-right:0; }
     .gather-copy h1 { font-size:24px; }
-    .gather-setup { width:calc(100% + 160px); margin-top:var(--s-7); }
-    .hero-stage { position:absolute; top:0; right:0; width:148px; height:160px; }
-    .hero-stage img { width:auto; max-width:none; height:180px; }
+    .gather-setup { width:100%; margin-top:var(--s-7); padding-right:0; }
+    .gather-setup > div:first-child .choice-row { padding-right:72px; }
+    .hero-stage { z-index:2; top:110.8px; width:64px; height:56px; }
+    .hero-stage img { width:64px; height:56px; object-fit:contain; transform:translate(-50%,-50%); }
+    .hero-stage .motion-tag,.story-stage .motion-tag,.download-stage .motion-tag { display:none; }
     .choice-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
     .choice { min-width:0; padding:0 var(--s-2); }
     .choice-row.length { grid-template-columns:repeat(4,minmax(0,1fr)); }
     .guide-box ul { grid-template-columns:1fr; }
     .materials { margin-top:var(--s-5); }
     .story-title { margin-bottom:var(--s-4); }
-    .coach-rail { position:sticky; z-index:20; top:56px; grid-template-columns:minmax(0,1fr) 140px; gap:var(--s-3); margin:0; padding-bottom:var(--s-3); background:var(--paper); }
+    .story-grid { position:relative; display:grid; grid-template-columns:1fr; gap:0; }
+    .coach-rail { display:contents; }
+    .score-card { grid-row:1; grid-column:1; margin-bottom:var(--s-4); }
+    .story-main { grid-row:2; grid-column:1; }
     .score-head { grid-template-columns:40px minmax(0,1fr) 14px; min-height:96px; gap:var(--s-2); padding:var(--s-2); }
     .score-ring { width:40px; height:40px; }
     .score-ring svg { width:40px; height:40px; }
     .score-face { inset:6px; width:28px; height:28px; }
-    .story-stage { width:140px; height:158px; }
-    .story-stage img { width:auto; max-width:none; height:180px; }
-    .is-expanded .coach-rail,.composer-active .coach-rail { position:static; grid-template-columns:minmax(0,1fr) 140px; }
-    .is-expanded .score-card { grid-column:1/-1; }
-    .is-expanded .story-stage { grid-column:2; }
+    .story-stage { z-index:2; grid-row:2; grid-column:1; align-self:start; justify-self:end; width:64px; height:56px; margin-top:var(--s-4); }
+    .story-stage img { width:64px; height:56px; object-fit:contain; transform:translate(-50%,-50%); }
+    .story-main > .part-head:first-child { min-height:56px; padding-right:72px; }
     .score-dims { padding:var(--s-2); }
     .score-dims li { grid-template-columns:minmax(72px,1fr) 46px 48px 28px; gap:6px; min-height:34px; }
     .score-bars b { width:12px; }
-    .foundation li { scroll-margin-top:242px; }
-    .is-expanded .foundation li,.composer-active .foundation li { scroll-margin-top:72px; }
+    .foundation li { scroll-margin-top:72px; }
     .download-head .lede { max-width:330px; }
-    .download-card { grid-template-columns:1fr; gap:var(--s-5); margin-top:var(--s-5); padding:var(--s-5); }
-    .download-stage { order:-2; justify-self:center; width:220px; height:240px; }
-    .download-stage img { width:auto; max-width:none; height:260px; }
-    .package-body { order:-1; }
-    .result-preview { order:0; grid-column:auto; padding:var(--s-3); }
+    .download-layout { grid-template-columns:minmax(0,1fr) 64px; grid-template-areas:"mobile-title stage" "card card"; gap:var(--s-2) 0; margin-top:var(--s-5); }
+    .download-mobile-title { grid-area:mobile-title; display:flex; align-items:center; min-height:56px; margin:0; font-size:16px; line-height:24px; font-weight:600; }
+    .download-card { grid-area:card; grid-template-columns:1fr; gap:var(--s-5); padding:var(--s-5); }
+    .download-stage { grid-area:stage; width:64px; height:56px; }
+    .download-stage img { width:64px; height:56px; object-fit:contain; transform:translate(-50%,-50%); }
+    .result-preview { padding:var(--s-3); }
     .slide-preview { padding:var(--s-4); }
     .slide-preview h2 { margin-top:17%; font-size:20px; }
     .footer { left:0; padding:9px 0 var(--s-3); }
@@ -251,10 +261,7 @@
     .footer-actions { display:grid; gap:var(--s-2); }
     .composer,.next { width:100%; }
   }
-  @media (max-width:720px) and (max-height:699px) {
-    .coach-rail { position:static; }
-    .foundation li { scroll-margin-top:72px; }
-  }
+  @media (max-width:720px) and (max-height:699px) { .foundation li { scroll-margin-top:72px; } }
   @media (prefers-reduced-motion:reduce) {
     .score-face,.score-up .score-face { animation:none!important; }
   }
@@ -279,13 +286,11 @@
       <div class="page">
         <section class="screen gather-screen">
           <div class="gather-hero">
-            <div class="gather-copy">
-              <h1>把你的项目，讲成一个好故事。</h1><p class="lede">先把你知道的都倒出来。</p>
-              <div class="gather-setup">
-                <div><span class="section-label">用在哪</span><div class="choice-row"><button class="choice on">面试</button><button class="choice">汇报</button><button class="choice">作品集</button></div></div>
-                <div><span class="section-label">谁会听</span><div class="choice-row"><button class="choice on">设计负责人</button><button class="choice on">产品负责人</button><button class="choice">招聘经理</button></div></div>
-                <div><span class="section-label">准备讲多久</span><div class="choice-row length"><button class="choice compact">5 分钟</button><button class="choice compact on">10 分钟</button><button class="choice compact">15 分钟</button><button class="choice compact">30 分钟</button></div></div>
-              </div>
+            <div class="gather-copy"><h1>把你的项目，讲成一个好故事。</h1><p class="lede">先把你知道的都倒出来。</p></div>
+            <div class="gather-setup">
+              <div><span class="section-label">用在哪</span><div class="choice-row"><button class="choice on">面试</button><button class="choice">汇报</button><button class="choice">作品集</button></div></div>
+              <div><span class="section-label">谁会听</span><div class="choice-row"><button class="choice on">设计负责人</button><button class="choice on">产品负责人</button><button class="choice">招聘经理</button></div></div>
+              <div><span class="section-label">准备讲多久</span><div class="choice-row length"><button class="choice compact">5 分钟</button><button class="choice compact on">10 分钟</button><button class="choice compact">15 分钟</button><button class="choice compact">30 分钟</button></div></div>
             </div>
             <div class="hero-stage" aria-hidden="true"><img src="../../../assets/lumi/source/wave.webp" alt=""><span class="motion-tag">标注 · wave 循环</span></div>
           </div>
@@ -320,10 +325,13 @@
 
         <section class="screen download-screen">
           <header class="download-head"><h1>你的故事，准备好了。</h1><p class="lede">草稿只存在这个浏览器里，下载一份带走。</p></header>
-          <div class="download-card">
-            <div class="package-body"><ul class="pkg-list"><li class="pkg-item"><span class="check-box">✓</span><span class="file-icon">▤</span><span>演示文件 <small>.html</small></span></li><li class="pkg-item"><span class="check-box">✓</span><span class="file-icon">▧</span><span>讲稿 <small>.md</small></span></li><li class="pkg-item"><span class="check-box">✓</span><span class="file-icon">▥</span><span>项目文件 <small>.json</small></span></li><li class="pkg-item"><span class="check-box">✓</span><span class="file-icon">◇</span><span>设计系统 <small>.md</small></span></li></ul><button class="download-button">下载</button><p class="github-link">想放到网上？ <a class="text-link">用 GitHub Pages 发布 ↗</a></p></div>
+          <div class="download-layout">
+            <h2 class="download-mobile-title">你要下载的内容</h2>
+            <div class="download-card">
+              <div class="package-body"><ul class="pkg-list"><li class="pkg-item"><span class="check-box">✓</span><span class="file-icon">▤</span><span>演示文件 <small>.html</small></span></li><li class="pkg-item"><span class="check-box">✓</span><span class="file-icon">▧</span><span>讲稿 <small>.md</small></span></li><li class="pkg-item"><span class="check-box">✓</span><span class="file-icon">▥</span><span>项目文件 <small>.json</small></span></li><li class="pkg-item"><span class="check-box">✓</span><span class="file-icon">◇</span><span>设计系统 <small>.md</small></span></li></ul><button class="download-button">下载</button><p class="github-link">想放到网上？ <a class="text-link">用 GitHub Pages 发布 ↗</a></p></div>
+              <section class="result-preview" aria-label="下载内容预览"><div class="preview-label"><strong>你要下载的内容</strong><span>第一页预览</span></div><div class="slide-preview"><span class="slide-index">LUMI / 01</span><h2>三天，变成四小时。</h2></div><div class="final-score"><span class="mini-ring">8</span><div><strong>最终评分 8/10</strong><p>2 项可加强 · 下载后仍可继续编辑</p></div><span class="score-ready">已准备</span></div></section>
+            </div>
             <div class="download-stage" aria-hidden="true"><img src="../../../assets/lumi/source/cheer.webp" alt=""><span class="motion-tag">标注 · cheer 循环</span></div>
-            <section class="result-preview" aria-label="下载内容预览"><div class="preview-label"><strong>你要下载的内容</strong><span>第一页预览</span></div><div class="slide-preview"><span class="slide-index">LUMI / 01</span><h2>三天，变成四小时。</h2></div><div class="final-score"><span class="mini-ring">8</span><div><strong>最终评分 8/10</strong><p>2 项可加强 · 下载后仍可继续编辑</p></div><span class="score-ready">已准备</span></div></section>
           </div>
         </section>
       </div>
