@@ -1,6 +1,6 @@
 # Lumi character scale, Step 2 interaction, and download-result layout
 
-Status: revised static proposal for Lu review. It updates PR #35 after the 2026-10-24 decisions in PR #36. It changes no production code and generates no paid animation.
+Status: revised static proposal for Lu review. It updates PR #35 after Lu's 2026-10-25 marked screenshot and the 2026-10-24 decisions in PR #36. It changes no production code and generates no paid animation.
 
 ## Recommendation and rationale
 
@@ -10,7 +10,7 @@ Treat Lumi as a visible coach at the three moments where the product changes mod
 - **Step 2 / thinking + jump:** a coaching rail paired with StoryScore. The body reacts to work; the face inside StoryScore continues to communicate the score tier.
 - **Step 5 / cheer:** a celebration in the same full-width result surface as the downloadable files and a preview of what the user made.
 
-At about 1900px, the content still stops at a 1280px maximum. Lumi grows inside that working area rather than drifting into unused viewport space. At 1280px, the character scales down while the story keeps at least 640px. At 390px, the same hierarchy becomes a compact coach band or a single-column result card.
+At about 1900px, the page and Composer expand to a 1600px maximum so the working area uses the same right-hand territory as the enlarged character. The Step 1 character occupies the approximately 526 × 574 CSS-pixel zone Lu marked in her 3820 × 1942 screenshot. At 1280px, the character scales down while the story keeps at least 640px. At 390px, the same hierarchy becomes a compact coach band or a single-column result card.
 
 Mood and personality: calm, observant, warm, precise, lightly playful. The clay character carries the expression; paper, ink, hairlines, and whitespace stay quiet.
 
@@ -54,24 +54,24 @@ Typography stays on the design-system sans stack. Page titles are 24/600, except
 ## Shared layout and spacing
 
 - Keep the existing 232px desktop sidebar.
-- Centre a shared content wrapper at `max-width: 1280px` for the page and fixed Composer.
+- Centre a shared content wrapper at `max-width: 1600px` for the page and fixed Composer at 1500px and wider. Keep the existing 1280px maximum below that breakpoint.
 - At 1500px and wider, use 40px left and right content gutters. Between 721px and 1499px, use `s-6` = 32px. At mobile, use `s-4` = 16px.
-- The Composer and its `下一步` button use the same wrapper and gutters as the page. The bar therefore fills the content width and has equal space on both sides.
+- The Composer and its `下一步` button use the same wrapper and gutters as the page. At 1900px the bar extends through the enlarged Lumi column to its right edge; at 1280px and below it keeps the existing responsive wrapper.
 - Use existing spacing tokens only: 4, 8, 12, 16, 24, 32, 48, and 64px.
 
 ## Step 1: wave
 
 ### Desktop
 
-- At 1500px and wider, use `minmax(0, 1fr) 420px` with a 48px gap. Reserve a 400px square stage and render the transparent square asset at 380px.
-- From 901px through 1499px, use a 340px character column, a 320px stage, and a 300px render.
-- From 721px through 900px, reserve a compact 180px stage at the upper right and render Lumi at 168px. Keep 204px clear on the right of the title and lead, then let the setup controls use the full content width below that top block. This prevents the copy column from collapsing beside the desktop character column.
+- At 1500px and wider, use `minmax(0, 1fr) 560px` with a 48px gap. Reserve a 520 × 570px stage and render the transparent source at 640px high. The source's alpha bounds produce an approximately 444 × 572px visible character, filling Lu's marked zone without cropping hair, scarf, star, or feet.
+- From 901px through 1499px, use a 380px character column, a 360 × 380px stage, and a 430px-high render. At the 1280px reference this produces an approximately 298 × 384px visible character.
+- From 721px through 900px, reserve a compact 196 × 212px stage at the upper right and render Lumi at 236px high. Keep 220px clear on the right of the title and lead, then let the setup controls use the full content width below that top block. This prevents the copy column from collapsing beside the desktop character column.
 - The copy, setup controls, material guide, and Composer keep their existing components. Enlarging Lumi does not reduce a control, font, or hit target.
 
 ### Mobile
 
-- Reserve a 136px stage at the upper right and render Lumi at 128px.
-- Keep 148px clear on the right of the title and lead. Let the setup controls return to the full 358px content width below that top block.
+- Reserve a 148 × 160px stage at the upper right and render Lumi at 180px high.
+- Keep 160px clear on the right of the title and lead. Let the setup controls return to the full 358px content width below that top block.
 - The Step 1 Composer continues to use its existing prompt; no new card or bubble is added.
 
 ## Step 2: one current row and coaching rail
@@ -85,24 +85,24 @@ Typography stays on the design-system sans stack. Page titles are 24/600, except
 
 ### Wide layout: 1272px and above
 
-- From 1272px through 1499px, use `minmax(0, 1fr) 304px`, with `s-6` = 32px between columns. Stage: 288px; rendered square: 272px.
-- At 1500px and wider, enlarge the coach rail to 336px. Stage: 320px; rendered square: 304px.
+- From 1272px through 1499px, use `minmax(0, 1fr) 304px`, with `s-6` = 32px between columns. Stage: 304 × 360px; render: 400px high.
+- At 1500px and wider, enlarge the coach rail to 520px. Stage: 520 × 570px; render: 650px high. The visible standing character is approximately 464 × 570px.
 - At a 1280px viewport, the 32px page gutters leave a 648px story column. At the 1272px threshold, the story column is 640px.
-- At about 1900px, the max-width wrapper leaves an 832px story column; Lumi remains connected to StoryScore in the 336px rail instead of occupying the empty outer viewport.
+- At about 1900px, the 1600px wrapper leaves an approximately 968px story column. Lumi remains connected to StoryScore in the 520px coaching rail while using the previously empty right side of the viewport.
 - The coach rail is sticky at `top: s-6` = 32px. StoryScore remains first; the full-body stage sits below it.
 
 ### Compact layout: 721–1271px
 
 - Move the coaching region above the story rows in normal document flow.
-- StoryScore takes the flexible column; Lumi uses a 160px stage with a 152px render.
+- StoryScore takes the flexible column; Lumi uses a 200 × 220px stage with a 250px-high render.
 - Do not keep a side rail if it would push the story below 640px.
 
 ### Mobile: 390px reference
 
 - Top bar: 56px. Page gutter: 16px.
-- Closed coach band: `minmax(0, 1fr) 128px` with a 12px gap. Stage: 128px; rendered square: 120px.
+- Closed coach band: `minmax(0, 1fr) 140px` with a 12px gap. Stage: 140 × 158px; render: 180px high.
 - The closed band may stick below the top bar only when the layout viewport is at least 700px and the Composer is not focused.
-- Its measured height is 140px, including 12px bottom padding. Sticky row targets therefore use `scroll-margin-top: 212px` = 56px top bar + 140px band + 16px breathing room.
+- Its measured height is 170px, including 12px bottom padding. Sticky row targets therefore use `scroll-margin-top: 242px` = 56px top bar + 170px band + 16px breathing room.
 - Open StoryScore, Composer focus, and a short or keyboard-contracted viewport put the band back into normal document flow. These states use `scroll-margin-top: 72px` = 56px top bar + 16px breathing room.
 - Open StoryScore spans the full width and retains all five dimensions, statuses, and `去补` links. Lumi stays below it in the right column.
 - Preserve the shared row grid: 24px number column, 12px gap, 16px horizontal padding, 14px question, 13px answer, and visible source status.
@@ -132,8 +132,8 @@ Use one full-width `sunken` result surface with three related parts: file packag
 
 ### Wide and standard desktop
 
-- At 1500px and wider: `300px 320px minmax(340px, 1fr)`, with 32px gaps and 32px card padding.
-- At 1280px: `260px 240px minmax(300px, 1fr)`, with 24px gaps. Stage: 240px; rendered asset: 228px.
+- At 1500px and wider: `300px 520px minmax(340px, 1fr)`, with 32px gaps and 32px card padding. Stage: 520 × 570px; render: 680px high.
+- At 1280px: `260px 320px minmax(300px, 1fr)`, with 24px gaps. Stage: 320 × 380px; render: 440px high.
 - The preview contains the first generated slide thumbnail and the final story score. It is read-only and does not introduce editing at Step 5.
 - Keep download as the primary action inside the package column. Step 5 has no Composer.
 
@@ -145,7 +145,7 @@ Use one full-width `sunken` result surface with three related parts: file packag
 
 ### Mobile
 
-- Stack cheer, package, then preview inside the same card. Use a 184px stage and a 176px render. Keeping the file package before the read-only preview preserves the download action's priority.
+- Stack cheer, package, then preview inside the same card. Use a 220 × 240px stage and a 260px-high render. Keeping the file package before the read-only preview preserves the download action's priority.
 - Keep the download button at least 40px high and the result preview inside the normal document flow; the page may scroll rather than compress text or controls.
 
 ## Animation placement and file constraints
@@ -208,6 +208,7 @@ Use only the approved clay renders in `assets/lumi/source/`. Keep Lumi's face, h
 - [PR #29: Step 2 Claude drafting, review, and score](https://github.com/lujin88/Lumi-Storytelling/pull/29) — implemented StoryScore, question rows, source statuses, busy line, and Composer.
 - [PR #34: Lu's full-body Lumi decision](https://github.com/lujin88/Lumi-Storytelling/pull/34) — approval to add a full-body Step 2 coach before generating motion.
 - [PR #36: Lu's scale, interaction, looping, and preview decisions](https://github.com/lujin88/Lumi-Storytelling/pull/36) — current scope and owner decisions for this revision.
+- [Lu's 3820 × 1942 marked screenshot](https://buzz-wwbf.srv2056990.hstgr.cloud/media/81d9d7f064186974433d24f4ef913f14678827a51ded4d1c829522fabb6ba436.png) and `#lumi-storytelling` event `ba9b4c3512b01b0f7bd8819d91b03d668821785a9bc86507fe51e39844a2bf96` — the outer red box measures approximately 526 × 574 CSS px at 2× capture scale; it is the 1900px Step 1 character target.
 - [`design-system/README.md`](../../design-system/README.md) — one reading axis, one current row, spacing, colour, and motion restraint.
 - [`design-system/tokens.json`](../../design-system/tokens.json) — colour, type, spacing, radius, and responsive values.
 - [`design-system/components/QuestionList/README.md`](../../design-system/components/QuestionList/README.md) — row grid, typography, status, and current-row treatment.
