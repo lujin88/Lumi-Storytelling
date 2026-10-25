@@ -513,31 +513,49 @@ test('without assets/lumi/ the download page still bounces in place and never sc
 });
 
 test('the cheer clip on the download page stays inside the viewport and the page does not scroll sideways', async ({ page }) => {
+  // Five widths, each reading one loop at half speed (8 s) after waiting for the first restart.
+  test.setTimeout(120_000);
   // Served over http so the clip frames can be read back from a canvas.
-  for (const w of [1900, 1512]) {
+  // 1500-1599 has the big stage with a 40px gutter, 1600 and up a 64px one.
+  for (const w of [1500, 1512, 1599, 1600, 1900]) {
     await page.setViewportSize({ width: w, height: 1000 });
     await openApp(page, { http: true });
     await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
     const video = page.locator('.dl-stage video[data-lumi-video]');
     await expect(video).toBeVisible();
     expect(await sidewaysScroll(page), `${w} sideways scroll`).toBe(0);
-    // Rightmost opaque pixel over 2.5 s of the loop, in page coordinates.
-    const right = await video.evaluate(async (v) => {
+    // Rightmost opaque pixel over one whole loop, read frame by frame with requestVideoFrameCallback.
+    // The star is raised furthest in a single frame (3.08 s of 4.04 s), so sampling on a timer misses it.
+    // Half speed so no frame is dropped while each one is read back.
+    const { right, frames } = await video.evaluate(async (v) => {
       if (v.readyState < 2) await new Promise((res) => v.addEventListener('loadeddata', res, { once: true }));
       const c = document.createElement('canvas'), x = c.getContext('2d', { willReadFrequently: true });
       c.width = v.videoWidth; c.height = v.videoHeight;
-      let max = -1;
-      for (let n = 0; n < 25; n++) {
-        x.clearRect(0, 0, c.width, c.height); x.drawImage(v, 0, 0);
-        const d = x.getImageData(0, 0, c.width, c.height).data;
-        for (let i = 3; i < d.length; i += 4) if (d[i] > 128) max = Math.max(max, ((i - 3) / 4) % c.width);
-        await new Promise((r) => setTimeout(r, 100));
-      }
+      v.playbackRate = 0.5;
+      let max = -1, frames = 0, last = -1, wraps = 0;
+      await new Promise((done) => {
+        const read = (now, meta) => {
+          // Read from the first loop restart to the next one: exactly one loop.
+          if (meta.mediaTime < last) wraps++;
+          last = meta.mediaTime;
+          if (wraps >= 2) return done();
+          if (wraps === 1) {
+            x.clearRect(0, 0, c.width, c.height); x.drawImage(v, 0, 0);
+            const d = x.getImageData(0, 0, c.width, c.height).data;
+            for (let i = 3; i < d.length; i += 4) if (d[i] > 128) max = Math.max(max, ((i - 3) / 4) % c.width);
+            frames++;
+          }
+          v.requestVideoFrameCallback(read);
+        };
+        v.requestVideoFrameCallback(read);
+      });
       // object-fit: contain, and the box has the clip's aspect ratio.
       const b = v.getBoundingClientRect();
-      return b.x + (max + 1) * (b.width / c.width);
+      return { right: b.x + (max + 1) * (b.width / c.width), frames };
     });
-    expect(right, `${w} Lumi's right edge`).toBeLessThanOrEqual(w);
+    // cheer.webm has 97 frames at 24 fps.
+    expect(frames, `${w} frames read in one loop`).toBeGreaterThanOrEqual(95);
+    expect(right, `${w} Lumi's right edge`).toBeLessThanOrEqual(w - 4);
   }
 });
 
