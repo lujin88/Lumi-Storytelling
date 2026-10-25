@@ -178,7 +178,7 @@ test('a key check that never answers stops after 15 seconds and can be run again
 });
 
 // Lu, 2026-10-25: the card's "try the sample" link lines up with step 1's
-// "load a sample" link below it. If the two card buttons do not fit on one
+// "load a sample" link below it, both 16px in from the card's right edge. If the two card buttons do not fit on one
 // line, the link wraps to its own line, still on the right and inside the card.
 for (const width of [1900, 1512, 1280, 390]) {
   test(`the card's sample link lines up with the step 1 sample link at ${width}px`, async ({ page }) => {
@@ -192,6 +192,8 @@ for (const width of [1900, 1512, 1280, 390]) {
     const load = await box('[data-action="loadSample"]');
     const cardBox = await box('.first-run');
     expect(Math.abs((sample.x + sample.width) - (load.x + load.width))).toBeLessThanOrEqual(1);
+    // Lu, 2026-10-25: both links keep the card's 16px inner padding on the right.
+    expect(Math.round(cardBox.x + cardBox.width - (sample.x + sample.width)), 'card right padding').toBe(16);
     expect(sample.x).toBeGreaterThanOrEqual(cardBox.x);
     expect(sample.x + sample.width).toBeLessThanOrEqual(cardBox.x + cardBox.width + 0.5);
     expect(sample.y + sample.height).toBeLessThanOrEqual(cardBox.y + cardBox.height);

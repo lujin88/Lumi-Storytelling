@@ -688,14 +688,39 @@ test('the download page Lumi takes the same box whether the clip plays or the st
   }
 });
 
-test('step 1 Lumi is 80% of its first size: 192px wide from 1001px up, 150px below', async ({ page }) => {
-  for (const [w, width] of [[1905, 192], [1512, 192], [1001, 192], [1000, 150]]) {
+test('step 1 Lumi is 256px wide from 1280px up, 192px down to 1001px, 150px below, and clears the content around it', async ({ page }) => {
+  for (const [w, width] of [[1905, 256], [1512, 256], [1280, 256], [1279, 192], [1001, 192], [1000, 150]]) {
     await page.setViewportSize({ width: w, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     const errors = await openApp(page);
     // The wave clip takes the still's place, so measure whichever one is on screen.
     const shown = page.locator(`${WAVE}:visible, img.intro-lumi[data-lumi]:visible`).first();
     await expect(shown).toBeVisible();
-    expect(Math.round((await shown.boundingBox()).width), `${w}px`).toBe(width);
+    const lumi = await shown.boundingBox();
+    expect(Math.round(lumi.width), `${w}px`).toBe(width);
+    // At least 24px to the setup rows beside it and to the card above and the brief box below.
+    const box = (sel) => page.locator(sel).first().boundingBox();
+    for (const sel of ['.dump-left .choice-row', '.dump-left .choice-row.compact']) {
+      const r = await box(sel);
+      expect(lumi.x - (r.x + r.width), `${w}px ${sel}`).toBeGreaterThanOrEqual(24);
+    }
+    const card = await box('.first-run');
+    expect(lumi.y - (card.y + card.height), `${w}px card`).toBeGreaterThanOrEqual(24);
+    const brief = await box('.brief-saved');
+    expect(brief.y - (lumi.y + lumi.height), `${w}px brief`).toBeGreaterThanOrEqual(24);
+    expect(await sidewaysScroll(page), `${w}px sideways scroll`).toBe(0);
     expect(errors).toEqual([]);
+  }
+});
+
+test('the download page Lumi is 60% of its first 673px size from 1272px up', async ({ page }) => {
+  for (const w of [1905, 1512, 1280]) {
+    await page.setViewportSize({ width: w, height: 1000 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await openApp(page);
+    await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+    const still = page.locator('.dl-stage img[data-lumi]');
+    await expect(still).toBeVisible();
+    expect(await still.evaluate((el) => [el.offsetWidth, el.offsetHeight]), `${w}px`).toEqual([404, 407]);
   }
 });

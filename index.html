@@ -774,12 +774,13 @@ html.dark :is(#content .deck-thumb,.modal .deck-zoom){color:var(--ink)}
 #content .intro{align-items:start!important;padding-top:0!important}
 #content .intro-art{margin-top:calc(-1 * var(--s-3))!important}
 #content .intro-lumi{width:136px}
-/* dump v4: setup stacked on the left, bigger Lumi on the right (80% of the first 240px, like the download page) */
+/* dump v4: setup stacked on the left, bigger Lumi on the right. Lu, 2026-10-25: 256px from 1280 up; below that the setup rows need the width, so 192px. */
 #content .dump-top{display:grid;grid-template-columns:minmax(0,1fr) 208px;gap:var(--s-6);align-items:center}
 #content .dump-left{min-width:0}
 #content .dump-left .intro{display:block!important;padding:0!important}
 #content .dump-top .intro-art{margin:0!important;justify-content:center}
 #content .dump-top .intro-lumi{width:192px}
+@media(min-width:1280px){#content .dump-top{grid-template-columns:minmax(0,1fr) 256px}#content .dump-top .intro-lumi{width:256px}}
 #content .page-dump .setup-row{display:flex!important;flex-direction:column;gap:var(--s-5);margin-top:var(--s-6)!important}
 #content .page-dump .setup-row .choice-row{max-width:720px}
 #content .page-dump .setup-row .choice-row.compact{display:grid;grid-template-columns:repeat(4,96px);gap:var(--s-2)}
@@ -852,7 +853,9 @@ html.dark :is(#content .deck-thumb,.modal .deck-zoom){color:var(--ink)}
 #content .first-run{max-width:960px;margin:0 0 var(--s-4);padding:var(--s-4);border-radius:var(--r-surface);background:var(--sunken)}
 #content .first-run h2{margin:0 0 var(--s-1);font-size:var(--fs-16)}
 #content .first-run p{margin:0 0 var(--s-3);color:var(--muted);font-size:var(--fs-13)}
-#content .first-run .row{flex-wrap:wrap;gap:var(--s-2) var(--s-4);align-items:center}#content .first-run [data-action="firstRunSample"]{margin-left:auto;margin-right:calc(-1 * var(--s-4))}
+#content .first-run .row{flex-wrap:wrap;gap:var(--s-2) var(--s-4);align-items:center}#content .first-run [data-action="firstRunSample"]{margin-left:auto}
+/* Lu, 2026-10-25: both sample links keep the card's 16px inner padding on the right, so they end on the same line as the guide box text below. */
+#content .page-dump .brief-saved>.section-head{padding-right:var(--s-4)}
 #content .connect-prompt{display:flex;align-items:center;gap:8px;max-width:960px;margin:0 0 var(--s-3);font-size:var(--fs-13);color:var(--danger)}
 .connect-prompt.tip{color:var(--muted)}
 #footer .ai-status{display:flex;align-items:center;gap:8px;max-width:1172px;margin:0 auto var(--s-2);font-size:var(--fs-13);color:var(--muted)}
@@ -1118,12 +1121,12 @@ html body #content .aud-row button.aud-chip.on{border-color:var(--action-line)!i
 #content .page-publish .dl-ready{color:var(--ok);font-size:12px}
 /* The media box is wider than the stage, so it is centered with left/top, not transform: the fallback still keeps its lumiCheer transform animation without leaving the stage. The page clips the overflow at the viewport edge, past Lumi's outline. */
 #content:has(.page-publish){overflow-x:clip}
-/* On the big stage the cheer clip's raised star reaches 56px past the stage's right edge (frame 74 of cheer.webm, 68px at the earlier 673px size scaled to 540px), which sits one gutter from the viewport edge. The box moves in by whatever the gutter lacks, so the star always keeps 8px to the edge and Lumi holds the same screen position when the gutter grows at 1600px. */
-#content .page-publish .dl-stage{--lw:540px;--lh:544px;--lshift:max(0px,64px - var(--gutter));position:relative;width:416px;height:456px;justify-self:end}
+/* Lu, 2026-10-25: the download page Lumi is 60% of its first 673px size (404px). At that size the cheer clip's raised star stays inside the stage, so the box no longer moves in from the viewport edge. */
+#content .page-publish .dl-stage{--lw:404px;--lh:407px;--lshift:0px;position:relative;width:416px;height:456px;justify-self:end}
 #content .page-publish .dl-lumi{position:absolute;left:calc(50% - var(--lw)/2 - var(--lshift,0px));top:calc(50% - var(--lh)/2);width:var(--lw)!important;height:var(--lh)!important;max-width:none!important;margin:0!important;object-fit:contain;pointer-events:none;filter:drop-shadow(0 18px 24px #252a3814)!important}
 /* Up to 1699 the big stage leaves the slide under ~330px wide: three 26px lines do not fit. */
 @media(min-width:1500px) and (max-width:1699px){#content .page-publish .dl-slide h3{-webkit-line-clamp:2;font-size:20px}}
-@media(max-width:1499px){#content .page-publish .dl-layout{grid-template-columns:minmax(0,1fr) 360px}#content .page-publish .dl-card{grid-template-columns:200px minmax(0,1fr);gap:var(--s-5)}#content .page-publish .dl-stage{--lw:435px;--lh:440px;--lshift:0px;width:360px;height:380px}#content .page-publish .dl-slide h3{-webkit-line-clamp:2;font-size:22px}}
+@media(max-width:1499px){#content .page-publish .dl-layout{grid-template-columns:minmax(0,1fr) 360px}#content .page-publish .dl-card{grid-template-columns:200px minmax(0,1fr);gap:var(--s-5)}#content .page-publish .dl-stage{--lw:404px;--lh:407px;--lshift:0px;width:360px;height:380px}#content .page-publish .dl-slide h3{-webkit-line-clamp:2;font-size:22px}}
 @media(max-width:1271px){#content .page-publish .dl-layout{grid-template-columns:minmax(0,1fr) 200px}#content .page-publish .dl-card{grid-template-columns:1fr}#content .page-publish .dl-stage{--lw:247px;--lh:250px;width:200px;height:220px}}
 @media(max-width:900px) and (min-width:721px){#content .page-publish .dl-layout{grid-template-columns:1fr}#content .page-publish .dl-stage{grid-row:1}#content .page-publish .dl-card{grid-row:2}}
 @media(max-width:720px){#content .page-publish .dl-layout{grid-template-columns:minmax(0,1fr) 64px;grid-template-areas:"title stage" "card card";gap:var(--s-2) 0;margin-top:var(--s-5)}#content .page-publish .dl-mobile-title{grid-area:title;display:flex;align-items:center;min-height:56px;margin:0;font-size:16px;line-height:24px;font-weight:600}#content .page-publish .dl-card{grid-area:card;grid-template-columns:1fr;gap:var(--s-5);padding:var(--s-5)}#content .page-publish .dl-stage{--lw:64px;--lh:56px;grid-area:stage;width:64px;height:56px}#content .page-publish .dl-lumi{filter:none!important}#content .page-publish .dl-preview{padding:var(--s-3)}#content .page-publish .dl-slide{padding:var(--s-4)}#content .page-publish .dl-slide h3{-webkit-line-clamp:2;font-size:20px}}
