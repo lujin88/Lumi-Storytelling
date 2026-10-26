@@ -24,6 +24,6 @@ GitHub bot account is 403 (suspended): no PRs, no pushes. All work is committed 
 - Dark secondary button fix `e2596ae` (QA pass, 112 tests), local only, waiting for GitHub.
 
 ## 下一步
-1. Developer | fix the full-site issue list in batches; QA + visual QA per batch; final full-site sign-off against `bar.md`.
+1. Developer | batch 1 assigned 2026-10-26 on `demo/2026-10-26` from `d292c30` (light only): zoom modal text styles, non-empty D1 test case, 390 step 4 overflow + step 3 toolbar wrap, empty download page "ready" copy (existing copy only, else UX copywriter), flaky test :448 root cause + 20 runs. Batch 2: Material Symbols -> Remix Icon, bottom CTA arrow. Dark items wait for Lu's dark palette decision. Then the rest of the full-site list in batches; QA + visual QA per batch; final full-site sign-off against `bar.md`.
 2. PM | once GitHub works: open PRs for the local branches (demo fixes, `e2596ae`, dark palette after Lu approves), Lu merges.
 3. Lu decides on publishing only after the full-site sign-off.
