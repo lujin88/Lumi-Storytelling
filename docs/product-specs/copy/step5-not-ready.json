@@ -6,5 +6,9 @@
   "publish.notReady.subtitle": {
     "zh": "先回到「收集素材」，把你知道的写下来。",
     "en": "Go back to Gather and write down what you know."
+  },
+  "publish.notReady.scoreNote": {
+    "zh": "还没有内容可以评分",
+    "en": "Nothing to score yet"
   }
 }
