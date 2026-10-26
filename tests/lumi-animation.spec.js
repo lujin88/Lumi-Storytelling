@@ -559,7 +559,9 @@ test('the download page shows the preview card and Lumi on a fixed stage, same b
       // Measure after the page's arrive slide-in (translateY 5px to 0) has ended. Mid-slide both rects carry a
       // fractional translate, and the media top at 1280 is exactly -13.5px from the stage, so the float noise left
       // after subtracting them rounded to -13 one run and -14 the next. Settled values are exact, so no rounding.
-      await page.evaluate(() => Promise.all(document.querySelector('#content .page').getAnimations().map((a) => a.finished)));
+      // Waits for children too, so an entrance added later inside the page is covered; looping animations never finish.
+      await page.evaluate(() => Promise.all(document.querySelector('#content .page').getAnimations({ subtree: true })
+        .filter((a) => a.effect && a.effect.getComputedTiming().endTime !== Infinity).map((a) => a.finished.catch(() => {}))));
       const [st, media] = await page.evaluate(() => {
         const st = document.querySelector('.dl-stage').getBoundingClientRect();
         const m = [...document.querySelectorAll('.dl-stage > *')].find((el) => getComputedStyle(el).display !== 'none').getBoundingClientRect();
@@ -722,6 +724,37 @@ test('the step 3 thumbnail, zoom modal and download preview show the first slide
       expect(zoom, `${name} ${w} zoom modal`).toEqual(build);
       expect(publish, `${name} ${w} download preview`).toEqual(build);
     }
+  }
+});
+
+// QA of 4b63fac: `.modal h2` / `.modal p` were scoped with :not(:where(.slide *)) so they stop reaching the zoomed
+// slide. Dialog text outside the slide must keep exactly the dialog styles every other modal uses.
+test('text outside the slide in the zoom modal keeps the dialog styles of other modals', async ({ page }) => {
+  // Direct and nested h2, p and p.small, as dialogs use them.
+  const probe = () => page.evaluate(() => {
+    const host = document.createElement('div');
+    host.innerHTML = '<h2 data-probe>Title</h2><p data-probe>Body</p><p class="small" data-probe>Note</p><div><h2 data-probe>Nested title</h2><p data-probe>Nested body</p></div>';
+    const m = document.querySelector('#modal');
+    m.append(...host.childNodes);
+    const keys = ['fontSize', 'fontWeight', 'lineHeight', 'color', 'marginTop', 'marginBottom', 'paddingRight'];
+    return [...m.querySelectorAll('[data-probe]')].map((el) => { const cs = getComputedStyle(el); return [el.textContent, ...keys.map((k) => cs[k])]; });
+  });
+  for (const w of [390, 1512]) {
+    await page.setViewportSize({ width: w, height: 900 });
+    // Fresh page, plain modal first: the zoom modal's `wide` class is never removed, so it would leak into a later one.
+    await openApp(page);
+    await page.evaluate(() => { if (!state.sample) loadSample(); go('build'); micGuide(); });
+    await expect(page.locator('#modal h2')).toBeVisible();
+    const plain = await probe();
+    await page.evaluate(() => $('#modal').close());
+    await page.click('[data-action="deckZoom:0"]');
+    await expect(page.locator('#modal .deck-zoom-scale .slide')).toBeVisible();
+    const zoom = await probe();
+    await page.evaluate(() => $('#modal').close());
+    expect(zoom.length, `${w} probes found`).toBe(5);
+    // The dialog title rule really applies (semibold), so the comparison is not two unstyled copies.
+    expect(plain[0][2], `${w} dialog h2 weight`).toBe('600');
+    expect(zoom, `${w} zoom modal vs microphone guide modal`).toEqual(plain);
   }
 });
 
