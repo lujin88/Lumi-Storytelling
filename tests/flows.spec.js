@@ -412,7 +412,12 @@ for (const [lang, copy] of [
     await expect(page.locator('.dl-score strong')).toContainText('0/10');
     await expect(page.locator('.dl-score p')).toHaveText(copy.note);
     await expect(page.locator('.dl-ready')).toHaveCount(0);
-    await page.evaluate(() => { loadSample(); go('publish'); });
+    // Content with a low score is not an empty project: the normal copy, not this set (cross review, 42bce62).
+    await page.evaluate(() => { state.found[FOUNDATION[0].id] = { text: 'x' }; go('publish'); });
+    expect(await page.evaluate(() => audit().total)).toBeLessThanOrEqual(2);
+    await expect(page.locator('#content h1')).toHaveText(copy.readyTitle);
+    await expect(page.locator('.dl-score p')).not.toHaveText(copy.note);
+    await page.evaluate(() => { delete state.found[FOUNDATION[0].id]; loadSample(); go('publish'); });
     await expect(page.locator('#content h1')).toHaveText(copy.readyTitle);
     await expect(page.locator('.dl-score p')).not.toHaveText(copy.note);
     await expect(page.locator('.dl-ready')).toHaveText(copy.ready);
