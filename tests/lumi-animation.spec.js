@@ -741,7 +741,7 @@ test('text outside the slide in the zoom modal keeps the dialog styles of other 
   });
   for (const w of [390, 1512]) {
     await page.setViewportSize({ width: w, height: 900 });
-    // Fresh page, plain modal first: the zoom modal's `wide` class is never removed, so it would leak into a later one.
+    // Fresh page, plain modal first, so this compares against a modal that has never been wide.
     await openApp(page);
     await page.evaluate(() => { if (!state.sample) loadSample(); go('build'); micGuide(); });
     await expect(page.locator('#modal h2')).toBeVisible();
@@ -756,6 +756,28 @@ test('text outside the slide in the zoom modal keeps the dialog styles of other 
     expect(plain[0][2], `${w} dialog h2 weight`).toBe('600');
     expect(zoom, `${w} zoom modal vs microphone guide modal`).toEqual(plain);
   }
+});
+
+// The zoom modal adds `wide` (960px). It used to stay on #modal, so every later dialog opened 960px wide.
+test('a dialog opened after the zoom modal is back to its normal width', async ({ page }) => {
+  await page.setViewportSize({ width: 1512, height: 900 });
+  await openApp(page);
+  const width = () => page.evaluate(() => Math.round(document.querySelector('#modal').getBoundingClientRect().width));
+  await page.evaluate(() => { if (!state.sample) loadSample(); go('build'); micGuide(); });
+  await expect(page.locator('#modal h2')).toBeVisible();
+  const normal = await width();
+  expect(normal, 'microphone guide before any zoom').toBe(540);
+  await page.evaluate(() => $('#modal').close());
+  await page.click('[data-action="deckZoom:0"]');
+  await expect(page.locator('#modal .deck-zoom-scale .slide')).toBeVisible();
+  expect(await width(), 'zoom modal').toBe(960);
+  // Paging inside the zoom modal re-renders it and must stay wide.
+  await page.click('#modal [data-action="deckZoom:1"]');
+  expect(await width(), 'zoom modal, slide 2').toBe(960);
+  await page.evaluate(() => { $('#modal').close(); micGuide(); });
+  await expect(page.locator('#modal h2')).toBeVisible();
+  expect(await width(), 'microphone guide after zoom').toBe(normal);
+  await expect(page.locator('#modal')).not.toHaveClass(/\bwide\b/);
 });
 
 test('the download page Lumi takes the same box whether the clip plays or the still falls back', async ({ browser }) => {
