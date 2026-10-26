@@ -674,10 +674,12 @@ test('the download preview shows the same first slide as step 3, scaled to fit a
 });
 
 // Visual recheck of 1b8a7d8 (D1): same HTML is not the same slide if the step 3 text rules do not reach step 5.
-test('the download preview first slide has the same title and text styles and line breaks as step 3', async ({ page }) => {
+// Visual recheck of d292c30: the sample cover has no body text or number, so a second case adds both; the step 3
+// zoom modal has to match too.
+test('the step 3 thumbnail, zoom modal and download preview show the first slide with the same text styles and line breaks', async ({ page }) => {
   await openApp(page);
   await page.evaluate(() => { if (!state.sample) loadSample(); });
-  // Computed styles and offset sizes are the unscaled 960x540 slide, before the fitDeckThumbs transform.
+  // Computed styles and offset sizes are the unscaled 960x540 slide, before the scale transform.
   const read = (root) => page.evaluate((root) => {
     const slide = document.querySelector(root + ' .slide');
     return ['h2', 'p', '.stat'].map((sel) => {
@@ -687,14 +689,36 @@ test('the download preview first slide has the same title and text styles and li
       return { sel, fontSize: cs.fontSize, lineHeight: cs.lineHeight, marginTop: cs.marginTop, marginBottom: cs.marginBottom, width: el.offsetWidth, lines: Math.round(el.offsetHeight / lh) };
     });
   }, root);
-  for (const w of [390, 1000, 1512, 1905]) {
-    await page.setViewportSize({ width: w, height: 900 });
-    await page.evaluate(() => go('build'));
-    const build = await read('#content .deck-row[data-deck="0"] .deck-scale');
-    await page.evaluate(() => go('publish'));
-    const publish = await read('.dl-slide .deck-scale');
-    expect(build[0], `${w} step 3 first slide has a title`).not.toBeNull();
-    expect(publish, `${w}`).toEqual(build);
+  const cases = [
+    ['sample cover', () => {}],
+    // Same slideHTML path, with a number layout and body text long enough to wrap.
+    ['cover with body text and a number', () => {
+      const s = getScenes()[0];
+      s.type = 'number';
+      s.zhp = s.enp = '交付时间从两周降到三天，评审轮次从五轮减到两轮，产品经理和研究员第一次在同一份文档里对齐了优先级。';
+    }],
+  ];
+  for (const [name, setup] of cases) {
+    await page.evaluate(setup);
+    for (const w of [390, 1000, 1512, 1905]) {
+      await page.setViewportSize({ width: w, height: 900 });
+      await page.evaluate(() => go('build'));
+      const build = await read('#content .deck-row[data-deck="0"] .deck-scale');
+      await page.click('[data-action="deckZoom:0"]');
+      await expect(page.locator('#modal .deck-zoom-scale .slide')).toBeVisible();
+      const zoom = await read('#modal .deck-zoom-scale');
+      await page.evaluate(() => $('#modal').close());
+      await page.evaluate(() => go('publish'));
+      const publish = await read('.dl-slide .deck-scale');
+      expect(build[0], `${name} ${w} step 3 first slide has a title`).not.toBeNull();
+      if (name !== 'sample cover') {
+        expect(build[1], `${name} ${w} body text`).not.toBeNull();
+        expect(build[2], `${name} ${w} number`).not.toBeNull();
+        expect(build[1].lines, `${name} ${w} body text wraps`).toBeGreaterThan(1);
+      }
+      expect(zoom, `${name} ${w} zoom modal`).toEqual(build);
+      expect(publish, `${name} ${w} download preview`).toEqual(build);
+    }
   }
 });
 
