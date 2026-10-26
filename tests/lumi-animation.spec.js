@@ -556,11 +556,14 @@ test('the download page shows the preview card and Lumi on a fixed stage, same b
       const title = await page.evaluate(() => getScenes()[0][state.lang]);
       await expect(page.locator('.dl-preview .dl-slide .slide.cover h2')).toHaveText(title);
       await expect(page.locator('.dl-preview .dl-score strong')).toContainText('/10');
-      // Stage and media are measured in one go, relative to the stage: the page itself may still be sliding in.
+      // Measure after the page's arrive slide-in (translateY 5px to 0) has ended. Mid-slide both rects carry a
+      // fractional translate, and the media top at 1280 is exactly -13.5px from the stage, so the float noise left
+      // after subtracting them rounded to -13 one run and -14 the next. Settled values are exact, so no rounding.
+      await page.evaluate(() => Promise.all(document.querySelector('#content .page').getAnimations().map((a) => a.finished)));
       const [st, media] = await page.evaluate(() => {
         const st = document.querySelector('.dl-stage').getBoundingClientRect();
         const m = [...document.querySelectorAll('.dl-stage > *')].find((el) => getComputedStyle(el).display !== 'none').getBoundingClientRect();
-        return [[st.width, st.height], [m.x - st.x, m.y - st.y, m.width, m.height]].map((a) => a.map(Math.round));
+        return [[st.width, st.height], [m.x - st.x, m.y - st.y, m.width, m.height]];
       });
       expect(st, `${w} stage`).toEqual(stage);
       if (reduce) expect(media, `${w} still vs clip`).toEqual(clipBox);
