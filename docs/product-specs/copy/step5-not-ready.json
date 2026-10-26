@@ -1,0 +1,10 @@
+{
+  "publish.notReady.title": {
+    "zh": "你的故事还没准备好。",
+    "en": "Your story isn’t ready yet."
+  },
+  "publish.notReady.subtitle": {
+    "zh": "先回到「收集素材」，把你知道的写下来。",
+    "en": "Go back to Gather and write down what you know."
+  }
+}
