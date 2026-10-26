@@ -10,5 +10,13 @@
   "publish.notReady.scoreNote": {
     "zh": "还没有内容可以评分",
     "en": "Nothing to score yet"
+  },
+  "publish.notReady.subtitleNoAnswers": {
+    "zh": "素材里还找不到这些问题的答案。先到「找到故事」答几个。",
+    "en": "Your notes don’t answer the story questions yet. Answer a few in Find the story."
+  },
+  "publish.notReady.scoreNoteNoAnswers": {
+    "zh": "还没有答案可以评分",
+    "en": "No answers to score yet"
   }
 }

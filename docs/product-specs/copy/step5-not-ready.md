@@ -16,6 +16,19 @@
 - 评分卡这一行整行换掉，「下载后仍可继续编辑」也不留：空项目没有东西可以下载后再编辑。不加句号，和现在这一行一致。「最终评分 0/10」不变。
 - 「收集素材 / Gather」是第 1 步现在的名字（`index.html`），步骤改名时这一行跟着改。
 
+## 写了素材、但一题都没对上
+
+第 1 步有素材，第 2 步的问题一个都没有答案（没有「你的回答」也没有「从材料中找到」）。标题和「已准备」不显示照旧，换下面两行：
+
+| 位置 | 文案 | key |
+|---|---|---|
+| 标题下一行 | 素材里还找不到这些问题的答案。先到「找到故事」答几个。 / Your notes don’t answer the story questions yet. Answer a few in Find the story. | `publish.notReady.subtitleNoAnswers` |
+| 评分卡分数下面一行 | 还没有答案可以评分 / No answers to score yet | `publish.notReady.scoreNoteNoAnswers` |
+
+- 评分卡也要换：这类用户写过素材，「还没有内容可以评分」对他同样不准。
+- 「找到故事 / Find the story」是第 2 步现在的名字（`index.html`），改名时跟着改。
+- 两种状态怎么分由开发按数据判断：没有素材 → 上一节；有素材、0 个问题有答案 → 这一节。
+
 ## 母语审校清单
 
 | key | zh | en |
@@ -23,3 +36,5 @@
 | `publish.notReady.title` | 你的故事还没准备好。 | Your story isn’t ready yet. |
 | `publish.notReady.subtitle` | 先回到「收集素材」，把你知道的写下来。 | Go back to Gather and write down what you know. |
 | `publish.notReady.scoreNote` | 还没有内容可以评分 | Nothing to score yet |
+| `publish.notReady.subtitleNoAnswers` | 素材里还找不到这些问题的答案。先到「找到故事」答几个。 | Your notes don’t answer the story questions yet. Answer a few in Find the story. |
+| `publish.notReady.scoreNoteNoAnswers` | 还没有答案可以评分 | No answers to score yet |
