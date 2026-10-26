@@ -397,3 +397,25 @@ test('Enter that confirms an input method does not add the custom audience yet',
   await field.press('Enter');
   expect(await page.evaluate(() => audCustom())).toContain('设计总监');
 });
+
+// Full-site list (2026-10-26): an empty project scored 0/10 but step 5 still said the story was ready.
+// Copy: docs/product-specs/copy/step5-not-ready.json (UX copy, 42bce62). Condition A: empty project only.
+for (const [lang, copy] of [
+  ['zh', { title: '你的故事还没准备好。', sub: '先回到「收集素材」，把你知道的写下来。', note: '还没有内容可以评分', readyTitle: '你的故事，准备好了。', ready: '已准备' }],
+  ['en', { title: 'Your story isn’t ready yet.', sub: 'Go back to Gather and write down what you know.', note: 'Nothing to score yet', readyTitle: 'Your story is ready.', ready: 'Ready' }],
+]) {
+  test(`step 5 says an empty project is not ready, and a story with answers is (${lang})`, async ({ page }) => {
+    const errors = await openApp(page, { storage: { 'lumi-workbench-v1': JSON.stringify({ lang }) } });
+    await page.evaluate(() => go('publish'));
+    await expect(page.locator('#content h1')).toHaveText(copy.title);
+    await expect(page.locator('#content .heading p')).toHaveText(copy.sub);
+    await expect(page.locator('.dl-score strong')).toContainText('0/10');
+    await expect(page.locator('.dl-score p')).toHaveText(copy.note);
+    await expect(page.locator('.dl-ready')).toHaveCount(0);
+    await page.evaluate(() => { loadSample(); go('publish'); });
+    await expect(page.locator('#content h1')).toHaveText(copy.readyTitle);
+    await expect(page.locator('.dl-score p')).not.toHaveText(copy.note);
+    await expect(page.locator('.dl-ready')).toHaveText(copy.ready);
+    expect(errors).toEqual([]);
+  });
+}
