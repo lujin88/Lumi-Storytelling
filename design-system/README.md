@@ -79,3 +79,22 @@ A page with two jobs shows two sections, each with a 13px/600 label and an optio
 ## Layout
 
 Sidebar `side` 232px: logo and the 中/EN toggle on one row, then 40px nav rows. No top bar on desktop; downloads live in step 5. Content padding `s-6` top, `gutter` sides. Composer fixed at the bottom on the same gutter. Under 720px the sidebar hides, the footer stacks and the CTA goes full width at 48px.
+
+### Step 1 content + Lumi
+
+The intro, setup controls, Lumi and material area share one left-aligned rail no wider than 960px. The intro spans that rail. Under it, the setup controls occupy the first column and Lumi occupies the second; the setup column hugs its controls and does not stretch. Separate the longest option row from Lumi by at least `s-5` (24px). Audience tags wrap inside the setup column and never push Lumi sideways.
+
+Lumi has two exact alignment anchors. Its **top edge equals the top edge of the first setup label** (`用在哪` / `What's it for`), and its **right edge equals the right edge of the 960px rail** used by `上传资料` and its saved-material field. This replaces the 2026-10-26 vertical-centre rule. Keep the figure's bottom at or above the bottom of the question controls beside it; it must not extend into the duration controls or material section. The anchors stay true when the first-run connection card appears because the intro, setup row and Lumi move together.
+
+At 1280px and above the figure is 256px wide; from 1001–1279px it is 192px; from 721–1000px it is 150px. Preserve the image aspect ratio and use `object-fit: contain`; if the available question block is shorter than the nominal figure, reduce the figure rather than cropping it. A direct implementation is a two-row grid: let the existing `.dump-left` children participate in `.dump-top`, span the intro across both columns, then place `.setup-row` and `.intro-art` in the second row with the same `s-6` top margin. Set the art to `justify-self: end` and `align-self: start`. Do not position it with viewport-specific `left` or `top` values.
+
+At 720px and below, Step 1 becomes one column: Lumi hides, the three purpose choices stack full width, and the four duration choices stay in one equal-width row. The material section and composer use the `gutter` edges, so at 390px their x coordinates are 16–374.
+
+Reference render measurements from the 2026-10-27 handoff (Chrome, 964px viewport height, first-run card hidden, Chinese, audience controls visible):
+
+| Viewport | Setup label top | Lumi box | Shared rail / material area | Result |
+| --- | ---: | --- | --- | --- |
+| 1905px | y=142 | x=1000–1256, y=142, 256×245 | x=296–1256 | top and right anchors: 0px error |
+| 1512px | y=142 | x=976–1232, y=142, 256×245 | x=272–1232 | top and right anchors: 0px error |
+| 1280px | y=142 | x=976–1232, y=142, 256×245 | x=272–1232 | top and right anchors: 0px error |
+| 390px | y=229 | hidden by the ≤720px rule | x=16–374 | single-column mobile rule preserved |
