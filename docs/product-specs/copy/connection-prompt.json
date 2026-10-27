@@ -32,27 +32,31 @@
     "en": "Copy the key, paste it into the field above, then select Connect."
   },
   "connection.key-stored": {
-    "zh": "密钥只存在这个浏览器里，不会上传或导出。",
-    "en": "The key stays in this browser and is never uploaded or exported."
+    "zh": "密钥只存在这个浏览器里，调用 {provider} 时直接发给它，不经过别处，也不会导出。",
+    "en": "The key stays in this browser. It goes straight to {provider} when Lumi calls it, nowhere else, and is never exported."
   },
   "connection.key-not-stored": {
     "zh": "双击打开时不会保存密钥，关掉页面后要重新填。",
     "en": "Opened as a file, Lumi doesn’t save the key, so you’ll enter it again next time."
   },
   "help.connect-provider.q": {
-    "zh": "怎么填 API 密钥？",
-    "en": "How do I add my API keys?"
+    "zh": "怎么填 API 密钥，怎么知道连上了？",
+    "en": "How do I add my API keys, and how do I know they work?"
   },
   "help.connect-provider.a": {
-    "zh": "Lumi 用你自己的 API 密钥调用 AI 服务，每个服务一把。点下面的服务名，会跳到设置里它那一行，输入框旁边就有拿密钥的步骤。",
-    "en": "Lumi calls AI services with your own API keys, one key per service. Select a service below to jump to its row in Settings. The steps to get a key are right beside the field."
+    "zh": "Lumi 用你自己的 API 密钥调用 AI 服务，每个服务一把。点下面的服务名，会跳到设置里它那一行，输入框旁边就有拿密钥的步骤。连上后，那一行会显示「已连接」。",
+    "en": "Lumi calls AI services with your own API keys, one key per service. Select a service below to jump to its row in Settings. The steps to get a key are right beside the field. Once it’s connected, the row shows Connected."
   },
   "help.connect-provider.stored": {
-    "zh": "密钥只存在这个浏览器里，不会上传或导出。",
-    "en": "Keys stay in this browser and are never uploaded or exported."
+    "zh": "密钥只存在这个浏览器里，调用时直接发给对应的服务，不经过别处，也不会导出。",
+    "en": "Keys stay in this browser. Each one goes straight to its own service when Lumi calls it, nowhere else, and is never exported."
   },
   "help.connect-provider.not-stored": {
     "zh": "双击打开时不会保存密钥，关掉页面后要重新填。",
     "en": "Opened as a file, Lumi doesn’t save keys, so you’ll enter them again next time."
+  },
+  "settings.keys-note": {
+    "zh": "用你自己的 API 密钥。密钥只存在这个浏览器里，调用时直接发给对应的服务，不经过别处，也不会导出。",
+    "en": "Bring your own API keys. They stay in this browser, go straight to each service when Lumi calls it, and are never exported."
   }
 }

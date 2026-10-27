@@ -26,7 +26,7 @@
 | 输入框下面的展开按钮 | 在哪里拿密钥，怎么填？ / How do I get a key? | `connection.key-help` |
 | 展开第 1 步（外链，末尾接 `arrow-right-up-line` 图标，和 `prov-doc` 一样，不在文案里写 ↗） | 在 {site} 创建 {provider} API 密钥 / Create a {provider} API key in {site} | `connection.get-key` |
 | 展开第 2 步 | 复制密钥，粘贴到上面的输入框，再点「连接」。 / Copy the key, paste it into the field above, then select Connect. | `connection.paste-key` |
-| 展开末尾，网页打开（`KEYS_PERSIST` 为真） | 密钥只存在这个浏览器里，不会上传或导出。 / The key stays in this browser and is never uploaded or exported. | `connection.key-stored` |
+| 展开末尾，网页打开（`KEYS_PERSIST` 为真） | 密钥只存在这个浏览器里，调用 {provider} 时直接发给它，不经过别处，也不会导出。 / The key stays in this browser. It goes straight to {provider} when Lumi calls it, nowhere else, and is never exported. | `connection.key-stored` |
 | 展开末尾，双击文件打开 | 双击打开时不会保存密钥，关掉页面后要重新填。 / Opened as a file, Lumi doesn’t save the key, so you’ll enter it again next time. | `connection.key-not-stored` |
 
 `{site}` 和链接放进 provider 元数据（规格要求设置和帮助读同一份）。三个链接都在官方文档里核对过（2026-10-27）：
@@ -38,22 +38,33 @@
 | Gemini | Google AI Studio | https://aistudio.google.com/apikey | https://ai.google.dev/gemini-api/docs/api-key |
 
 - 「连接」和设置页按钮现在的字一致（`settingsViewV3`）。按钮状态是「重新检查」时这一步也照写「连接」：只有没连上的行会被跳转过来。
-- 本地保存两句是设置页顶部 `settings-note` 现有的事实，只把「API 密钥」改成单数「密钥」。
+- 本地保存的说法改准了：原来写「不会上传」，但每次调用时密钥会从浏览器直接发给对应服务商（decisions.md 2026-10-23「Claude, OpenAI and Gemini are called from the browser with the user's key」；`index.html` 里三家都是浏览器直连，本地 `server/` 不经手密钥）。新说法：只存在这个浏览器、调用时直接发给这家服务、不经过别处、不会导出。没写「Lumi 没有服务器」：本地 `server/`（127.0.0.1:4317）是存在的，只是不碰密钥。
+- 双击文件打开那句没有「不会上传」，事实不变，不改。
 - 即梦不用密钥（用本机登录），不加展开说明。
 
 ## 帮助页 FAQ
 
+**替换现有第 3 条「怎么知道 API 连上了？」，放在原来的位置，不新增一条**（项目经理定，2026-10-27）。
+
 | 位置 | 文案 | key |
 |---|---|---|
-| 问题 | 怎么填 API 密钥？ / How do I add my API keys? | `help.connect-provider.q` |
-| 回答 | Lumi 用你自己的 API 密钥调用 AI 服务，每个服务一把。点下面的服务名，会跳到设置里它那一行，输入框旁边就有拿密钥的步骤。 / Lumi calls AI services with your own API keys, one key per service. Select a service below to jump to its row in Settings. The steps to get a key are right beside the field. | `help.connect-provider.a` |
+| 问题 | 怎么填 API 密钥，怎么知道连上了？ / How do I add my API keys, and how do I know they work? | `help.connect-provider.q` |
+| 回答 | Lumi 用你自己的 API 密钥调用 AI 服务，每个服务一把。点下面的服务名，会跳到设置里它那一行，输入框旁边就有拿密钥的步骤。连上后，那一行会显示「已连接」。 / Lumi calls AI services with your own API keys, one key per service. Select a service below to jump to its row in Settings. The steps to get a key are right beside the field. Once it’s connected, the row shows Connected. | `help.connect-provider.a` |
 | 服务列表 | 每行：服务名（内部链接）+ 设置页同一行的用途说明，例如「Claude · 理解故事、写讲稿」。直接读 provider 元数据，不加新文案 | 无 |
-| 回答末尾，网页打开 | 密钥只存在这个浏览器里，不会上传或导出。 / Keys stay in this browser and are never uploaded or exported. | `help.connect-provider.stored` |
+| 回答末尾，网页打开 | 密钥只存在这个浏览器里，调用时直接发给对应的服务，不经过别处，也不会导出。 / Keys stay in this browser. Each one goes straight to its own service when Lumi calls it, nowhere else, and is never exported. | `help.connect-provider.stored` |
 | 回答末尾，双击文件打开 | 双击打开时不会保存密钥，关掉页面后要重新填。 / Opened as a file, Lumi doesn’t save keys, so you’ll enter them again next time. | `help.connect-provider.not-stored` |
 
-- 规格里写的标题是「连接服务和 API 密钥」。帮助页现有 5 条都是问句，这里也写成问句。
+- 规格里写的标题是「连接服务和 API 密钥」。帮助页现有 5 条都是问句，这里也写成问句，同时覆盖原第 3 条的「怎么知道连上了」。
+- 「已连接 / Connected」是设置页 `providerStatusLabel` 现在的状态词，状态词改了这里跟着改。原第 3 条后半句「连上后，改讲稿、生成图片会自动用它」不保留。
 - 列表只列需要密钥的 Claude、OpenAI、Gemini。即梦不用密钥，不列。
-- 和现有第 3 条「怎么知道 API 连上了？」有重叠（都在讲设置页）。两条并存不算错，要不要合并由项目经理定。
+
+## 设置页顶部说明（改现有文案）
+
+现有 `settings-note`（网页打开那版）也写了「不会上传」，一起改。双击文件打开那版不变。
+
+| 现在 | 改成 | key |
+|---|---|---|
+| 用你自己的 API 密钥。密钥只存在这个浏览器里，不会上传或导出。 / Bring your own API keys. They stay in this browser and are never uploaded or exported. | 用你自己的 API 密钥。密钥只存在这个浏览器里，调用时直接发给对应的服务，不经过别处，也不会导出。 / Bring your own API keys. They stay in this browser, go straight to each service when Lumi calls it, and are never exported. | `settings.keys-note` |
 
 ## 没写的
 
@@ -72,9 +83,10 @@
 | `connection.key-help` | 在哪里拿密钥，怎么填？ | How do I get a key? |
 | `connection.get-key` | 在 {site} 创建 {provider} API 密钥 | Create a {provider} API key in {site} |
 | `connection.paste-key` | 复制密钥，粘贴到上面的输入框，再点「连接」。 | Copy the key, paste it into the field above, then select Connect. |
-| `connection.key-stored` | 密钥只存在这个浏览器里，不会上传或导出。 | The key stays in this browser and is never uploaded or exported. |
+| `connection.key-stored` | 密钥只存在这个浏览器里，调用 {provider} 时直接发给它，不经过别处，也不会导出。 | The key stays in this browser. It goes straight to {provider} when Lumi calls it, nowhere else, and is never exported. |
 | `connection.key-not-stored` | 双击打开时不会保存密钥，关掉页面后要重新填。 | Opened as a file, Lumi doesn’t save the key, so you’ll enter it again next time. |
-| `help.connect-provider.q` | 怎么填 API 密钥？ | How do I add my API keys? |
-| `help.connect-provider.a` | Lumi 用你自己的 API 密钥调用 AI 服务，每个服务一把。点下面的服务名，会跳到设置里它那一行，输入框旁边就有拿密钥的步骤。 | Lumi calls AI services with your own API keys, one key per service. Select a service below to jump to its row in Settings. The steps to get a key are right beside the field. |
-| `help.connect-provider.stored` | 密钥只存在这个浏览器里，不会上传或导出。 | Keys stay in this browser and are never uploaded or exported. |
+| `help.connect-provider.q` | 怎么填 API 密钥，怎么知道连上了？ | How do I add my API keys, and how do I know they work? |
+| `help.connect-provider.a` | Lumi 用你自己的 API 密钥调用 AI 服务，每个服务一把。点下面的服务名，会跳到设置里它那一行，输入框旁边就有拿密钥的步骤。连上后，那一行会显示「已连接」。 | Lumi calls AI services with your own API keys, one key per service. Select a service below to jump to its row in Settings. The steps to get a key are right beside the field. Once it’s connected, the row shows Connected. |
+| `help.connect-provider.stored` | 密钥只存在这个浏览器里，调用时直接发给对应的服务，不经过别处，也不会导出。 | Keys stay in this browser. Each one goes straight to its own service when Lumi calls it, nowhere else, and is never exported. |
 | `help.connect-provider.not-stored` | 双击打开时不会保存密钥，关掉页面后要重新填。 | Opened as a file, Lumi doesn’t save keys, so you’ll enter them again next time. |
+| `settings.keys-note` | 用你自己的 API 密钥。密钥只存在这个浏览器里，调用时直接发给对应的服务，不经过别处，也不会导出。 | Bring your own API keys. They stay in this browser, go straight to each service when Lumi calls it, and are never exported. |
