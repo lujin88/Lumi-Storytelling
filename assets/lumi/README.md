@@ -28,7 +28,12 @@ Wave, think and cheer were re-exported from their existing transparent WebM clip
 without a paid generation. `scripts/lumi-loop-fix.mjs` eases the final six 24 fps
 frames toward the first frame, then writes transparent VP9 and animated WebP.
 The WebP selects 40 frames across the same 4-second motion, including the exact
-first and last source frames. Original renders in `source/` are unchanged.
+first and last source frames. Wave and think use WebP loop count 0 (continuous).
+Cheer uses loop count 1: it plays once and holds its last frame. The page's
+playback controller must restart it after a pause; the pause length is pending
+review. To make the one-play WebP from a continuous export, run `webpmux
+-set loop 1 cheer.webp -o cheer-once-v2.webp`; this changes loop metadata
+without re-encoding frames. Original renders in `source/` are unchanged.
 
 Decoded first/last-frame premultiplied RGBA PSNR for WebM is 95.6 dB (wave),
 92.0 dB (think) and 94.2 dB (cheer). The corresponding WebP frames decode

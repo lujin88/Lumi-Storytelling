@@ -4,10 +4,11 @@ import { basename, join } from 'node:path';
 
 // Re-export an existing transparent VP9 clip. Keep each run in a new versioned
 // output directory, then review the files before copying them into assets/lumi/.
-// Usage: node scripts/lumi-loop-fix.mjs input.webm outdir pose-v1
-const [,, input, outputDir, name, tailArg = '6', crfArg = '20', qualityArg = '84'] = process.argv;
-if (!input || !outputDir || !name) throw new Error('usage: node lumi-loop-fix.mjs input.webm outdir name [tail] [crf] [webp quality]');
-const tail = Number(tailArg), crf = Number(crfArg), quality = Number(qualityArg);
+// Usage: node scripts/lumi-loop-fix.mjs input.webm outdir pose-v1 [tail] [crf] [webp quality] [webp loops]
+const [,, input, outputDir, name, tailArg = '6', crfArg = '20', qualityArg = '84', loopArg = '0'] = process.argv;
+if (!input || !outputDir || !name) throw new Error('usage: node lumi-loop-fix.mjs input.webm outdir name [tail] [crf] [webp quality] [webp loops]');
+const tail = Number(tailArg), crf = Number(crfArg), quality = Number(qualityArg), loops = Number(loopArg);
+if (!Number.isInteger(loops) || loops < 0 || loops > 65535) throw new Error('invalid WebP loop count');
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, { maxBuffer: 160 * 1024 * 1024, ...options });
   if (result.status !== 0) throw new Error(`${command} ${args.join(' ')}\n${result.stderr?.toString()}`);
@@ -47,6 +48,6 @@ for (const png of pngs) {
   run('cwebp', ['-quiet', '-q', String(quality), '-alpha_q', '85', '-m', '6', '-sharp_yuv', src, '-o', dst]);
   muxArgs.push('-frame', dst, '+100+0+0+1-b');
 }
-run('webpmux', [...muxArgs, '-loop', '0', '-bgcolor', '0,0,0,0', '-o', webp]);
+run('webpmux', [...muxArgs, '-loop', String(loops), '-bgcolor', '0,0,0,0', '-o', webp]);
 if ([webm, webp].some(path => statSync(path).size >= 1048576)) throw new Error('output exceeds the 1 MiB asset limit');
-console.log(JSON.stringify({ input: basename(input), frames: frameCount, tail, crf, quality, webm: statSync(webm).size, webp: statSync(webp).size, outputDir }));
+console.log(JSON.stringify({ input: basename(input), frames: frameCount, tail, crf, quality, loops, webm: statSync(webm).size, webp: statSync(webp).size, outputDir }));
