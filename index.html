@@ -1005,6 +1005,9 @@ html body #content .aud-row button.aud-chip.on{border-color:var(--action-line)!i
 #footer .outside-cta :is(.ms,i,svg){display:none!important}
 #content .prov-mic .text-link :is(.ms,i,svg),#content .support-inline-guide :is(.ms,i,svg){display:none!important}
 #footer .outside-cta{min-width:96px;justify-content:center}
+/* composer bar fills the content column: no 1172px cap from .composer, and stacked under 720px it spans the full width (decisions.md 2026-10-24, point 6) */
+#footer .footer-actions .composer{max-width:none}
+@media(max-width:720px){#footer .footer-actions .composer{align-self:stretch}}
 /* publish v6: Lumi bigger, closer; GitHub is a quiet link */
 #content .page-publish .publish-main{display:grid!important;grid-template-columns:minmax(0,360px) minmax(0,1fr)!important;gap:var(--s-6)!important;align-items:center!important}
 #content .page-publish .package-art{justify-self:center;display:flex;justify-content:center}
