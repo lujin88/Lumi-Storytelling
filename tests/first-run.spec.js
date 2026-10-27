@@ -130,6 +130,47 @@ test('each failure kind has its own one-line message', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+// #64 E2, E3: a retired endpoint and a region or account refusal each say so, instead of
+// "try again later" or "wrong key". A 403 counts as a wrong key only when the body says so.
+const checkFailures = [
+  ['404', { status: 404, json: { type: 'error', error: { type: 'not_found_error', message: 'Not found' } } }, 'Claude 停用了这个接口或模型。去设置换一个模型，或换一家服务商。'],
+  ['403 permission', { status: 403, json: { type: 'error', error: { type: 'permission_error', message: 'Your API key does not have permission to use the specified resource.' } } }, 'Claude 拒绝了这次请求，可能是地区或账号权限的问题。'],
+  ['403 region', { status: 403, json: { error: { code: 'unsupported_country_region_territory', message: 'Country, region, or territory not supported' } } }, 'Claude 拒绝了这次请求，可能是地区或账号权限的问题。'],
+  ['403 leaked key', { status: 403, json: { error: { code: 403, status: 'PERMISSION_DENIED', message: 'Your API key was reported as leaked. Please use another API key.' } } }, 'Claude 不认这个密钥。重新复制一个再试。'],
+];
+for (const [name, reply, message] of checkFailures) {
+  test(`a key check that fails with ${name} shows its own line`, async ({ page }) => {
+    const errors = await openApp(page);
+    await page.route(CLAUDE_MODELS, (route) => route.fulfill(reply));
+    await connectClaudeFromCard(page);
+    await expect(claudeRow(page).locator('.connection-status')).toHaveText('连接失败');
+    await expect(page.locator('.prov-err')).toHaveText(message);
+    expect(errors).toEqual([]);
+  });
+}
+
+// #64 E1: a provider that never answers must not leave the row on "checking" forever.
+test('a key check that never answers stops after 15 seconds and can be run again', async ({ page }) => {
+  await page.clock.install();
+  const errors = await openApp(page);
+  await page.route(CLAUDE_MODELS, () => {}); // never answers
+  await connectClaudeFromCard(page);
+  const status = claudeRow(page).locator('.connection-status');
+  await expect(status).toHaveText('正在检查连接');
+  await page.clock.fastForward('00:14');
+  await expect(status).toHaveText('正在检查连接');
+  await page.clock.fastForward('00:02');
+  await expect(status).toHaveText('连接失败');
+  await expect(page.locator('.prov-err')).toHaveText('Claude 暂时没有响应。过一会儿再试。');
+  await page.unroute(CLAUDE_MODELS);
+  await mockClaude(page, true);
+  await claudeRow(page).locator('[data-action="connectApi:claude"]').click();
+  await expect(page.locator('.page-dump')).toBeVisible();
+  await page.click('#sidebar [data-page="settings"]');
+  await expect(status).toHaveText('已连接');
+  expect(errors).toEqual([]);
+});
+
 // Lu, 2026-10-25: the card's "try the sample" link lines up with step 1's
 // "load a sample" link below it. If the two card buttons do not fit on one
 // line, the link wraps to its own line, still on the right and inside the card.
