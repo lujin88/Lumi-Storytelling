@@ -75,6 +75,10 @@
     "zh": "Gemini：你用麦克风说话时的录音，用来转成文字。",
     "en": "Gemini: your voice recording when you use the mic, so it can be turned into text."
   },
+  "help.data-flow.github": {
+    "zh": "GitHub：Lumi 不会把内容发给它。想放到网上，要你下载文件后自己上传。",
+    "en": "GitHub: Lumi sends it nothing. To put your story online, you download the files and upload them yourself."
+  },
   "settings.keys-note": {
     "zh": "用你自己的 API 密钥。密钥只存在这个浏览器里，调用时直接发给对应的服务，不经过别处，也不会导出。",
     "en": "Bring your own API keys. They stay in this browser, go straight to each service when Lumi calls it, and are never exported."

@@ -68,6 +68,7 @@
 | 列表第 1 行 | Claude：你的笔记和回答、选的用途和听众、幻灯片和讲稿，以及你提的修改要求。 / Claude: your notes and answers, the purpose and audience you chose, your slides and script, and any changes you ask for. | `help.data-flow.claude` |
 | 列表第 2 行 | OpenAI：你要改图时，当前这张图、修改要求和风格说明。 / OpenAI: when you ask to change an image, the current image, the change request and your style brief. | `help.data-flow.openai` |
 | 列表第 3 行 | Gemini：你用麦克风说话时的录音，用来转成文字。 / Gemini: your voice recording when you use the mic, so it can be turned into text. | `help.data-flow.gemini` |
+| 列表第 4 行 | GitHub：Lumi 不会把内容发给它。想放到网上，要你下载文件后自己上传。 / GitHub: Lumi sends it nothing. To put your story online, you download the files and upload them yourself. | `help.data-flow.github` |
 
 每句对应的代码（`index.html`）：
 
@@ -79,6 +80,7 @@
 | Claude：回答 | `reviewStory`（审阅、打分）：`answers`；`draftDefend` | **#29**（`b1abef0`，未合） |
 | OpenAI：当前这张图、修改要求、风格说明 | `openaiEdit`：`image`（`state.generatedImage`，生成的或上传的图）、`prompt` = 修改要求 + `Style brief`（`curStyle().note`，有才发） | main `1b1e4b8` |
 | Gemini：录音 | `geminiTranscribe`：`inlineData` 音频，在 `MediaRecorder` 停止后调用 | main `1b1e4b8` |
+| GitHub：不发，用户自己上传 | 发布页只有一个外链「用 GitHub Pages 发布」，指向 GitHub 官方文档；帮助页「怎么分享做好的故事？」也写的是下载后按步骤自己发布。PRD 8.11：「Publishing to the web is a guide, not an automated upload.」 | main `1b1e4b8` |
 
 - **要等 #29 合了再上线。** 现在 main 上 Claude 只在改稿时收到内容，「笔记和回答」是 #29 加的。先上的话，这句会说多了。
 - 「修改要求」：发给 OpenAI 的修改要求是 Claude 根据你的话改写出来的（`image_instruction`），不是原话。用「修改要求」两边都对得上。
@@ -88,7 +90,7 @@
 
 还没写、要定的：
 
-- **GitHub 发布也会把内容发出去。** 连上 GitHub 后点发布，`index.html`、讲稿、`storyboard.md`、`lumi-project.json` 会经本地服务（127.0.0.1:4317）写进用户自己的仓库。这一条不是 AI 服务，按派活只写三家，但不写的话「会发给哪些服务」这个问题答不全。要不要加一行，待确认。
+- **GitHub 那行（项目经理 12:45 要加）。** 我在 12:45 说过「点发布会把文件写进用户的仓库」，这句说错了。`index.html` 里确实有 `publishGithub`、`connectGithub` 这两段处理，但页面上没有任何按钮会触发它们（这两个 action 名只出现在处理函数里）。`server/` 里也没有 `/api/github/*` 接口。所以现在 Lumi 不会往 GitHub 发任何东西。这一行写的是现在的事实。**以后要是把直接发布接上，这一行要跟着改。**
 - **浏览器自带的语音识别。** 没连 Gemini 时用浏览器自带识别（`webkitSpeechRecognition`）。有些浏览器会把声音发到自己的服务器处理，这不是 Lumi 的代码决定的，我没有核对出处，不写。待确认。
 
 ## 设置页顶部说明（改现有文案）
@@ -127,4 +129,5 @@
 | `help.data-flow.claude` | Claude：你的笔记和回答、选的用途和听众、幻灯片和讲稿，以及你提的修改要求。 | Claude: your notes and answers, the purpose and audience you chose, your slides and script, and any changes you ask for. |
 | `help.data-flow.openai` | OpenAI：你要改图时，当前这张图、修改要求和风格说明。 | OpenAI: when you ask to change an image, the current image, the change request and your style brief. |
 | `help.data-flow.gemini` | Gemini：你用麦克风说话时的录音，用来转成文字。 | Gemini: your voice recording when you use the mic, so it can be turned into text. |
+| `help.data-flow.github` | GitHub：Lumi 不会把内容发给它。想放到网上，要你下载文件后自己上传。 | GitHub: Lumi sends it nothing. To put your story online, you download the files and upload them yourself. |
 | `settings.keys-note` | 用你自己的 API 密钥。密钥只存在这个浏览器里，调用时直接发给对应的服务，不经过别处，也不会导出。 | Bring your own API keys. They stay in this browser, go straight to each service when Lumi calls it, and are never exported. |
