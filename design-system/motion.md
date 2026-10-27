@@ -30,15 +30,19 @@ Lu chose an intermittent celebration for the download page: play once, pause, th
 
 | State | Entry | Visual | Exit |
 | --- | --- | --- | --- |
-| `cheer-playing` | The download page becomes active while visible. | Play the approved cheer clip once at its authored speed. Do not use the media `loop` attribute and do not add CSS breathing or a second animation. | On `ended`, seek to frame 0 and enter `cheer-hold`. |
-| `cheer-hold` | The clip ends. | Keep the exact first decoded frame of the final export visible for `motion-delay-cheer-replay` (4000ms, **proposal**). The character's size, crop and position must not change when playback stops. | After the delay, replay once and return to `cheer-playing`. |
+| `cheer-playing` | The download page becomes active while visible. | Show the exact first frame extracted from the final export, then play that same export once at its authored speed. Do not use the media `loop` attribute and do not add CSS breathing or a second animation. | WebM: on `ended`, pause, set `currentTime = 0`, wait for `seeked` and enter `cheer-hold`. WebP: when the export's measured single-play duration ends, replace the animated image with its extracted frame-0 still and enter `cheer-hold`. |
+| `cheer-hold` | One complete play ends and frame 0 is decoded. | Keep the exact extracted frame 0 of the **final WebM/WebP export** visible for `motion-delay-cheer-replay` (4000ms, **proposal**). The character's canvas, size, crop and position stay identical to playback. Start the hold timer only after this frame is visible. | After the delay, replay once and return to `cheer-playing`. |
 | `cheer-reduced` | `prefers-reduced-motion: reduce` is active. | Do not load or autoplay an animated clip. Show `assets/lumi/source/cheer.webp` as the static image for the entire visit. | No timer or replay. React live if the media query changes. |
 
 The first visit starts with `cheer-playing`; the quiet hold only follows a completed play. Repeat the play/hold rhythm while the download page remains visible. Leaving the page, hiding the tab or moving the character outside the viewport pauses playback and clears the replay timer. When it becomes visible again, show frame 0 for one complete delay before replaying so the character does not move the instant the user returns.
 
-Use one coordinator and one timer for this Lumi instance. A page render, visibility change and media `ended` event must not schedule overlapping replays. The animated WebP fallback follows the same visible rhythm: show the existing still during the hold, then restart the fallback animation once. Do not replace the still with a separately cropped image that shifts by a pixel.
+The final export supplies a frame-0 still asset with the same pixel dimensions, transparent canvas, character position and crop as both animated files. WebM and WebP normal playback, initial paint and quiet hold all use that asset; the older source still is reserved for reduced motion. Do not use a separately composed or re-cropped hold image.
 
-Acceptance recording: at normal motion, capture three complete play/hold cycles on the download page and verify that each hold lasts 4s ±100ms, that the transition into and out of the hold does not jump, and that only one clip plays at a time. Capture the reduced-motion visit separately and verify that `cheer.webp` never animates.
+Export the animated WebP with a loop count of one. Browsers do not expose an `ended` event for animated images, so record the final WebP's exact duration in the asset manifest and use that duration for the one play timer. At its end, swap the `<img>` to the final-export frame-0 still. After the quiet delay, replace the image node with a fresh node pointing to the animated WebP so playback restarts at frame 0; do not rely on reassigning the same `src` to an existing node. Predecode both assets and preserve the same width, height and `object-fit` box so the swap has no blank frame or layout shift.
+
+Use one coordinator, one play timer and one hold timer for this Lumi instance. A page render, visibility change and media `ended` event must not schedule overlapping replays. Clearing or changing state cancels both timers before another play is scheduled.
+
+Acceptance recording: at normal motion, capture three complete play/hold cycles for WebM and one complete play/hold/replay cycle for the WebP fallback. Verify that each hold lasts 4s ±100ms, both formats hold on the same final-export frame 0, the transition into and out of the hold does not jump or flash, and only one clip plays at a time. Capture the reduced-motion visit separately and verify that `assets/lumi/source/cheer.webp` remains static.
 
 ## Verification
 

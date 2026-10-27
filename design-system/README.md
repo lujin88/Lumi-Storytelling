@@ -82,8 +82,10 @@ Sidebar `side` 232px: logo and the 中/EN toggle on one row, then 40px nav rows.
 
 ### Step 1 content + Lumi
 
-**Pending Lu's choice. Do not implement the desktop arrangement yet.** Options A, B and C are documented with rendered evidence in [`docs/research/design-handoff/README.md`](../docs/research/design-handoff/README.md). After Lu chooses, replace this pending note with the selected desktop grid and its exact anchors.
+Lu selected Option A on 2026-10-27 (Buzz event `c0f7e99e`): keep the setup questions stacked at the left and place Lumi on the right edge of the same 960px rail used by the material section. The comparison renders remain as decision history in [`docs/research/design-handoff/README.md`](../docs/research/design-handoff/README.md); Options B and C are not implementation alternatives.
 
-The candidates share these constraints: the intro, setup controls, Lumi and material area use a left-aligned rail no wider than 960px; Lumi's top edge aligns with the first setup label; its bottom does not extend into the material section; and the figure is 256×245px at the reviewed 1905px and 1280px viewports. Preserve the media aspect ratio with `object-fit: contain` and do not crop it.
+At reviewed desktop widths (1905px, 1512px and 1280px), the setup area is a 960px grid with `408px minmax(0, 1fr) 256px` columns. Questions occupy column 1 and Lumi occupies column 3. Lumi is 256×245px, its right edge is exactly the material rail's right edge, and its top edge aligns with the `用在哪` / `Use case` label. Its bottom must remain above the material section. Preserve the media aspect ratio with `object-fit: contain`; do not crop or shift the figure inside its box.
 
-At 720px and below, Step 1 becomes one column regardless of the desktop choice: Lumi hides, the three purpose choices stack full width, and the four duration choices stay in one equal-width row. The material section and composer use the `gutter` edges, so at 390px their x coordinates are 16–374.
+At 1905px the rail is x=296–1256 and Lumi is x=1000–1256. At 1280px the rail is x=272–1232 and Lumi is x=976–1232. At both widths the questions remain 408px wide. These measurements come from the selected Option A renders linked above; visual QA checks the shared top and right anchors rather than hard-coding viewport coordinates.
+
+At 720px and below, Step 1 becomes one column: Lumi hides, the three purpose choices stack full width, and the four duration choices stay in one equal-width row. The material section and composer use the `gutter` edges, so at 390px their x coordinates are 16–374.

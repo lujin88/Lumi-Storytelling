@@ -13,6 +13,8 @@ These images support the design-system specifications for Step 1 alignment, Stor
 
 Lu asked to compare several placements because Step 1 has denser setup controls than the other steps: putting Lumi at the far right is consistent across the product, but can leave the left side visually sparse. The three candidates below are rendered from the current 4317 demo with proposal CSS injected; they are design evidence, not application implementation screenshots. All three align Lumi's top to the setup area at y=123 and keep the 960px material rail unchanged.
 
+**Decision:** Lu selected Option A on 2026-10-27 (Buzz event `c0f7e99e`). Option A is the implementation specification in [`design-system/README.md`](../../../design-system/README.md); Options B and C remain below only as decision history.
+
 | Option | Layout | Benefit | Trade-off |
 | --- | --- | --- | --- |
 | A — rail edge | Keep the existing 408px stacked question block; align Lumi's right edge to the material rail. | Strongest shared right anchor; matches the right-side placement on other steps. | Leaves 296px between the controls and Lumi, so the top area feels split. |

@@ -20,6 +20,7 @@ An inline route from a missing or degraded AI connection to the exact place that
 
 - The whole prompt is one internal-navigation button/link, so clicking the message or trailing action has the same result.
 - 16px leading icon, `s-2` gap, 13px text, then a trailing text-link label. No fill, border or shadow. Minimum hit height 44px on touch layouts.
+- The Settings row keeps its existing `Connect` / `连接` action beside the key field. It is an outlined secondary button; help is the text link below it. Do not tell the user to choose Connect unless that control is visible in the same highlighted region.
 - Keep the provider name visible in the sentence and the action. Final Chinese and English strings belong to UX Copy; the design keys are `connection.blocked`, `connection.degraded`, `connection.open-settings`, `connection.get-key`, `connection.paste-key` and `help.connect-provider`.
 - Do not put a generic "Open Settings" prompt beside several providers. Each instance carries exactly one provider id.
 
@@ -30,6 +31,7 @@ An inline route from a missing or degraded AI connection to the exact place that
 3. Add the `targeted` state to that row. It uses `action-bg`, a 3px `action-ink` bar on the leading edge and `r-surface`; it has no pulse or timed fade. Keep it until the user interacts with the row or leaves Settings.
 4. With `prefers-reduced-motion: reduce`, use instant scrolling. Otherwise native smooth scrolling is allowed; do not add a page transition.
 5. On 390px, the complete highlighted row and its help stack into one column. The provider name, key field, help and connect action must remain in the same highlighted region.
+6. Dark mode uses the dark action tokens from the shared system: `action-bg` #232a36, `action-line` #9fb0cf, `action-ink` #a9bbd6, `paper` #171a21, `surface` #1d222c and `line` #343b49. The leading bar, focus outline and underlined links remain visible without provider brand colours.
 
 ## Setup help beside the key field
 
@@ -41,6 +43,8 @@ The disclosure has two provider-specific steps:
 2. A plain instruction to copy the key, paste it into this field and choose Connect.
 
 End with the existing local-storage privacy fact for the current origin. Never show, repeat, copy, log or place the actual key in the help text. Provider names, official URLs and whether a provider accepts browser calls come from one provider metadata source; if an official key-creation URL is not confirmed, label it `待确认` rather than linking to a guessed page.
+
+The `Connect` button stays available while the disclosure is open. At desktop widths the field and button share a row; at 390px they stack to full width before the help link. A pending connection disables only the button and changes its label; it never hides the provider help.
 
 ## Help page
 
