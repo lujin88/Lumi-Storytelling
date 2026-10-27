@@ -20,5 +20,11 @@ The Lumi renders used in `index.html`, extracted so agents can use them as refer
 | Pose | Source clip | `webm` | `webp` |
 |---|---|---|---|
 | wave | Dreamina seedance2.0 mini, task `cd75c5b3` | 777,221 B | 890,402 B |
+| jump | Dreamina seedance2.0 mini, task `caa805fc`, from `standing.webp` | 873,773 B | 887,206 B |
 
-Still to come, after Lu approves wave: idle, tilt, thinking, jump, cheer.
+The jump clip is a one-shot reaction for a rising step-2 score. Its generated audio
+was removed. It is included as an asset only; page playback waits for the
+approved full-body Lumi layout. The source MP4 is not committed. The transparent
+exports use `FIT="480 -8 3" CANVAS="480 460"` so the full jump stays in frame.
+
+Other poses are tracked in separate PRs.
