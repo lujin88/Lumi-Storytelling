@@ -15,12 +15,12 @@ for (const lang of ['zh', 'en']) {
     // Resize after the first render too, so the fluid mobile thumbnail is covered.
     for (const width of [1512, 1280, 1100, 721, 390]) {
       await page.setViewportSize({ width, height: 900 });
-      const cut = await page.evaluate(() => [...document.querySelectorAll('#content .deck-thumb')].flatMap((th, i) => {
+      // The resize event fires on the next frame, after setViewportSize returns.
+      await expect.poll(() => page.evaluate(() => [...document.querySelectorAll('#content .deck-thumb')].flatMap((th, i) => {
         const b = th.getBoundingClientRect(), s = th.querySelector('.slide')?.getBoundingClientRect();
         if (!s || !b.width) return [];
         return s.right > b.right + 0.5 || s.bottom > b.bottom + 0.5 ? [{ i, thumb: [b.right, b.bottom], slide: [s.right, s.bottom] }] : [];
-      }));
-      expect(cut, `${width}px`).toEqual([]);
+      })), `${width}px`).toEqual([]);
     }
   });
 }
