@@ -106,9 +106,10 @@ test('a file the browser can\'t play is refused and nothing is stored', async ({
   expect(errors).toEqual([]);
 });
 
-// Every video string in the page is the reviewed copy, word for word (placeholders are filled in at run time).
-test('video copy in the page matches docs/product-specs/copy/video-prompt.json', () => {
-  const copy = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/product-specs/copy/video-prompt.json'), 'utf8'));
+// Every video and download-error string in the page is the reviewed copy, word for word (placeholders are filled in at run time).
+test('video copy in the page matches docs/product-specs/copy/video-prompt.json and export-errors.json', () => {
+  const read = (f) => JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/product-specs/copy', f), 'utf8'));
+  const copy = { ...read('video-prompt.json'), ...read('export-errors.json') };
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   for (const [key, text] of Object.entries(copy)) {
     // No defensible length limit was measured, so that row is left out (design-system/components/VideoPrompt).
