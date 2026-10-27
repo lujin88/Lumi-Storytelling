@@ -59,7 +59,6 @@ test('download excludes saved API keys and GitHub token', async ({ page }) => {
     claude: 'FAKE-CLAUDE-KEY-FOR-TEST-ONLY',
     openai: 'FAKE-OPENAI-KEY-FOR-TEST-ONLY',
     gemini: 'FAKE-GEMINI-KEY-FOR-TEST-ONLY',
-    jimeng: 'FAKE-JIMENG-KEY-FOR-TEST-ONLY',
   };
   const githubMarker = 'FAKE-GITHUB-TOKEN-FOR-TEST-ONLY';
   // Over http, because file:// pages no longer load saved keys (see key-storage.spec.js).
@@ -70,7 +69,7 @@ test('download excludes saved API keys and GitHub token', async ({ page }) => {
       'lumi-github-token-v1': githubMarker,
     },
   });
-  await expect.poll(() => page.evaluate(() => localStorage.getItem('lumi-api-keys-v1'))).toContain(keyMarkers.jimeng);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('lumi-api-keys-v1'))).toContain(keyMarkers.gemini);
   expect(await page.evaluate(() => localStorage.getItem('lumi-github-token-v1'))).toBe(githubMarker);
   await page.click('[data-action="loadSample"]');
   await page.click('#sidebar [data-page="publish"]');
