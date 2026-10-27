@@ -30,6 +30,39 @@ for (const [theme, time] of [['light', DAY], ['dark', NIGHT]]) {
     expect(errors).toEqual([]);
   });
 
+  // QA, 2026-10-27: Lumi's review on "Next" moved the current row to a
+  // follow-up but left the picked "remember" row current too, so the composer
+  // overwrote that row instead of answering the follow-up.
+  // runReview() backs the "Ask Lumi to review" card, which no page renders
+  // today, so that case calls it directly.
+  const reviews = [
+    ['Next', page => page.click('#footer [data-action="next"]')],
+    ['runReview', page => page.evaluate(() => runReview())],
+  ];
+  for (const [via, review] of reviews) test(`${theme}: Lumi's review (${via}) leaves the follow-up as the only current row`, async ({ page }) => {
+    await page.clock.install({ time });
+    const errors = await openApp(page);
+    await page.click('[data-action="loadSample"]');
+    await page.click('#sidebar [data-page="story"]');
+    await page.click('[data-action="three:1"]');
+    await page.keyboard.press('Escape');
+    const kept = await page.evaluate(() => {
+      state.found.stake = { text: '影响很大。' };
+      state.storyReviewPass = false; render();
+      return state.three[1];
+    });
+    expect(kept.trim()).not.toBe('');
+    await review(page);
+    const current = page.locator('#content .foundation-item.current');
+    await expect(current).toHaveCount(1);
+    await expect(current).toHaveAttribute('data-action', /^fuFocus:/);
+    await page.fill('#guideText', '影响了 12 个客户。');
+    await page.press('#guideText', 'Enter');
+    expect(await page.evaluate(() => state.three[1])).toBe(kept);
+    expect(await page.evaluate(() => state.followups.map(x => x.text))).toContain('影响了 12 个客户。');
+    expect(errors).toEqual([]);
+  });
+
   test(`${theme}: selected step 1 choices use the shared action fill`, async ({ page }) => {
     await page.clock.install({ time });
     const errors = await openApp(page);
