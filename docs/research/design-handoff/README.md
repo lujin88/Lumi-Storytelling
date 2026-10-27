@@ -11,16 +11,39 @@ These images support the design-system specifications for Step 1 alignment, Stor
 
 ## Step 1 Lumi alignment
 
-The proposed layout uses the same 960px rail as the material area. On desktop, Lumi's top edge equals the first setup label and its right edge equals the material area's right edge. The screenshots include viewport x/y marks; they are generated from the current 4317 demo with proposal CSS injected and do not change production code.
+Lu asked to compare several placements because Step 1 has denser setup controls than the other steps: putting Lumi at the far right is consistent across the product, but can leave the left side visually sparse. The three candidates below are rendered from the current 4317 demo with proposal CSS injected; they are design evidence, not application implementation screenshots. All three align Lumi's top to the setup area at y=123 and keep the 960px material rail unchanged.
 
-| Viewport width | Evidence |
+| Option | Layout | Benefit | Trade-off |
+| --- | --- | --- | --- |
+| A — rail edge | Keep the existing 408px stacked question block; align Lumi's right edge to the material rail. | Strongest shared right anchor; matches the right-side placement on other steps. | Leaves 296px between the controls and Lumi, so the top area feels split. |
+| B — two-column task area | Keep Lumi on the material rail's right edge; widen the questions to 680px, with purpose across the top and audience/time below. | Uses the full left area and keeps Lumi in the product-wide right position; shortens the whole section by 53px. | Changes the scan order and makes time a 2×2 control group. |
+| C — adjacent coach | Keep the 408px stacked question block; place Lumi 24px after it. | Preserves the current controls and makes Lumi feel connected to the task. | Leaves 272px at the rail's right side and remains different from other steps. |
+
+### Option A — rail edge
+
+| 1905px | 1280px |
 | --- | --- |
-| 1905px | [Step 1 alignment at 1905px](https://github.com/lujin88/Lumi-Storytelling/blob/0ecbe54bdb6672fe5a1efaf1b7c2d31a90259352/docs/research/design-handoff/step1-lumi-align-1905.png?raw=true) |
-| 1512px | [Step 1 alignment at 1512px](https://github.com/lujin88/Lumi-Storytelling/blob/0ecbe54bdb6672fe5a1efaf1b7c2d31a90259352/docs/research/design-handoff/step1-lumi-align-1512.png?raw=true) |
-| 1280px | [Step 1 alignment at 1280px](https://github.com/lujin88/Lumi-Storytelling/blob/0ecbe54bdb6672fe5a1efaf1b7c2d31a90259352/docs/research/design-handoff/step1-lumi-align-1280.png?raw=true) |
-| 390px | [Step 1 mobile rule at 390px](https://github.com/lujin88/Lumi-Storytelling/blob/0ecbe54bdb6672fe5a1efaf1b7c2d31a90259352/docs/research/design-handoff/step1-lumi-align-390.png?raw=true) |
+| ![Option A at 1905px](step1-a-1905.png) | ![Option A at 1280px](step1-a-1280.png) |
 
-At 390px Lumi remains hidden by the existing ≤720px rule. The single-column content and material area keep the `gutter` edges at x=16 and x=374.
+At 1905px: questions x=296–704, Lumi x=1000–1256, material x=296–1256. At 1280px: questions x=272–680, Lumi x=976–1232, material x=272–1232.
+
+### Option B — two-column task area
+
+| 1905px | 1280px |
+| --- | --- |
+| ![Option B at 1905px](step1-b-1905.png) | ![Option B at 1280px](step1-b-1280.png) |
+
+At 1905px: questions x=296–976, Lumi x=1000–1256, material x=296–1256. At 1280px: questions x=272–952, Lumi x=976–1232, material x=272–1232. The question-to-Lumi gap is 24px at both widths.
+
+### Option C — adjacent coach
+
+| 1905px | 1280px |
+| --- | --- |
+| ![Option C at 1905px](step1-c-1905.png) | ![Option C at 1280px](step1-c-1280.png) |
+
+At 1905px: questions x=296–704, Lumi x=728–984, material x=296–1256. At 1280px: questions x=272–680, Lumi x=704–960, material x=272–1232. The question-to-Lumi gap is 24px and the remaining rail space is 272px at both widths.
+
+At 390px Lumi remains hidden by the existing ≤720px rule for every option. The single-column content and material area keep the `gutter` edges at x=16 and x=374.
 
 ## StoryScore
 
