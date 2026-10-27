@@ -219,6 +219,8 @@ test.describe('step 3 send', () => {
     ['too many requests', (route) => route.fulfill({ status: 429, json: { type: 'error', error: { type: 'rate_limit_error', message: 'Rate limited' } } }), 'Claude 现在请求太多，或到了用量上限。过一会儿再试。', false],
     ['overloaded', (route) => route.fulfill({ status: 529, json: { type: 'error', error: { type: 'overloaded_error', message: 'Overloaded' } } }), 'Claude 暂时没有响应。过一会儿再试。', false],
     ['server error', (route) => route.fulfill({ status: 500, json: { type: 'error', error: { type: 'api_error', message: 'Internal server error' } } }), 'Claude 暂时没有响应。过一会儿再试。', false],
+    ['model retired', (route) => route.fulfill({ status: 404, json: { type: 'error', error: { type: 'not_found_error', message: 'model: claude-opus-5-5' } } }), 'Claude 停用了这个接口或模型。去设置换一个模型，或换一家服务商。', true],
+    ['region refused', (route) => route.fulfill({ status: 403, json: { type: 'error', error: { type: 'permission_error', message: 'Request not allowed' } } }), 'Claude 拒绝了这次请求，可能是地区或账号权限的问题。', false],
   ];
   for (const [name, reply, text, settingsLink] of claudeFailures) {
     test(`Claude failure (${name}) shows one line where the user sent, and keeps the text`, async ({ page }) => {
