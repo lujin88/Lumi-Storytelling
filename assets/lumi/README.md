@@ -19,27 +19,35 @@ The Lumi renders used in `index.html`, extracted so agents can use them as refer
 
 | Pose | Source clip | `webm` | `webp` |
 |---|---|---|---|
-| wave | Dreamina seedance2.0 mini, task `cd75c5b3` | 628,020 B | 817,548 B |
+| wave | Dreamina seedance2.0 mini, task `cd75c5b3` | 564,393 B | 822,678 B |
 | think | Dreamina seedance2.0 mini, task `2c49178f` | 659,263 B | 801,430 B |
-| cheer | Dreamina seedance2.0 mini, task `b3e4fd1f` | 897,469 B | 805,818 B |
+| cheer | Dreamina seedance2.0 mini, task `b3e4fd1f` | 830,715 B | 810,874 B |
 | jump | Dreamina seedance2.0 mini, task `caa805fc`, from `standing.webp` | 873,773 B | 887,206 B |
 
-Wave, think and cheer were re-exported from their existing transparent WebM clips
-without a paid generation. `scripts/lumi-loop-fix.mjs` eases the final six 24 fps
-frames toward the first frame, then writes transparent VP9 and animated WebP.
-The WebP selects 40 frames across the same 4-second motion, including the exact
-first and last source frames. Wave and think use WebP loop count 0 (continuous).
-Cheer uses loop count 1: it plays once and holds its last frame. The page's
-playback controller must restart it after a pause; the pause length is pending
-review. To make the one-play WebP from a continuous export, run `webpmux
--set loop 1 cheer.webp -o cheer-once-v2.webp`; this changes loop metadata
-without re-encoding frames. Original renders in `source/` are unchanged.
+Wave and cheer were re-exported without a paid generation from the transparent
+clips in the pre-#58 `feat/lumi-loop-settings-error` branch. The old #58 method
+of easing the final six frames to match the first frame is superseded: although
+the endpoints matched, a pose snap remained just before and after the seam.
+`scripts/lumi-loop-fix.mjs` now trims those frames instead. Wave keeps source
+frames 4–89 (86 frames, 3.58 s); cheer keeps 3–92 (90 frames, 3.75 s). For
+example, run `node scripts/lumi-loop-fix.mjs input.webm outdir wave-v2 4 89`.
+The script writes transparent VP9 and a 40-frame animated WebP fallback into
+versioned filenames, matching their playback lengths within one WebP frame,
+then checks that both are under 1 MiB. The app uses the
+stable filenames in this directory. Original renders in `source/` are unchanged.
 
-Decoded first/last-frame premultiplied RGBA PSNR for WebM is 95.6 dB (wave),
-92.0 dB (think) and 94.2 dB (cheer). The corresponding WebP frames decode
-identically. Both exceed the 40 dB seam target; the figures describe the seam,
-not the visual quality of every frame. Versioned working exports are kept
-locally; the app uses the stable filenames above.
+Frame differences were measured from decoded RGBA composited on white, sampling
+every fourth pixel and averaging absolute RGB differences on a 0–255 scale.
+Wave's original frame 92→93 jump measured 2.25; the trimmed 89→4 seam measures
+1.20 (median adjacent difference 0.49). Cheer's original 92→93 jump measured
+3.48; the trimmed 92→3 seam measures 1.60 (median adjacent difference 3.28).
+These seam figures are from the final encoded WebM outputs. The WebP
+fallbacks currently loop continuously, including cheer. The planned
+play-once/pause/replay behavior waits for the approved pause duration and a
+page playback change; it is not implemented in this export.
+
+Think still uses the earlier six-frame endpoint easing in #58. Its seam has
+not been reworked in this pass.
 
 The jump clip is a one-shot reaction for a rising step-2 score. Its generated audio
 was removed. It is included as an asset only; page playback waits for the
