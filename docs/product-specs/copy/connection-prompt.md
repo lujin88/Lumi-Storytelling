@@ -40,7 +40,6 @@
 - 「连接」和设置页按钮现在的字一致（`settingsViewV3`）。按钮状态是「重新检查」时这一步也照写「连接」：只有没连上的行会被跳转过来。
 - 本地保存的说法改准了：原来写「不会上传」，但每次调用时密钥会从浏览器直接发给对应服务商（decisions.md 2026-10-23「Claude, OpenAI and Gemini are called from the browser with the user's key」；`index.html` 里三家都是浏览器直连，本地 `server/` 不经手密钥）。新说法：只存在这个浏览器、调用时直接发给这家服务、不经过别处、不会导出。没写「Lumi 没有服务器」：本地 `server/`（127.0.0.1:4317）是存在的，只是不碰密钥。
 - 双击文件打开那句没有「不会上传」，事实不变，不改。
-- 即梦不用密钥（用本机登录），不加展开说明。
 
 ## 帮助页 FAQ
 
@@ -56,7 +55,41 @@
 
 - 规格里写的标题是「连接服务和 API 密钥」。帮助页现有 5 条都是问句，这里也写成问句，同时覆盖原第 3 条的「怎么知道连上了」。
 - 「已连接 / Connected」是设置页 `providerStatusLabel` 现在的状态词，状态词改了这里跟着改。原第 3 条后半句「连上后，改讲稿、生成图片会自动用它」不保留。
-- 列表只列需要密钥的 Claude、OpenAI、Gemini。即梦不用密钥，不列。
+- 列表只列需要密钥的 Claude、OpenAI、Gemini。即梦已经去掉（Lu，2026-10-27），视频暂时不连任何服务商。
+
+## 帮助页 FAQ：内容会发给哪些服务（F7）
+
+**新加一条，放在「怎么填 API 密钥，怎么知道连上了？」后面**（Lu 2026-10-27 批，见 #64 F7）。只写 Claude、OpenAI、Gemini 三家：视频暂时不连任何服务商（Lu 2026-10-27 12:42）。
+
+| 位置 | 文案 | key |
+|---|---|---|
+| 问题 | 我的内容会发给哪些服务？ / Where does my content go? | `help.data-flow.q` |
+| 回答 | 用到 AI 功能时，相关内容会从这个浏览器直接发给对应的服务。没连上的服务什么都收不到。 / When you use an AI feature, the content it needs goes straight from this browser to that service. A service you haven’t connected receives nothing. | `help.data-flow.a` |
+| 列表第 1 行 | Claude：你的笔记和回答、选的用途和听众、幻灯片和讲稿，以及你提的修改要求。 / Claude: your notes and answers, the purpose and audience you chose, your slides and script, and any changes you ask for. | `help.data-flow.claude` |
+| 列表第 2 行 | OpenAI：你要改图时，当前这张图、修改要求和风格说明。 / OpenAI: when you ask to change an image, the current image, the change request and your style brief. | `help.data-flow.openai` |
+| 列表第 3 行 | Gemini：你用麦克风说话时的录音，用来转成文字。 / Gemini: your voice recording when you use the mic, so it can be turned into text. | `help.data-flow.gemini` |
+
+每句对应的代码（`index.html`）：
+
+| 文案 | 代码 | 在哪 |
+|---|---|---|
+| 从浏览器直接发、没连上的收不到 | 三家都用 `providerCall` 直连 `api.anthropic.com`、`api.openai.com`、`generativelanguage.googleapis.com`；调用前都查 `aiReady(id)` | main `1b1e4b8` |
+| Claude：修改要求、用途、听众、幻灯片（标题、正文、依据）、讲稿 | `claudeStep3`：`request`、`purpose`、`audience`、`slides[].title/body/evidence`、`script` | main `1b1e4b8` |
+| Claude：笔记 | `draftAnswers`：`notes`（`state.brief`） | **#29**（`b1abef0`，未合） |
+| Claude：回答 | `reviewStory`（审阅、打分）：`answers`；`draftDefend` | **#29**（`b1abef0`，未合） |
+| OpenAI：当前这张图、修改要求、风格说明 | `openaiEdit`：`image`（`state.generatedImage`，生成的或上传的图）、`prompt` = 修改要求 + `Style brief`（`curStyle().note`，有才发） | main `1b1e4b8` |
+| Gemini：录音 | `geminiTranscribe`：`inlineData` 音频，在 `MediaRecorder` 停止后调用 | main `1b1e4b8` |
+
+- **要等 #29 合了再上线。** 现在 main 上 Claude 只在改稿时收到内容，「笔记和回答」是 #29 加的。先上的话，这句会说多了。
+- 「修改要求」：发给 OpenAI 的修改要求是 Claude 根据你的话改写出来的（`image_instruction`），不是原话。用「修改要求」两边都对得上。
+- 「风格说明」：只在用户写了风格说明时才发。没加「（如果写了）」，这句是在说会发什么，没写就不会发。
+- 没写「Lumi 不保存你的内容」：内容会存在这个浏览器的 `localStorage`（PRD 第 5 节），这句说不准。
+- 没写各家会不会保存、会不会拿去训练：代码里查不到，要看各家的条款，待确认。
+
+还没写、要定的：
+
+- **GitHub 发布也会把内容发出去。** 连上 GitHub 后点发布，`index.html`、讲稿、`storyboard.md`、`lumi-project.json` 会经本地服务（127.0.0.1:4317）写进用户自己的仓库。这一条不是 AI 服务，按派活只写三家，但不写的话「会发给哪些服务」这个问题答不全。要不要加一行，待确认。
+- **浏览器自带的语音识别。** 没连 Gemini 时用浏览器自带识别（`webkitSpeechRecognition`）。有些浏览器会把声音发到自己的服务器处理，这不是 Lumi 的代码决定的，我没有核对出处，不写。待确认。
 
 ## 设置页顶部说明（改现有文案）
 
@@ -89,4 +122,9 @@
 | `help.connect-provider.a` | Lumi 用你自己的 API 密钥调用 AI 服务，每个服务一把。点下面的服务名，会跳到设置里它那一行，输入框旁边就有拿密钥的步骤。连上后，那一行会显示「已连接」。 | Lumi calls AI services with your own API keys, one key per service. Select a service below to jump to its row in Settings. The steps to get a key are right beside the field. Once it’s connected, the row shows Connected. |
 | `help.connect-provider.stored` | 密钥只存在这个浏览器里，调用时直接发给对应的服务，不经过别处，也不会导出。 | Keys stay in this browser. Each one goes straight to its own service when Lumi calls it, nowhere else, and is never exported. |
 | `help.connect-provider.not-stored` | 双击打开时不会保存密钥，关掉页面后要重新填。 | Opened as a file, Lumi doesn’t save keys, so you’ll enter them again next time. |
+| `help.data-flow.q` | 我的内容会发给哪些服务？ | Where does my content go? |
+| `help.data-flow.a` | 用到 AI 功能时，相关内容会从这个浏览器直接发给对应的服务。没连上的服务什么都收不到。 | When you use an AI feature, the content it needs goes straight from this browser to that service. A service you haven’t connected receives nothing. |
+| `help.data-flow.claude` | Claude：你的笔记和回答、选的用途和听众、幻灯片和讲稿，以及你提的修改要求。 | Claude: your notes and answers, the purpose and audience you chose, your slides and script, and any changes you ask for. |
+| `help.data-flow.openai` | OpenAI：你要改图时，当前这张图、修改要求和风格说明。 | OpenAI: when you ask to change an image, the current image, the change request and your style brief. |
+| `help.data-flow.gemini` | Gemini：你用麦克风说话时的录音，用来转成文字。 | Gemini: your voice recording when you use the mic, so it can be turned into text. |
 | `settings.keys-note` | 用你自己的 API 密钥。密钥只存在这个浏览器里，调用时直接发给对应的服务，不经过别处，也不会导出。 | Bring your own API keys. They stay in this browser, go straight to each service when Lumi calls it, and are never exported. |
