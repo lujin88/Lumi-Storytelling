@@ -53,14 +53,14 @@ Current application baseline at commit `31e12e9`, 1280×850 after loading the sa
 
 [Current StoryScore](https://github.com/lujin88/Lumi-Storytelling/blob/85ce17c3fb26bf64f91b1d97cc3fc7e847e408bc/docs/research/design-handoff/story-score-current.png?raw=true)
 
-Proposed component preview at 900×500. The 48px ring holds a 34px image inside its 36px clear diameter; the preview includes the low-frequency idle and one-shot score-rise reaction:
+Current component specification at 900×700. The 48px ring holds a 27px image inside its 36px clear diameter; the preview includes `low`, `good`, `top`, the worst idle and score-rise extremes, and both score-source states:
 
-[StoryScore motion specification](https://github.com/lujin88/Lumi-Storytelling/blob/85ce17c3fb26bf64f91b1d97cc3fc7e847e408bc/docs/research/design-handoff/story-score-spec.png?raw=true)
+[StoryScore geometry, motion and score-source specification](https://github.com/lujin88/Lumi-Storytelling/blob/e46608c4a83df7075f2a78b824445e164062ac46/docs/research/design-handoff/story-score-states.png?raw=true)
 
 ## Missing connection
 
-Proposed component preview at 900×500 after activating a missing-Gemini prompt and opening setup help. The target row keeps `action-bg`, a 3px `action-ink` leading bar and a visible keyboard focus outline; help remains inside that same region:
+Current component specification after activating a missing-Gemini prompt and opening setup help. The target row keeps `action-bg`, a 3px `action-ink` leading bar and a visible keyboard focus outline; the key field, visible Connect action and help remain inside that same region:
 
-[Connection prompt specification](https://github.com/lujin88/Lumi-Storytelling/blob/85ce17c3fb26bf64f91b1d97cc3fc7e847e408bc/docs/research/design-handoff/connection-prompt-spec.png?raw=true)
+[Connection prompt — desktop](https://github.com/lujin88/Lumi-Storytelling/blob/e46608c4a83df7075f2a78b824445e164062ac46/docs/research/design-handoff/connection-prompt-desktop.png?raw=true) · [390px light](https://github.com/lujin88/Lumi-Storytelling/blob/e46608c4a83df7075f2a78b824445e164062ac46/docs/research/design-handoff/connection-prompt-390-light.png?raw=true) · [390px dark](https://github.com/lujin88/Lumi-Storytelling/blob/e46608c4a83df7075f2a78b824445e164062ac46/docs/research/design-handoff/connection-prompt-390-dark.png?raw=true)
 
 The cheer change is a timing and playback-state specification in `design-system/motion.md`; its required three-cycle recording belongs to the implementation PR.
