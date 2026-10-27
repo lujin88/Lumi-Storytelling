@@ -33,7 +33,7 @@ test('The local server serves the tab icons as PNG', async () => {
   const server = http.createServer();
   await new Promise((r) => server.listen(0, '127.0.0.1', () => r(undefined)));
   const port = /** @type {import('net').AddressInfo} */ (server.address()).port;
-  server.on('request', createHandler({ port, dreamina: '/nonexistent' }));
+  server.on('request', createHandler({ port }));
   try {
     for (const { href } of ICONS) {
       const res = await fetch(`http://127.0.0.1:${port}/${href}`);
