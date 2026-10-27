@@ -90,11 +90,13 @@ test('after skipping, an AI action shows an inline connect prompt, not silence',
 test('each optional provider says what it unlocks and shows its status', async ({ page }) => {
   const errors = await openApp(page);
   await page.click('#sidebar [data-page="settings"]');
-  for (const [id, unlocks] of [['openai', '图片'], ['gemini', '语音转文字'], ['jimeng', '视频']]) {
+  for (const [id, unlocks] of [['openai', '图片'], ['gemini', '语音转文字']]) {
     const row = page.locator('.prov-row', { has: page.locator(`[data-action="connectApi:${id}"]`) });
     await expect(row.locator('.prov-doc')).toContainText(unlocks);
     await expect(row.locator('.connection-status')).toHaveText('未连接');
   }
+  // No video provider: video is made elsewhere and uploaded (Lu, 2026-10-27).
+  await expect(page.locator('[data-action^="connectApi:"]')).toHaveCount(3);
   expect(errors).toEqual([]);
 });
 
@@ -123,16 +125,55 @@ test('each failure kind has its own one-line message', async ({ page }) => {
     ['claude', 'FAKE-CLAUDE-KEY-FOR-TEST-ONLY', '连不上 Claude。检查网络后再试。'],
     ['openai', 'FAKE-OPENAI-KEY-FOR-TEST-ONLY', 'OpenAI 账户没有额度了。充值后再试。'],
     ['gemini', 'FAKE-GEMINI-KEY-FOR-TEST-ONLY', 'Gemini 不认这个密钥。重新复制一个再试。'],
-    // Opened as a file, Jimeng goes to the local service, which isn't running here.
-    ['jimeng', null, '本地服务没有开。在项目文件夹运行 node server，再试一次。'],
   ];
   for (const [id, key, message] of cases) {
-    if (key) await page.fill(`#key-${id}`, key);
+    await page.fill(`#key-${id}`, key);
     await page.click(`[data-action="connectApi:${id}"]`);
     const row = page.locator('.prov-row', { has: page.locator(`[data-action="connectApi:${id}"]`) });
     await expect(row.locator('.connection-status')).toHaveText('连接失败');
     await expect(row.locator('.prov-err')).toHaveText(message);
   }
+  expect(errors).toEqual([]);
+});
+
+// #64 E2, E3: a retired endpoint and a region or account refusal each say so, instead of
+// "try again later" or "wrong key". A 403 counts as a wrong key only when the body says so.
+const checkFailures = [
+  ['404', { status: 404, json: { type: 'error', error: { type: 'not_found_error', message: 'Not found' } } }, 'Claude 停用了这个接口或模型。去设置换一个模型，或换一家服务商。'],
+  ['403 permission', { status: 403, json: { type: 'error', error: { type: 'permission_error', message: 'Your API key does not have permission to use the specified resource.' } } }, 'Claude 拒绝了这次请求，可能是地区或账号权限的问题。'],
+  ['403 region', { status: 403, json: { error: { code: 'unsupported_country_region_territory', message: 'Country, region, or territory not supported' } } }, 'Claude 拒绝了这次请求，可能是地区或账号权限的问题。'],
+  ['403 leaked key', { status: 403, json: { error: { code: 403, status: 'PERMISSION_DENIED', message: 'Your API key was reported as leaked. Please use another API key.' } } }, 'Claude 不认这个密钥。重新复制一个再试。'],
+];
+for (const [name, reply, message] of checkFailures) {
+  test(`a key check that fails with ${name} shows its own line`, async ({ page }) => {
+    const errors = await openApp(page);
+    await page.route(CLAUDE_MODELS, (route) => route.fulfill(reply));
+    await connectClaudeFromCard(page);
+    await expect(claudeRow(page).locator('.connection-status')).toHaveText('连接失败');
+    await expect(page.locator('.prov-err')).toHaveText(message);
+    expect(errors).toEqual([]);
+  });
+}
+
+// #64 E1: a provider that never answers must not leave the row on "checking" forever.
+test('a key check that never answers stops after 15 seconds and can be run again', async ({ page }) => {
+  await page.clock.install();
+  const errors = await openApp(page);
+  await page.route(CLAUDE_MODELS, () => {}); // never answers
+  await connectClaudeFromCard(page);
+  const status = claudeRow(page).locator('.connection-status');
+  await expect(status).toHaveText('正在检查连接');
+  await page.clock.fastForward('00:14');
+  await expect(status).toHaveText('正在检查连接');
+  await page.clock.fastForward('00:02');
+  await expect(status).toHaveText('连接失败');
+  await expect(page.locator('.prov-err')).toHaveText('Claude 暂时没有响应。过一会儿再试。');
+  await page.unroute(CLAUDE_MODELS);
+  await mockClaude(page, true);
+  await claudeRow(page).locator('[data-action="connectApi:claude"]').click();
+  await expect(page.locator('.page-dump')).toBeVisible();
+  await page.click('#sidebar [data-page="settings"]');
+  await expect(status).toHaveText('已连接');
   expect(errors).toEqual([]);
 });
 
@@ -165,3 +206,95 @@ for (const width of [1900, 1512, 1280, 390]) {
     expect(errors).toEqual([]);
   });
 }
+
+// Visual review of #38: at 1280px the English "Connection failed" label ran
+// under the model dropdown, and squeezing the status in beside the key left
+// the key field 77px wide at 1001px. Below 1200px the status sits under the
+// key field; above, it has its own column that must end before the dropdown.
+const STATUSES = ['disconnected', 'checking', 'configured', 'connected', 'error'];
+
+/** Put every provider row in `status`, open Settings, and measure each key row. */
+function settingsRows(page, lang, status) {
+  return page.evaluate(({ lang, status }) => {
+    state.lang = lang;
+    for (const id of ['claude', 'openai', 'gemini', 'jimeng']) {
+      state.providerStatus[id] = status;
+      if (status === 'error') state.providerMessage[id] = providerErrorText(id, id === 'jimeng' ? 'login' : 'credit');
+    }
+    go('settings');
+    return [...document.querySelectorAll('.prov-row')].filter((row) => row.querySelector('.connection-status')).map((row) => {
+      const label = row.querySelector('.connection-status');
+      const text = document.createRange();
+      text.selectNodeContents(label);
+      const t = text.getBoundingClientRect();
+      const s = row.querySelector('select').getBoundingClientRect();
+      const input = row.querySelector('input[id^="key-"]');
+      const box = input?.getBoundingClientRect();
+      const style = input && getComputedStyle(input);
+      const ctx = document.createElement('canvas').getContext('2d');
+      if (style) ctx.font = style.font;
+      return {
+        label: label.textContent,
+        clear: t.bottom <= s.top || t.top >= s.bottom || s.left - t.right >= 4,
+        id: input?.id,
+        width: box?.width,
+        placeholderFits: !input || ctx.measureText(input.placeholder).width
+          <= box.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
+      };
+    });
+  }, { lang, status });
+}
+
+for (const width of [901, 1001]) {
+  test(`the key field keeps its room and takes a click in the middle at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const errors = await openApp(page);
+    for (const lang of ['en', 'zh']) {
+      for (const status of STATUSES) {
+        const rows = await settingsRows(page, lang, status);
+        for (const row of rows) {
+          expect(row.clear, `${lang} ${status} ${row.label}`).toBe(true);
+          if (!row.id) continue;
+          // 109px is the key field's width on main before #38.
+          expect(row.width, `${lang} ${status} #${row.id}`).toBeGreaterThanOrEqual(109);
+          expect(row.placeholderFits, `${lang} ${status} #${row.id} placeholder`).toBe(true);
+        }
+      }
+    }
+    for (const id of ['key-claude', 'key-openai', 'key-gemini']) {
+      await page.locator(`#${id}`).click({ position: await page.locator(`#${id}`).evaluate((el) => ({ x: el.offsetWidth / 2, y: el.offsetHeight / 2 })) });
+      await expect(page.locator(`#${id}`)).toBeFocused();
+    }
+    expect(errors).toEqual([]);
+  });
+}
+
+for (const width of [1280, 1512, 1905]) {
+  test(`connection status labels stay clear of the model dropdown at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const errors = await openApp(page);
+    for (const lang of ['en', 'zh']) {
+      for (const status of STATUSES) {
+        const rows = await settingsRows(page, lang, status);
+        expect(rows.filter((r) => !r.clear).map((r) => r.label), `${lang} ${status}`).toEqual([]);
+      }
+    }
+    expect(errors).toEqual([]);
+  });
+}
+
+test('the settings rows fit a 390px screen in every connection state', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const errors = await openApp(page, { http: true });
+  for (const lang of ['en', 'zh']) {
+    for (const status of STATUSES) {
+      await settingsRows(page, lang, status);
+      // d40e7f0 scrolled sideways to 423px with the English error labels.
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), `${lang} ${status}`).toBe(390);
+    }
+  }
+  expect(errors).toEqual([]);
+});
