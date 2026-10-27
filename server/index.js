@@ -25,6 +25,23 @@ const STATIC_TYPES = {
   '.svg': 'image/svg+xml',
 };
 
+/**
+ * One "bytes=" range as [first, last], 'unsatisfiable', or null to send the
+ * whole file. Malformed and multi-part ranges are ignored (RFC 9110 14.2).
+ */
+function byteRange(header, size) {
+  const m = /^bytes=(\d*)-(\d*)$/.exec(String(header || '').trim());
+  if (!m || (m[1] === '' && m[2] === '')) return null;
+  if (m[1] === '') { // suffix: the last N bytes
+    const n = Number(m[2]);
+    return n > 0 && size > 0 ? [Math.max(0, size - n), size - 1] : 'unsatisfiable';
+  }
+  const first = Number(m[1]);
+  const last = m[2] === '' ? Infinity : Number(m[2]);
+  if (last < first) return null;
+  return first < size ? [first, Math.min(last, size - 1)] : 'unsatisfiable';
+}
+
 function createHandler({ port = DEFAULT_PORT } = {}) {
   const hosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`]);
 
@@ -44,13 +61,24 @@ function createHandler({ port = DEFAULT_PORT } = {}) {
     const allowed = file === path.join(ROOT, 'index.html') || file.startsWith(path.join(ROOT, 'assets') + path.sep);
     const type = STATIC_TYPES[path.extname(file).toLowerCase()];
     if (!allowed || !type) return send(res, 404, { code: 'not_found' });
+    let data;
     try {
-      const data = await fsp.readFile(file);
-      res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-store' });
-      res.end(req.method === 'HEAD' ? undefined : data);
+      data = await fsp.readFile(file);
     } catch {
-      send(res, 404, { code: 'not_found' });
+      return send(res, 404, { code: 'not_found' });
     }
+    const headers = { 'Content-Type': type, 'Cache-Control': 'no-store', 'Accept-Ranges': 'bytes' };
+    // Chrome only seeks a <video> when the server answers byte ranges.
+    // We send no validators, so an If-Range can never match: send the whole file.
+    const range = req.headers['if-range'] === undefined ? byteRange(req.headers.range, data.length) : null;
+    if (range === 'unsatisfiable') {
+      res.writeHead(416, { ...headers, 'Content-Range': `bytes */${data.length}` });
+      return res.end();
+    }
+    const [status, body] = range ? [206, data.subarray(range[0], range[1] + 1)] : [200, data];
+    if (range) headers['Content-Range'] = `bytes ${range[0]}-${range[1]}/${data.length}`;
+    res.writeHead(status, { ...headers, 'Content-Length': body.length });
+    res.end(req.method === 'HEAD' ? undefined : body);
   }
 
   async function route(req, res) {
