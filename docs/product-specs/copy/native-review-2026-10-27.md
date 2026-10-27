@@ -30,4 +30,11 @@
 | `provider-error.gone.only-model` | {provider} 停用了 Lumi 用的模型。Lumi 更新后才能再用。 | {provider} has retired the model Lumi uses. Lumi needs an update before you can use it again. |
 | `provider-error.denied` | {provider} 拒绝了这次请求，可能是地区或账号权限的问题。 | {provider} refused this request. It may be your region or account permissions. |
 
+## 第 5 步下载报错（#72，`export-errors.json`）
+
+| key | 中文 | English |
+|---|---|---|
+| `export.videos-too-large` | 下载没成功：演示文件里的视频加起来太大，浏览器处理不了。回到「页面和讲稿」，移除几个视频或换成小一点的，再下载。 | Download failed. The videos in the presentation add up to more than the browser can handle. In Slides & script, remove some videos or use smaller ones, then download again. |
+| `export.failed` | 下载没成功，再试一次。 | Download failed. Try again. |
+
 `{provider}` 是服务商名（Claude、OpenAI、Gemini），不翻译。`{formats}` `{ratio}` `{length}` `{size}` 的数字等开发量出来再填。
