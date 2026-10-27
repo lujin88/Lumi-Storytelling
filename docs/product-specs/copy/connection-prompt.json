@@ -21,7 +21,7 @@
   },
   "connection.key-help": {
     "zh": "在哪里拿密钥，怎么填？",
-    "en": "How do I get a key?"
+    "en": "Where do I get a key, and how do I add it?"
   },
   "connection.get-key": {
     "zh": "在 {site} 创建 {provider} API 密钥",
