@@ -29,7 +29,7 @@ Chinese first, English parity. Short, direct, second person. Name the user's mat
 | --- | --- | --- | --- | --- |
 | Selected | `action-bg` (= `soft` #e7ecf3) | 1px `action-line` (= `blue` #7e8fae) | `ink`; Tag check in `action-line` | ChoiceCard, Tag, style chip, active nav row |
 | Pressed segment | `action-bg` | none (the track holds the shape) | `action-ink`, 600 | Segmented controls on a `sunken` track: LanguageToggle, 要点/逐字稿, modal toggles |
-| Current | `action-bg` | 3px `action-ink` (= `info` #526787) bar on the left | number in `action-ink`, 600 | Current question row, open accordion item |
+| Current | `action-bg` | 3px `action-ink` (= `info` #526787) bar on the left | number in `action-ink`, 600 | Current question row, active slide row, open accordion item |
 | Hover | `sunken` | unchanged | `ink` | Rows that are not current; ChoiceCard and Tag that are not selected |
 
 Never use white-on-track, a grey fill or an ink border for selection; those read as "not picked". Dark mode maps the same tokens (`soft` #232a36, `blue` #9fb0cf, `info` #a9bbd6).
@@ -58,14 +58,14 @@ Lumi the mascot appears on the intro, in the story score face, on the step 5 fil
    - Answered row: the answer turns into an inline text field in the row. Enter saves, Shift+Enter adds a line, Esc cancels.
    - Unanswered row: becomes the current row; answer in the bottom Composer (typing or voice).
    - Talk notes: click any line to edit in place.
-2. **One current thing at a time.** The current row, or the one open accordion item, gets the `soft` fill with a 3px `info` bar on the left and an `info` number. Opening another item closes the previous one.
+2. **One current thing at a time.** The current row, active slide row, or the one open accordion item gets the `soft` fill with a 3px `info` bar on the left and an `info` number. Opening or editing another item clears the previous one. See `SelectionState` for the Step 3 editing contract.
 3. **Flag only what needs action.** Evidence shows nothing when fine. Only 待确认 (inferred) and 缺材料 (missing) get an EvidenceMark.
 4. **Icons trail the text** (ⓘ after the sentence, ↗ after a link, ✓ after a chip label). Only status icons inside a chip may lead.
 5. **One primary button per screen**: the step CTA (下一步), or 下载 inside the file card on step 5 (no footer CTA there). Anything that acts on the current page is secondary (请 Lumi 看一遍, 连接); help and guides are text links. Buttons carry no icons; only external links get ↗. See Button.
 6. **Never lock a step.** Every step opens any time from the sidebar.
 
 7. **Row grid.** Every numbered list (story rows, three things, follow-up questions, slides, help) uses one grid: 16px inner padding, a 24px number column (centered), 12px gap, then text. Part heads use the same grid, so the part circle sits over the row numbers and the part title lines up with the row text.
-8. **Checkboxes follow the selected pattern**: 18px, 4px radius, `line` border; checked = `action-bg` fill, `action-line` border and check. Never the browser's black checkbox.
+8. **Checkboxes follow the selected pattern**: 18px, 4px radius, `line` border; checked = `action-bg` fill, `action-line` border and check. Never the browser's black checkbox. The row around a checked box stays unfilled; keyboard focus uses `:focus-visible`. See `SelectionState`.
 9. **Two surfaces, never mixed.** *Panel* = `sunken` fill, no border (guidance box, file card on step 5). *Outlined card* = `paper` fill (same as the page) + 1px `line` border (StoryScore). Don't give a panel a border or an outlined card a fill.
 10. **Guidance boxes**: a `sunken` panel with a 13px/550 lead line ("写清这四点，Lumi 就能帮你起草：") and the prompts as a list with `action-line` dots.
 

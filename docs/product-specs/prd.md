@@ -12,7 +12,7 @@ Sep 25, 2026 · @Lu
 
 - It is **one 4.3 MB HTML file**, framework-free, with fonts, icons and images embedded. No build step.
 - The flow is five steps: Gather, Story, Build, Defend, Download. Download is step 5. There is no top bar.
-- The flow runs client-side. AI calls go through the companion backend at `http://127.0.0.1:4317` (or a relative `/api/...` path when deployed): Claude (drafting and review), OpenAI (images), Gemini (voice to text) and Jimeng (video only, via Seedance). That backend is not part of this file.
+- The flow runs client-side. AI calls go from the browser to each provider with the user's own key: Claude (drafting and review), OpenAI (images), Gemini (voice to text). Lumi does not generate video: the user makes it in another tool and uploads it. The local `server/` at `http://127.0.0.1:4317` only serves the page.
 - **No sample content is shown as if it were the user's.** Every title and point comes from the user's own words. Anything not supplied stays visible as `[待补]` / `[Needed]`.
 
 ## 2. User flow
@@ -40,7 +40,7 @@ Everything the user sees now comes from their own material; what is still rule-b
 | Story score | **Completeness only**, not quality. Claude scoring weighted by audience is in the Backlog. |
 | Follow-up questions and drafted answers (step 4) | Ordered by the chosen audience. Answers are drafted from the step-2 answers. A Claude endpoint is in the Backlog. |
 | Slides | **Real layout** from the story in the chosen style. Images are the bundled photo unless the user uploads one or OpenAI edits it. |
-| Video on slides | The user can swap an image for a video. Uploaded videos are not persisted yet; Jimeng/Seedance generation is in the Backlog. |
+| Video on slides | The user can swap an image for a video. Uploaded videos are not persisted yet. Lumi does not generate video; the user makes it elsewhere and uploads it. |
 | Voice input, GitHub publish | Unchanged: real when the backend is running. |
 
 **Implication:** the prototype no longer looks smarter than it is. When the user hasn't supplied something, the gap is visible instead of covered by sample copy. The remaining gap is that drafting, review and scoring are not yet done by Claude. The next step is to let Claude draft answers, review them and draft follow-up answers, under the skill's no-invention policy (§10). See Backlog for Buzz.
@@ -103,7 +103,7 @@ Five steps plus Settings. Each block lists what the user sees and does.
 
 **Settings**
 
-- One table with a row each for Claude, OpenAI, Gemini and Jimeng:
+- One table with a row each for Claude, OpenAI and Gemini:
 
 | Column | What it does |
 | --- | --- |
@@ -256,7 +256,8 @@ When the purpose is Interview or Report, step 1 asks who is listening. The answe
 ### 8.11 Download, settings, theme
 
 - Step 5: checklist of files; one file saves as itself, several as `lumi-story.zip`. Inside claude.ai it goes through the viewer's download prompt. Publishing to the web is a guide, not an automated upload.
-- Settings is one table: Claude, OpenAI, Gemini, Jimeng (key, Connect, status, model dropdown). Providers are only auto-checked when a key is present. Jimeng connects through the local service (API key, or the signed-in Dreamina CLI); that endpoint is not built yet.
+- Settings is one table: Claude, OpenAI, Gemini (key, Connect, status, model dropdown). Providers are only auto-checked when a key is present.
+- Video: no provider row. The user makes video in another tool and uploads it on a slide.
 - Theme follows local time: dark from 19:00 to 07:00, rechecked every minute. Slide previews keep their own colours.
 
 ### 8.12 First-time use
@@ -268,7 +269,8 @@ On first open, before step 1 does anything AI, Lumi asks the user to connect Cla
 | Claude | Required | Drafting, review, score feedback |
 | OpenAI | Optional | Images |
 | Gemini | Optional | Voice to text |
-| Jimeng (即梦) | Optional | Video, via Seedance. It does not make images. |
+
+Video has no provider: the user makes it in another tool and uploads it (Lu, 2026-10-27, #lumi-storytelling).
 
 1. A short first-run card: "Connect Claude to start".
 2. Connect opens the Settings table.
@@ -505,6 +507,5 @@ Follow-up work for Buzz, in rough order. The first three make Lumi's drafts and 
 | First-time use (8.12) | Without Claude, users don't know Lumi can draft for them. | See the done-when list in 8.12. |
 | Claude drafting and review endpoints in the local service | Drafts and review are not Claude-backed yet. | The local service drafts answers and three things from the notes, reviews answers, and drafts follow-up answers with Claude. |
 | Claude-based scoring by audience | The score measures completeness only. | Claude scores the story, weighted by the chosen audience. |
-| Jimeng / Seedance endpoints | Video on slides needs a generator. | Video generation works with an API key or the Dreamina CLI. |
 | Persist uploaded videos | Uploaded videos are lost on reload. | Videos are stored in IndexedDB and survive a reload. |
 | Metrics | We need to know if Lumi saves time. | Primary: time-to-first-story (first paste of notes to first full slide preview). Also tracked: % of drafts accepted without edits, and step completion rate. |
