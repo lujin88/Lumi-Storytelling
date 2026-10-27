@@ -68,6 +68,9 @@ Lumi the mascot appears on the intro, in the story score face, on the step 5 fil
 8. **Checkboxes follow the selected pattern**: 18px, 4px radius, `line` border; checked = `action-bg` fill, `action-line` border and check. Never the browser's black checkbox.
 9. **Two surfaces, never mixed.** *Panel* = `sunken` fill, no border (guidance box, file card on step 5). *Outlined card* = `paper` fill (same as the page) + 1px `line` border (StoryScore). Don't give a panel a border or an outlined card a fill.
 10. **Guidance boxes**: a `sunken` panel with a 13px/550 lead line ("写清这四点，Lumi 就能帮你起草：") and the prompts as a list with `action-line` dots.
+11. **Missing connections point to the fix.** A missing-key or missing-provider message uses ConnectionPrompt. The whole prompt opens Settings at the matching provider row; that row is scrolled into view, focused and highlighted, with its setup help beside the key field. Help repeats the same provider guidance and links to the same row. Never leave the user at the top of Settings to find the service themselves.
+
+Motion values and reduced-motion behavior live in [`motion.md`](motion.md). Component-specific motion lives with the component; StoryScore is the first example.
 
 ## Sections
 
