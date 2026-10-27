@@ -14,7 +14,7 @@
 | 没连 Claude（`aiReady('claude')` 为假） | 写视频提示词要用 Claude，你的 Claude API 密钥还没连上。 / The video prompt needs Claude, and your Claude API key isn’t connected yet. | `video-prompt.blocked` |
 
 - 没连 Claude：句末接 #62 的 `connection.open-settings`（「去设置连接 {provider}」），写法照 #62 的 `connection.blocked.claude`。服务商拒绝密钥（`aiError.kind` 为 `key`/`credit`）时，前半句用现在的 `providerErrorText`，不用 `video-prompt.failed`。
-- `copy-failed` 要求界面上能看到提示词原文（V1 设计要留位置）。原因：Claude 写完再复制，中间隔了一次网络请求；有的浏览器要求复制紧跟着点击，隔开后会拒绝（Safari 尤其，未实测）。不留原文，这一行就没有退路。
+- `copy-failed` 要求界面上能看到提示词原文：项目经理 2026-10-27 已定，V1 设计在弹窗里显示原文（可选中）。原因：Claude 写完再复制，中间隔了一次网络请求；有的浏览器要求复制紧跟着点击，隔开后会拒绝（Safari 尤其，未实测）。不留原文，这一行就没有退路。
 - 「Claude 正在…」点名 Claude：#66 帮助页写了幻灯片内容会发给 Claude，这里让用户知道这一步也发了。
 
 ## 格式说明（同一个弹窗）
@@ -34,7 +34,7 @@
 |---|---|---|
 | `{formats}` | 待确认。现在上传框收 `video/mp4,video/webm,video/quicktime`（main `index.html`，`data-deck-video`），但浏览器能不能放、导出包能不能带，要开发量 | V3 |
 | `{ratio}` | 待确认。main 的 CSS 里有 4 处 `aspect-ratio:16/9`，看起来是幻灯片比例，开发确认后填 | V3 |
-| `{length}` | 待确认。没有任何出处。量不出硬上限的话，**这一行整行不显示**，不要编一个建议时长 | V3 / 项目经理 |
+| `{length}` | 待确认。没有任何出处。量不出硬上限的话，**这一行整行不显示**，不要编一个建议时长（项目经理 2026-10-27 同意） | V3 / 项目经理 |
 | `{size}` | 待确认。现在代码里写死 40MB（「视频太大了，控制在 40MB 以内。」），没有出处，要按导出包和浏览器存储重新量 | V3 |
 
 - 「换成视频」是弹窗里现有按钮的字（`换成视频` / `Use a video`），按钮字改了这里跟着改。
@@ -50,7 +50,7 @@
 - `{size}`、`{formats}` 和格式说明读同一个常量，两处数字不会对不上。
 
 ## 要开发和设计注意
-- **提示词用什么语言写**：没定。很多视频工具英文效果更好，但界面是中文时用户可能想看懂再改。这是 V3 写 `prompts/video-prompt.md` 时要定的，不归文案；定了告诉我，如果界面要提示「提示词是英文」，我再补一句。
+- **提示词用什么语言写**：用这张幻灯片内容的语言，不跟界面语言（项目经理 2026-10-27，依据 decisions.md「Lumi 用用户写的语言回复」）。归 V3 的 `prompts/video-prompt.md`。界面上不加「提示词是英文」之类的说明。
 - **刷新后视频还在**：V3 做完后，PRD（`docs/product-specs/prd.md`）第 43、253 行「not saved to the browser yet」和 Backlog 第 509 行要改，归 PRD 的负责人。帮助页 #66 的「Claude：…幻灯片和讲稿」已经覆盖提示词这一步发的内容，不用改；上传的视频不发给任何服务，也不用加。
 
 ## 检查
