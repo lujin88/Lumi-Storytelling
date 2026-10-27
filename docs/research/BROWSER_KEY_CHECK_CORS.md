@@ -14,6 +14,8 @@ All three allow it. None needs the local server.
 
 Jimeng has no browser API in this project: it runs through the Dreamina CLI on the user's machine, so it stays on the local `server/`.
 
+Update 2026-10-27: Jimeng was removed from Lumi (Lu, #lumi-storytelling). Video is made in another tool and uploaded; `server/` no longer has API routes. The Dreamina notes below are kept as history.
+
 ## Our measurements
 
 Run with `curl` from Lu's Mac on 2026-10-23, `Origin: null` (what a page opened over `file://` sends), with no key or a made-up key. No real key was used.
