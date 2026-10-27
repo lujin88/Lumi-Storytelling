@@ -416,3 +416,146 @@ test.describe('microphone', () => {
     expect(errors).toEqual([]);
   });
 });
+
+test.describe('step 3 video prompt', () => {
+  test('Claude writes the prompt from the slide the user sees (example: video-prompt)', async ({ page }) => {
+    const ex = example('video-prompt');
+    const { errors, logs } = await openBuild(page, ['claude']);
+    await page.evaluate(({ lang, slide }) => {
+      state.lang = lang;
+      Object.assign(state.scenes[slide.index], { [lang]: slide.title, [lang + 'p']: slide.body });
+    }, { lang: ex.uiLang, slide: ex.slide });
+    const seen = [];
+    await claudeReplies(page, ex.modelOutput, seen);
+    const text = await page.evaluate((i) => claudeVideoPrompt(i), ex.slide.index);
+    expect(text).toBe(ex.modelOutput.prompt);
+    expect(seen).toHaveLength(1);
+    const { headers, body } = seen[0];
+    expect(headers['x-api-key']).toBe(KEYS.claude);
+    expect(body.system).toBe(prompt('video-prompt'));
+    expect(body.output_config.format.schema.required).toEqual(['prompt']);
+    const input = JSON.parse(body.messages[0].content);
+    expect(input.slide).toEqual({ index: ex.slide.index, title: ex.slide.title, body: ex.slide.body, evidence: 'stated' });
+    expect(input).not.toHaveProperty('language'); // the prompt follows the slide's language, not the interface's
+    expectNoKeyIn(logs);
+    expect(errors).toEqual([]);
+  });
+
+  /** Record what the page copies; `fail` makes the clipboard refuse, as it can without focus or permission.
+   *  The test origin (http://lumi.test) isn't a secure context, so there is no real clipboard to wrap. */
+  const fakeClipboard = (page, fail = false) => page.evaluate((fail) => {
+    window.copiedTexts = [];
+    const writeText = async (text) => { if (fail) throw new DOMException('denied', 'NotAllowedError'); window.copiedTexts.push(text); };
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+  }, fail);
+  const vp = (page) => ({
+    copy: page.locator('#modal .vp-copy'),
+    feedback: page.locator('#modal .vp-feedback'),
+    text: page.locator('#modal .vp-text'),
+  });
+
+  test('copy writes the prompt once, copies it again without a new call, and writes a new one after the slide changes', async ({ page }) => {
+    const { errors, logs } = await openBuild(page, ['claude']);
+    await fakeClipboard(page);
+    const seen = [];
+    let release;
+    const gate = new Promise((r) => { release = r; });
+    await page.route(CLAUDE, async (route) => {
+      seen.push(route.request().postDataJSON());
+      await gate;
+      await route.fulfill({ json: { type: 'message', role: 'assistant', content: [{ type: 'text', text: JSON.stringify({ prompt: 'A quiet desk, slow push in.' }) }], stop_reason: 'end_turn' } });
+    });
+    await page.click('[data-action="deckZoom:1"]');
+    const v = vp(page);
+    await expect(v.feedback).toHaveText('');
+    await v.copy.click();
+    // Generating: button off, no empty prompt box, section busy.
+    await expect(v.feedback).toHaveClass(/generating/);
+    await expect(v.copy).toBeDisabled();
+    await expect(v.text).toHaveCount(0);
+    await expect(page.locator('#modal .vp')).toHaveAttribute('aria-busy', 'true');
+    release();
+    await expect(v.feedback).toHaveClass(/copied/);
+    await expect(v.text).toHaveText('A quiet desk, slow push in.');
+    await expect(v.copy).toBeEnabled();
+    await expect(v.copy).toBeFocused();
+    await expect(page.locator('#modal .vp')).toHaveAttribute('aria-busy', 'false');
+    expect(await page.evaluate(() => window.copiedTexts)).toEqual(['A quiet desk, slow push in.']);
+    // Copy again: no second call.
+    await v.copy.click();
+    await expect.poll(() => page.evaluate(() => window.copiedTexts.length)).toBe(2);
+    expect(seen).toHaveLength(1);
+    // Kept with the slide across a reopen and a reload.
+    await page.keyboard.press('Escape');
+    await page.reload();
+    await page.click('#sidebar [data-page="build"]');
+    await fakeClipboard(page);
+    await page.click('[data-action="deckZoom:1"]');
+    await expect(v.text).toHaveText('A quiet desk, slow push in.');
+    await v.copy.click();
+    await expect.poll(() => page.evaluate(() => window.copiedTexts)).toEqual(['A quiet desk, slow push in.']);
+    expect(seen).toHaveLength(1);
+    // The slide's text changes: the old prompt is stale, the next click asks Claude again.
+    await page.keyboard.press('Escape');
+    await page.evaluate(() => { state.scenes[1][state.lang] = 'A different title'; persist(); });
+    await page.click('[data-action="deckZoom:1"]');
+    await expect(v.text).toHaveCount(0);
+    await v.copy.click();
+    await expect(v.feedback).toHaveClass(/copied/);
+    expect(seen).toHaveLength(2);
+    expect(JSON.parse(seen[1].messages[0].content).slide.title).toBe('A different title');
+    expectNoKeyIn(logs);
+    expect(errors).toEqual([]);
+  });
+
+  test('when the clipboard refuses, the prompt stays on screen to copy by hand', async ({ page }) => {
+    const { errors } = await openBuild(page, ['claude']);
+    await fakeClipboard(page, true);
+    await claudeReplies(page, { prompt: 'Hands sort notes into three rows.' });
+    await page.click('[data-action="deckZoom:1"]');
+    const v = vp(page);
+    await v.copy.click();
+    await expect(v.feedback).toHaveClass(/failed/);
+    await expect(v.feedback).toContainText(/Select the prompt below|选中下面的提示词/);
+    await expect(v.text).toHaveText('Hands sort notes into three rows.');
+    await expect(v.copy).toBeEnabled();
+    expect(errors).toEqual([]);
+  });
+
+  test('a failed call says so and leaves no prompt box', async ({ page }) => {
+    const { errors } = await openBuild(page, ['claude']);
+    await fakeClipboard(page);
+    await claudeReplies(page, { prompt: '' });
+    await page.click('[data-action="deckZoom:1"]');
+    const v = vp(page);
+    await v.copy.click();
+    await expect(v.feedback).toHaveClass(/failed/);
+    await expect(v.feedback).toContainText(/Try again|再试一次/);
+    await expect(v.text).toHaveCount(0);
+    await expect(v.copy).toBeEnabled();
+    expect(await page.evaluate(() => window.copiedTexts)).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+
+  test('without a Claude key the button is off and the link opens Settings', async ({ page }) => {
+    const { errors } = await openBuild(page, []);
+    await page.click('[data-action="deckZoom:1"]');
+    const v = vp(page);
+    await expect(v.copy).toBeDisabled();
+    await expect(v.feedback).toHaveClass(/blocked/);
+    await expect(v.text).toHaveCount(0);
+    await expect(page.locator('#modal .vp-format')).toBeVisible();
+    await page.click('#modal [data-action="vpConnect"]');
+    await expect(page.locator('#modal')).not.toBeVisible();
+    await expect(page.locator('#key-claude')).toBeFocused();
+    expect(errors).toEqual([]);
+  });
+
+  test('an empty prompt from Claude is an error, not a blank prompt', async ({ page }) => {
+    const { errors } = await openBuild(page, ['claude']);
+    await claudeReplies(page, { prompt: '  ' });
+    const result = await page.evaluate(() => claudeVideoPrompt(1).then(() => 'ok', (e) => e.kind));
+    expect(result).toBe('reply');
+    expect(errors).toEqual([]);
+  });
+});

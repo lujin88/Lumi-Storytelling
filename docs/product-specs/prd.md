@@ -40,7 +40,7 @@ Everything the user sees now comes from their own material; what is still rule-b
 | Story score | **Completeness only**, not quality. Claude scoring weighted by audience is in the Backlog. |
 | Follow-up questions and drafted answers (step 4) | Ordered by the chosen audience. Answers are drafted from the step-2 answers. A Claude endpoint is in the Backlog. |
 | Slides | **Real layout** from the story in the chosen style. Images are the bundled photo unless the user uploads one or OpenAI edits it. |
-| Video on slides | The user can swap an image for a video. Uploaded videos are not persisted yet. Lumi does not generate video; the user makes it elsewhere and uploads it. |
+| Video on slides | The user can swap an image for a video. Uploaded videos are kept in the browser (IndexedDB) and survive a reload. Lumi does not generate video: Claude writes a prompt per slide, the user makes the clip elsewhere and uploads it. |
 | Voice input, GitHub publish | Unchanged: real when the backend is running. |
 
 **Implication:** the prototype no longer looks smarter than it is. When the user hasn't supplied something, the gap is visible instead of covered by sample copy. The remaining gap is that drafting, review and scoring are not yet done by Claude. The next step is to let Claude draft answers, review them and draft follow-up answers, under the skill's no-invention policy (§10). See Backlog for Buzz.
@@ -250,7 +250,8 @@ When the purpose is Interview or Report, step 1 asks who is listening. The answe
 
 - **Outline / Full script toggle** (`state.scriptMode`). Full script shows one editable paragraph per slide; untouched paragraphs are drafts built from the title and points (grey until edited). `talk.md` exports whichever mode is on.
 - **Edit popup per slide** (click the thumbnail or its Edit button): layout, motion (none, fade, rise, one by one, zoom; with replay) and swap the image for a video. Motion plays in the exported HTML when the slide scrolls in, and is skipped under reduced motion.
-- **Video** is kept in memory for the session and included in exports made in that session; it is not saved to the browser yet.
+- **Video** is saved in this browser (IndexedDB, `lumi-videos-v1`) and survives a reload; the slide keeps only an id. Exports embed it as a `data:` URL. An upload the browser can't play (ProRes, say) is refused; the limit is 40MB per file.
+- **Video prompt** (same popup, `design-system/components/VideoPrompt`): Claude writes a prompt for a video tool from the slide's content, in the slide's language, with the user's own key (`prompts/video-prompt.md`). One click writes and copies it; later clicks copy it again until the slide's text changes. Next to it: format guidance (MP4, WebM or MOV; landscape 16:9; up to 40MB).
 - **My styles**: name, reference image (drag and drop), style brief or uploaded .md, background, title font, accent. The brief is sent with image prompts.
 
 ### 8.11 Download, settings, theme
@@ -507,5 +508,4 @@ Follow-up work for Buzz, in rough order. The first three make Lumi's drafts and 
 | First-time use (8.12) | Without Claude, users don't know Lumi can draft for them. | See the done-when list in 8.12. |
 | Claude drafting and review endpoints in the local service | Drafts and review are not Claude-backed yet. | The local service drafts answers and three things from the notes, reviews answers, and drafts follow-up answers with Claude. |
 | Claude-based scoring by audience | The score measures completeness only. | Claude scores the story, weighted by the chosen audience. |
-| Persist uploaded videos | Uploaded videos are lost on reload. | Videos are stored in IndexedDB and survive a reload. |
 | Metrics | We need to know if Lumi saves time. | Primary: time-to-first-story (first paste of notes to first full slide preview). Also tracked: % of drafts accepted without edits, and step completion rate. |
