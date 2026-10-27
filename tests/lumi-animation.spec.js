@@ -305,6 +305,101 @@ test('a clip switch keeps the old clip in place until the new one has a frame', 
   expect(r.after.css).toBe(r.css);
 });
 
+/**
+ * Hold back every "frame drawn" callback, as on a slow network where the new clip has no frame yet.
+ * `window.__held.splice(0).forEach(...)` releases them; `window.__rvfc` is the browser's own method.
+ */
+const holdFrames = (page) => page.evaluate(() => {
+  window.__held = [];
+  window.__rvfc = HTMLVideoElement.prototype.requestVideoFrameCallback;
+  HTMLVideoElement.prototype.requestVideoFrameCallback = function (cb) { window.__held.push(cb); return window.__held.length; };
+});
+/** Visibility, pin and size of the step 1 wave and think clips. */
+const clipInfo = (page) => page.evaluate(() => {
+  const one = (src) => {
+    const v = document.querySelector(`video[data-lumi-video][src="assets/lumi/${src}.webm"]`), b = v.getBoundingClientRect();
+    return { shown: v.getClientRects().length > 0, opacity: v.style.opacity, paused: v.paused, pinned: v.style.position === 'absolute', w: Math.round(b.width), h: Math.round(b.height), sw: v.style.width, sh: v.style.height };
+  };
+  return { wave: one('wave'), think: one('think'), art: Math.round(document.querySelector('.intro-art').getBoundingClientRect().height) };
+});
+
+test('a new clip with no frame after 1.5 s leaves the old clip on screen; it switches once the frame comes', async ({ page }) => {
+  await openApp(page);
+  await expect(page.locator(WAVE)).toBeVisible();
+  const before = await clipInfo(page);
+  await holdFrames(page);
+  // Typing for 1.5 s: each keystroke asks for the think clip again, which must not force the switch through.
+  await page.evaluate(() => { lumiAnim.think(); });
+  for (let i = 0; i < 5; i++) { await page.waitForTimeout(300); await page.evaluate(() => lumiAnim.think()); }
+  const during = await clipInfo(page);
+  expect(during.wave).toMatchObject({ shown: true, paused: false, pinned: true });
+  expect(during.think).toMatchObject({ shown: true, opacity: '0.01' });
+  // The frame arrives: the think clip shows and takes back its own size; the wave is hidden and unpinned.
+  await page.evaluate(() => window.__held.splice(0).forEach((cb) => cb(performance.now(), {})));
+  const after = await clipInfo(page);
+  expect(after.wave).toMatchObject({ shown: false, pinned: false });
+  expect(after.think).toMatchObject({ shown: true, opacity: '', sw: before.think.sw, sh: before.think.sh });
+});
+
+test('going back to the old clip while the new one has no frame cancels the switch', async ({ page }) => {
+  await openApp(page);
+  const wave = page.locator(WAVE);
+  await expect(wave).toBeVisible();
+  const before = await page.evaluate(() => {
+    const v = document.querySelector('video[src="assets/lumi/wave.webm"]');
+    window.__wave = v;
+    return { css: v.style.cssText, think: document.querySelector('video[src="assets/lumi/think.webm"]').style.cssText };
+  });
+  await holdFrames(page);
+  await page.evaluate(() => lumiAnim.think());
+  // The think time runs out (1.2 s) before the think clip has a frame: Lumi goes back to waving.
+  await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('wave');
+  const r = await clipInfo(page);
+  expect(r.wave).toMatchObject({ shown: true, paused: false, pinned: false });
+  expect(r.think).toMatchObject({ shown: false, opacity: '', paused: true });
+  // The same wave element, back to its own styles; the think clip has its size back too.
+  expect(await page.evaluate(() => document.querySelector('video[src="assets/lumi/wave.webm"]') === window.__wave)).toBe(true);
+  expect(await wave.evaluate((v) => v.style.cssText)).toBe(before.css);
+  expect(await page.evaluate(() => document.querySelector('video[src="assets/lumi/think.webm"]').style.cssText)).toBe(before.think);
+  // A frame that arrives late for the cancelled switch changes nothing.
+  await page.evaluate(() => window.__held.splice(0).forEach((cb) => cb(performance.now(), {})));
+  expect(await clipInfo(page)).toMatchObject({ wave: { shown: true }, think: { shown: false } });
+});
+
+test('after a cancelled switch, typing again shows the think clip once it has a frame', async ({ page }) => {
+  await openApp(page);
+  await expect(page.locator(WAVE)).toBeVisible();
+  await holdFrames(page);
+  await page.evaluate(() => lumiAnim.think());
+  await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('wave');
+  expect(await clipInfo(page)).toMatchObject({ wave: { shown: true }, think: { shown: false } });
+  // The think clip has loaded by now; the next keystroke switches as usual.
+  await page.evaluate(() => { HTMLVideoElement.prototype.requestVideoFrameCallback = window.__rvfc; });
+  await page.locator('#guideText').pressSequentially('我');
+  await expect.poll(async () => (await clipInfo(page)).think).toMatchObject({ shown: true, opacity: '' });
+  expect((await clipInfo(page)).wave.shown).toBe(false);
+});
+
+test('while the preloaded think clip has no metadata yet, Lumi keeps her box size', async ({ page }) => {
+  // The think file never arrives, so the clip step 1 preloads stays at readyState 0, with no size of its own.
+  await page.route(/assets\/lumi\/think\.webm/, () => {});
+  await openApp(page);
+  await expect(page.locator(WAVE)).toBeVisible();
+  await expect.poll(() => page.locator(WAVE).evaluate((v) => v.readyState)).toBeGreaterThanOrEqual(1);
+  const box = () => page.evaluate(() => {
+    const w = document.querySelector('video[src="assets/lumi/wave.webm"]'), t = document.querySelector('video[src="assets/lumi/think.webm"]'), h = (x) => Math.round(x.getBoundingClientRect().height);
+    return { wave: h(w), think: t.getClientRects().length ? h(t) : null, thinkState: t.readyState, thinkCss: t.style.cssText, art: h(document.querySelector('.intro-art')) };
+  });
+  const before = await box();
+  expect(before).toMatchObject({ think: null, thinkState: 0 });
+  await page.evaluate(() => lumiAnim.think());
+  const during = await box();
+  expect(during).toMatchObject({ wave: before.wave, think: before.wave, thinkState: 0, art: before.art });
+  // The think time runs out with still no frame: the switch is cancelled and the think clip loses the borrowed size.
+  await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('wave');
+  expect(await box()).toEqual(before);
+});
+
 test('a think clip that fails to preload leaves the wave WebM alone', async ({ page }) => {
   await openApp(page);
   await expect(page.locator(WAVE)).toBeVisible();
