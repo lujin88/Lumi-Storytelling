@@ -84,11 +84,13 @@ test('after skipping, an AI action shows an inline connect prompt, not silence',
 test('each optional provider says what it unlocks and shows its status', async ({ page }) => {
   const errors = await openApp(page);
   await page.click('#sidebar [data-page="settings"]');
-  for (const [id, unlocks] of [['openai', '图片'], ['gemini', '语音转文字'], ['jimeng', '视频']]) {
+  for (const [id, unlocks] of [['openai', '图片'], ['gemini', '语音转文字']]) {
     const row = page.locator('.prov-row', { has: page.locator(`[data-action="connectApi:${id}"]`) });
     await expect(row.locator('.prov-doc')).toContainText(unlocks);
     await expect(row.locator('.connection-status')).toHaveText('未连接');
   }
+  // No video provider: video is made elsewhere and uploaded (Lu, 2026-10-27).
+  await expect(page.locator('[data-action^="connectApi:"]')).toHaveCount(3);
   expect(errors).toEqual([]);
 });
 
@@ -117,11 +119,9 @@ test('each failure kind has its own one-line message', async ({ page }) => {
     ['claude', 'FAKE-CLAUDE-KEY-FOR-TEST-ONLY', '连不上 Claude。检查网络后再试。'],
     ['openai', 'FAKE-OPENAI-KEY-FOR-TEST-ONLY', 'OpenAI 账户没有额度了。充值后再试。'],
     ['gemini', 'FAKE-GEMINI-KEY-FOR-TEST-ONLY', 'Gemini 不认这个密钥。重新复制一个再试。'],
-    // Opened as a file, Jimeng goes to the local service, which isn't running here.
-    ['jimeng', null, '本地服务没有开。在项目文件夹运行 node server，再试一次。'],
   ];
   for (const [id, key, message] of cases) {
-    if (key) await page.fill(`#key-${id}`, key);
+    await page.fill(`#key-${id}`, key);
     await page.click(`[data-action="connectApi:${id}"]`);
     const row = page.locator('.prov-row', { has: page.locator(`[data-action="connectApi:${id}"]`) });
     await expect(row.locator('.connection-status')).toHaveText('连接失败');
