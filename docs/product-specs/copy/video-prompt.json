@@ -54,5 +54,17 @@
   "video.unsupported": {
     "zh": "这个格式放不了，换成 {formats} 再试。",
     "en": "This format won’t play here. Use {formats} instead."
+  },
+  "video.added": {
+    "zh": "已换成视频。",
+    "en": "Video added."
+  },
+  "video.not-kept": {
+    "zh": "已换成视频，但浏览器没能保存它。刷新页面后，要重新上传。",
+    "en": "Video added, but the browser couldn’t save it. Upload it again after you reload the page."
+  },
+  "video.add-failed": {
+    "zh": "没能换成视频。再试一次，或者换一个文件。",
+    "en": "Couldn’t add the video. Try again or use another file."
   }
 }

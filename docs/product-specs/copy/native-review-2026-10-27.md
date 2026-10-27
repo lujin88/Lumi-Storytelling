@@ -20,6 +20,9 @@
 | `video-format.size` | 大小：{size} 以内 | Size: up to {size} |
 | `video.too-large` | 视频太大了，控制在 {size} 以内。 | Video too large. Keep it under {size}. |
 | `video.unsupported` | 这个格式放不了，换成 {formats} 再试。 | This format won’t play here. Use {formats} instead. |
+| `video.added` | 已换成视频。 | Video added. |
+| `video.not-kept` | 已换成视频，但浏览器没能保存它。刷新页面后，要重新上传。 | Video added, but the browser couldn’t save it. Upload it again after you reload the page. |
+| `video.add-failed` | 没能换成视频。再试一次，或者换一个文件。 | Couldn’t add the video. Try again or use another file. |
 
 ## 服务商报错（#69，`provider-errors.json`）
 

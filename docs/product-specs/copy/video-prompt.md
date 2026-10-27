@@ -46,8 +46,13 @@
 |---|---|---|
 | 文件超过上限（**替换**现在写死 40MB 的那句） | 视频太大了，控制在 {size} 以内。 / Video too large. Keep it under {size}. | `video.too-large` |
 | 格式浏览器放不了（新加） | 这个格式放不了，换成 {formats} 再试。 / This format won’t play here. Use {formats} instead. | `video.unsupported` |
+| 放上了，也存进了浏览器（#72 加） | 已换成视频。 / Video added. | `video.added` |
+| 放上了，但存进浏览器失败（IndexedDB 满了或被浏览器拒绝；这次还能看、能下载，刷新就没了）（#72 加） | 已换成视频，但浏览器没能保存它。刷新页面后，要重新上传。 / Video added, but the browser couldn’t save it. Upload it again after you reload the page. | `video.not-kept` |
+| 放视频时出了别的错（原因不明）（#72 加） | 没能换成视频。再试一次，或者换一个文件。 / Couldn’t add the video. Try again or use another file. | `video.add-failed` |
 
 - `{size}`、`{formats}` 和格式说明读同一个常量，两处数字不会对不上。
+- `video.not-kept` 先说「已换成视频」：视频这次确实放上了，用户不用马上重传，只是刷新后会丢。
+- `video.add-failed` 替换 #72 里的「这个视频读不出来，换一个文件再试。」。#72 `3b5a542` 的 `videoPlayable` 遇到坏文件或解不开的格式返回 false，走的是 `video.unsupported`，不会进这个 `.catch`；进 `.catch` 的只剩放视频时的意外错误，原因不明，所以不说「读不出来」。
 
 ## 要开发和设计注意
 - **提示词用什么语言写**：用这张幻灯片内容的语言，不跟界面语言（项目经理 2026-10-27，依据 decisions.md「Lumi 用用户写的语言回复」）。归 V3 的 `prompts/video-prompt.md`。界面上不加「提示词是英文」之类的说明。
