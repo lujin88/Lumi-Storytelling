@@ -58,21 +58,4 @@
 
 ## 母语审校清单
 
-新写的 14 条，全部要审（中文、英文各一遍）：
-
-| key | 中文 | English |
-|---|---|---|
-| `video-prompt.copy` | 复制视频提示词 | Copy video prompt |
-| `video-prompt.generating` | Claude 正在为这张幻灯片写视频提示词… | Claude is writing a video prompt for this slide… |
-| `video-prompt.copied` | 已复制视频提示词 | Video prompt copied |
-| `video-prompt.copy-failed` | 没能自动复制。选中下面的提示词，手动复制。 | Couldn’t copy automatically. Select the prompt below and copy it. |
-| `video-prompt.failed` | 没能写出视频提示词，再试一次。 | Lumi couldn’t write the video prompt. Try again. |
-| `video-prompt.blocked` | 写视频提示词要用 Claude，你的 Claude API 密钥还没连上。 | The video prompt needs Claude, and your Claude API key isn’t connected yet. |
-| `video-format.title` | 视频格式 | Video format |
-| `video-format.steps` | 复制提示词，在你常用的视频工具里生成视频，再点「换成视频」放到这张幻灯片上。 | Copy the prompt, make the video in any tool you like, then select Use a video to add it to this slide. |
-| `video-format.type` | 格式：{formats} | Format: {formats} |
-| `video-format.shape` | 画面：横屏 {ratio}，和幻灯片一样 | Shape: landscape {ratio}, same as the slides |
-| `video-format.length` | 时长：{length} 以内 | Length: up to {length} |
-| `video-format.size` | 大小：{size} 以内 | Size: up to {size} |
-| `video.too-large` | 视频太大了，控制在 {size} 以内。 | Video too large. Keep it under {size}. |
-| `video.unsupported` | 这个格式放不了，换成 {formats} 再试。 | This format won’t play here. Use {formats} instead. |
+和 #69 的服务商报错合成一批，见 `native-review-2026-10-27.md`（项目经理 2026-10-27 定）。
