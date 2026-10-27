@@ -243,3 +243,17 @@ for (const width of [1280, 1512, 1905]) {
     expect(errors).toEqual([]);
   });
 }
+
+test('the settings rows fit a 390px screen in every connection state', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const errors = await openApp(page, { http: true });
+  for (const lang of ['en', 'zh']) {
+    for (const status of STATUSES) {
+      await settingsRows(page, lang, status);
+      // d40e7f0 scrolled sideways to 423px with the English error labels.
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), `${lang} ${status}`).toBe(390);
+    }
+  }
+  expect(errors).toEqual([]);
+});
