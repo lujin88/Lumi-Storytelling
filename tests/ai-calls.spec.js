@@ -508,6 +508,51 @@ test.describe('step 3 video prompt', () => {
     expect(errors).toEqual([]);
   });
 
+  // QA #72: the copy/error line belongs to the click it reports; closing the modal clears it.
+  test('closing the slide modal clears the copied or error line; a call still running keeps its state', async ({ page }) => {
+    const { errors } = await openBuild(page, ['claude']);
+    await fakeClipboard(page);
+    await claudeReplies(page, { prompt: 'A quiet desk, slow push in.' });
+    await page.click('[data-action="deckZoom:1"]');
+    const v = vp(page);
+    await v.copy.click();
+    await expect(v.feedback).toHaveClass(/copied/);
+    await page.keyboard.press('Escape');
+    await page.click('[data-action="deckZoom:1"]');
+    await expect(v.feedback).toHaveText('');
+    await expect(v.feedback).not.toHaveClass(/copied/);
+    await expect(v.text).toHaveText('A quiet desk, slow push in.');
+    // An error goes the same way, closed with the button this time.
+    await page.unroute(CLAUDE);
+    await claudeReplies(page, { prompt: '' });
+    await page.evaluate(() => { state.scenes[2][state.lang] = 'Another title'; persist(); });
+    await page.click('#modal .close');
+    await page.click('[data-action="deckZoom:2"]');
+    await v.copy.click();
+    await expect(v.feedback).toHaveClass(/failed/);
+    await page.click('#modal .close');
+    await page.click('[data-action="deckZoom:2"]');
+    await expect(v.feedback).toHaveText('');
+    await expect(v.copy).toBeEnabled();
+    // Closed while generating: reopening still shows it running, so a second click can't start a duplicate call.
+    await page.unroute(CLAUDE);
+    let release;
+    const gate = new Promise((r) => { release = r; });
+    await page.route(CLAUDE, async (route) => {
+      await gate;
+      await route.fulfill({ json: { type: 'message', role: 'assistant', content: [{ type: 'text', text: JSON.stringify({ prompt: 'Hands sort notes.' }) }], stop_reason: 'end_turn' } });
+    });
+    await v.copy.click();
+    await expect(v.feedback).toHaveClass(/generating/);
+    await page.keyboard.press('Escape');
+    await page.click('[data-action="deckZoom:2"]');
+    await expect(v.feedback).toHaveClass(/generating/);
+    await expect(v.copy).toBeDisabled();
+    release();
+    await expect(v.feedback).toHaveClass(/copied/);
+    expect(errors).toEqual([]);
+  });
+
   test('when the clipboard refuses, the prompt stays on screen to copy by hand', async ({ page }) => {
     const { errors } = await openBuild(page, ['claude']);
     await fakeClipboard(page, true);
