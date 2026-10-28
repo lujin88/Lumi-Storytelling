@@ -1,0 +1,110 @@
+{
+  "captures": [
+    {
+      "direction": "C",
+      "treatment": "stage",
+      "page": "step-1",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "direction": "C",
+      "treatment": "stage",
+      "page": "step-2",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "direction": "C",
+      "treatment": "stage",
+      "page": "step-5",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "direction": "C",
+      "treatment": "dim",
+      "page": "step-1",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "direction": "C",
+      "treatment": "dim",
+      "page": "step-2",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "direction": "C",
+      "treatment": "dim",
+      "page": "step-5",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "direction": "D",
+      "treatment": "stage",
+      "page": "step-1",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "direction": "D",
+      "treatment": "stage",
+      "page": "step-2",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "direction": "D",
+      "treatment": "stage",
+      "page": "step-5",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "direction": "D",
+      "treatment": "dim",
+      "page": "step-1",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "direction": "D",
+      "treatment": "dim",
+      "page": "step-2",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "direction": "D",
+      "treatment": "dim",
+      "page": "step-5",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    }
+  ],
+  "contrast": {
+    "C": {
+      "primaryOnBase": 14.990996362475167,
+      "mutedOnPaper": 7.581677616685792
+    },
+    "D": {
+      "primaryOnBase": 14.367017688877644,
+      "mutedOnPaper": 7.572243393790652
+    }
+  }
+}

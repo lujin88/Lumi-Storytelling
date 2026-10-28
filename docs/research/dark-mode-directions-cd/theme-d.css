@@ -1,0 +1,188 @@
+/* Design evidence only. Injected at capture time; not product code. */
+html.dark {
+  --base: #211e1d;
+  --rail: #292523;
+  --paper: #302b29;
+  --surface: #393330;
+  --sunken: #292523;
+  --elevated: #433c38;
+  --line: #665d58;
+  --ink: #f5f0eb;
+  --muted: #c7bdb6;
+  --blue: #adbad1;
+  --soft: #3d424d;
+  --selected: #3d424d;
+  --info: #c2cde0;
+  --info-line: #6c778a;
+  --ok: #b7d2ac;
+  --ok-line: #687c61;
+  --warn: #e8c987;
+  --warn-line: #836b39;
+  --danger: #efaaa4;
+  --danger-line: #87504c;
+  --action-bg: #3d424d;
+  --action-line: #adbad1;
+  --action-ink: #c2cde0;
+}
+
+html.dark body,
+html.dark .main {
+  background: var(--base);
+  color: var(--ink);
+}
+
+html.dark #sidebar {
+  background: var(--rail);
+  border-color: var(--line);
+  box-shadow: inset -1px 0 #ffffff0b;
+}
+
+html.dark #content {
+  background: var(--paper);
+  border-inline: 1px solid #ffffff10;
+  box-shadow: inset 0 1px #ffffff0c, 0 0 0 1px #00000022;
+}
+
+html.dark #content > .page {
+  position: relative;
+}
+
+html.dark #content > .page::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -12px -18px -28px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff08, transparent 80px), var(--surface);
+  border: 1px solid #ffffff0d;
+  box-shadow: 0 16px 36px #0000001c;
+}
+
+html.dark #sidebar .nav button.active,
+html.dark #sidebar .bottomnav button.active {
+  background: var(--elevated);
+  color: var(--ink);
+  box-shadow: inset 0 1px #ffffff12;
+}
+
+html.dark #content .first-run,
+html.dark #content .brief-guide-box,
+html.dark #content .dl-card {
+  background: var(--elevated) !important;
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px #ffffff14;
+}
+
+html.dark #content .score-card,
+html.dark #content .score-card.open,
+html.dark #content .dl-preview {
+  background: #4a423d !important;
+  border-color: var(--line) !important;
+  box-shadow: inset 0 1px #ffffff17, 0 8px 22px #0000001f;
+}
+
+html.dark button.secondary,
+html.dark #content .provider-connect.secondary,
+html.dark #content .review-go,
+html.dark .modal button.secondary,
+html.dark #content .choice,
+html.dark #content .template-chip,
+html.dark input,
+html.dark textarea,
+html.dark select,
+html.dark #footer .composer {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+  box-shadow: inset 0 1px #ffffff10;
+}
+
+html.dark button.secondary:hover,
+html.dark #content .provider-connect.secondary:hover,
+html.dark #content .review-go:hover,
+html.dark .modal button.secondary:hover,
+html.dark #content .choice:hover,
+html.dark #content .template-chip:hover,
+html.dark #content .pkg-item:hover {
+  background: var(--elevated) !important;
+}
+
+html.dark button:disabled,
+html.dark #content .provider-connect:disabled {
+  opacity: 1;
+  background: var(--sunken) !important;
+  border-color: var(--line) !important;
+  color: var(--muted) !important;
+}
+
+html.dark .primary,
+html.dark button.primary {
+  background: var(--ink) !important;
+  border-color: var(--ink) !important;
+  color: var(--base) !important;
+}
+
+html.dark ::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+html.dark #content .choice.on,
+html.dark #content .choice[aria-pressed="true"],
+html.dark #content .choice.selected,
+html.dark #content .template-chip.on,
+html.dark #content .template-chip[aria-pressed="true"],
+html.dark #content .template-chip.selected {
+  background: var(--soft) !important;
+  border-color: var(--blue) !important;
+}
+
+html.dark #content .foundation-item:not(.current):not(.editing):hover,
+html.dark #content .deck-title:hover,
+html.dark #content .deck-points li[data-deck-field]:hover {
+  background: var(--elevated) !important;
+  color: var(--ink);
+}
+
+html.dark #content .deck-title:focus,
+html.dark #content .deck-points li[data-deck-field]:focus {
+  background: #4a423d;
+  color: var(--ink);
+  box-shadow: 0 0 0 2px var(--blue);
+}
+
+html.dark #footer {
+  background: linear-gradient(transparent, var(--base) 18%);
+}
+
+html.dark .modal {
+  background: #4a423d;
+  border-color: var(--line);
+  box-shadow: inset 0 1px #ffffff18, 0 34px 100px #00000070;
+}
+
+html.dark :is(.deck-scale, .deck-thumb, .thumb, .slide, .slide-stage, .modal .deck-zoom) {
+  --paper: #f7f5f0;
+  --surface: #ffffff;
+  --sunken: #eeede8;
+  --line: #d7d4cc;
+  --ink: #252a38;
+  --muted: #677181;
+  --blue: #7e8fae;
+  --soft: #e7ecf3;
+  color: var(--ink);
+}
+
+html.dark #content .deck-row.is-missing .deck-thumb {
+  opacity: 1;
+}
+
+html.dark #content .deck-thumb {
+  border-color: var(--line);
+  box-shadow: 0 0 0 1px #00000032;
+}
+
+html.dark #toast {
+  background: var(--ink);
+  color: var(--base);
+}
