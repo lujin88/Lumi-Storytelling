@@ -445,21 +445,150 @@ test('a clip whose files do not load falls back to the still, on step 1 and the 
   }
 });
 
+test('the download page shows the preview card and Lumi on a fixed stage, same box for the still and the clip', async ({ page }) => {
+  let clipBox;
+  for (const [w, h, stage] of [[1900, 1000, [416, 456]], [1280, 900, [360, 380]], [390, 844, [64, 56]]]) {
+    await page.setViewportSize({ width: w, height: h });
+    for (const reduce of [false, true]) {
+      await page.emulateMedia({ reducedMotion: reduce ? 'reduce' : 'no-preference' });
+      await openApp(page);
+      // The sample stays loaded after a reload, so only load it once.
+      await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+      if (!reduce) {
+        await expect(page.locator('.dl-stage video[data-lumi-video]')).toBeVisible();
+        await expect(page.locator('.dl-stage img[data-lumi]')).toBeHidden();
+      }
+      const title = await page.evaluate(() => getScenes()[0][state.lang]);
+      await expect(page.locator('.dl-preview .dl-slide h3')).toHaveText(title);
+      await expect(page.locator('.dl-preview .dl-score strong')).toContainText('/10');
+      // Stage and media are measured in one go, relative to the stage: the page itself may still be sliding in.
+      const [st, media] = await page.evaluate(() => {
+        const st = document.querySelector('.dl-stage').getBoundingClientRect();
+        const m = [...document.querySelectorAll('.dl-stage > *')].find((el) => getComputedStyle(el).display !== 'none').getBoundingClientRect();
+        return [[st.width, st.height], [m.x - st.x, m.y - st.y, m.width, m.height]].map((a) => a.map(Math.round));
+      });
+      expect(st, `${w} stage`).toEqual(stage);
+      if (reduce) expect(media, `${w} still vs clip`).toEqual(clipBox);
+      else clipBox = media;
+    }
+  }
+});
+
+/** Sideways overflow of the whole page, in px. */
+const sidewaysScroll = (page) => page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+
+test('without assets/lumi/ the download page still bounces in place and never scrolls sideways', async ({ page }) => {
+  // Same as opening index.html without assets/lumi/ next to it; motion is on, so the CSS placeholder runs.
+  await page.context().route(/assets\/lumi\//, (route) => route.abort());
+  for (const w of [1900, 1512, 1280]) {
+    await page.setViewportSize({ width: w, height: 1000 });
+    await openApp(page);
+    const failed = page.waitForEvent('requestfailed', (r) => r.url().endsWith('assets/lumi/cheer.webp'));
+    await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+    await failed;
+    const still = page.locator('.dl-stage img[data-lumi]');
+    await expect(still).toBeVisible();
+    await expect.poll(() => animationName(still), { message: `${w}` }).toBe('lumiCheer');
+    // lumiCheer lifts by 10px and scales from the bottom centre: while it runs (4 x 0.6 s) the centre stays put
+    // and the bottom moves at most 10px up. Centring with transform let the animation throw Lumi off the stage.
+    const anchor = () => still.evaluate((el) => {
+      const st = el.parentElement.getBoundingClientRect(), b = el.getBoundingClientRect();
+      return [b.x + b.width / 2 - st.x, b.bottom - st.y];
+    });
+    const samples = [];
+    for (let i = 0; i < 8; i++) {
+      samples.push({ at: await anchor(), overflow: await sidewaysScroll(page) });
+      await page.waitForTimeout(170);
+    }
+    await expect.poll(() => animationName(still), { timeout: 4000 }).toBe('lumiCheer');
+    await page.waitForTimeout(2600);
+    const rest = await anchor();
+    for (const { at, overflow } of samples) {
+      expect(at[0], `${w} centre`).toBeCloseTo(rest[0], 0);
+      expect(at[1], `${w} bottom`).toBeGreaterThanOrEqual(rest[1] - 10.5);
+      expect(at[1], `${w} bottom`).toBeLessThanOrEqual(rest[1] + 0.5);
+      expect(overflow, `${w} sideways scroll`).toBe(0);
+    }
+  }
+});
+
+test('the cheer clip on the download page stays inside the viewport and the page does not scroll sideways', async ({ page }) => {
+  // Five widths, each reading one loop at half speed (8 s) after waiting for the first restart.
+  test.setTimeout(120_000);
+  // Served over http so the clip frames can be read back from a canvas.
+  // 1500-1599 has the big stage with a 40px gutter, 1600 and up a 64px one.
+  for (const w of [1500, 1512, 1599, 1600, 1900]) {
+    await page.setViewportSize({ width: w, height: 1000 });
+    await openApp(page, { http: true });
+    await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+    const video = page.locator('.dl-stage video[data-lumi-video]');
+    await expect(video).toBeVisible();
+    expect(await sidewaysScroll(page), `${w} sideways scroll`).toBe(0);
+    // Rightmost opaque pixel over one whole loop, read frame by frame with requestVideoFrameCallback.
+    // The star is raised furthest in a single frame (3.08 s of 4.04 s), so sampling on a timer misses it.
+    // Half speed so no frame is dropped while each one is read back.
+    const { right, frames } = await video.evaluate(async (v) => {
+      if (v.readyState < 2) await new Promise((res) => v.addEventListener('loadeddata', res, { once: true }));
+      const c = document.createElement('canvas'), x = c.getContext('2d', { willReadFrequently: true });
+      c.width = v.videoWidth; c.height = v.videoHeight;
+      v.playbackRate = 0.5;
+      let max = -1, frames = 0, last = -1, wraps = 0;
+      await new Promise((done) => {
+        const read = (now, meta) => {
+          // Read from the first loop restart to the next one: exactly one loop.
+          if (meta.mediaTime < last) wraps++;
+          last = meta.mediaTime;
+          if (wraps >= 2) return done();
+          if (wraps === 1) {
+            x.clearRect(0, 0, c.width, c.height); x.drawImage(v, 0, 0);
+            const d = x.getImageData(0, 0, c.width, c.height).data;
+            for (let i = 3; i < d.length; i += 4) if (d[i] > 128) max = Math.max(max, ((i - 3) / 4) % c.width);
+            frames++;
+          }
+          v.requestVideoFrameCallback(read);
+        };
+        v.requestVideoFrameCallback(read);
+      });
+      // object-fit: contain, and the box has the clip's aspect ratio.
+      const b = v.getBoundingClientRect();
+      return { right: b.x + (max + 1) * (b.width / c.width), frames };
+    });
+    // cheer.webm has 97 frames at 24 fps.
+    expect(frames, `${w} frames read in one loop`).toBeGreaterThanOrEqual(95);
+    expect(right, `${w} Lumi's right edge`).toBeLessThanOrEqual(w - 4);
+  }
+});
+
+test('the download preview title shows whole lines and stays inside the slide at every width', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+  for (const w of [390, 1000, 1280, 1499, 1500, 1512, 1600, 1699, 1700, 1900]) {
+    await page.setViewportSize({ width: w, height: 900 });
+    const [lines, bottomGap] = await page.locator('.dl-slide h3').evaluate((h) => {
+      const s = h.parentElement.getBoundingClientRect(), b = h.getBoundingClientRect();
+      return [b.height / parseFloat(getComputedStyle(h).lineHeight), s.bottom - parseFloat(getComputedStyle(h.parentElement).paddingBottom) - b.bottom];
+    });
+    // A squeezed title showed half of its second line at 1512.
+    expect(Math.abs(lines - Math.round(lines)), `${w} whole lines (${lines})`).toBeLessThan(0.05);
+    expect(bottomGap, `${w} inside the slide`).toBeGreaterThanOrEqual(0);
+  }
+});
+
 test('the download page Lumi takes the same box whether the clip plays or the still falls back', async ({ browser }) => {
-  const box = async (blocked) => {
-    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const box = async (w, h, blocked) => {
+    const page = await browser.newPage({ viewport: { width: w, height: h } });
     if (blocked) await page.context().route(/assets\/lumi\//, (route) => route.abort());
     await openApp(page);
-    await page.click('#sidebar [data-page="publish"]');
-    const media = page.locator(blocked ? '#content .pub-art img[data-lumi="clip"]' : '#content .pub-art video[data-lumi-video][src="assets/lumi/cheer.webm"]');
+    await page.evaluate(() => go('publish'));
+    const media = page.locator(blocked ? '.dl-stage img[data-lumi="clip"]' : '.dl-stage video[data-lumi-video][src="assets/lumi/cheer.webm"]');
     await expect(media).toBeVisible();
     if (blocked) await expect.poll(() => media.evaluate((el) => el.getAttribute('src').startsWith('data:'))).toBe(true);
-    const size = await media.evaluate((el) => [el.offsetWidth, el.offsetHeight, el.parentElement.offsetWidth, el.parentElement.offsetHeight]);
+    // Layout box, not the bounding rect: the fallback still runs the lumiCheer transform.
+    const size = await media.evaluate((el) => [el.offsetLeft, el.offsetTop, el.offsetWidth, el.offsetHeight, el.parentElement.offsetWidth, el.parentElement.offsetHeight]);
     await page.close();
     return size;
   };
-  const clip = await box(false);
-  const still = await box(true);
-  expect(still).toEqual(clip);
-  expect(clip[0]).toBe(240);
+  for (const [w, h] of [[1900, 1000], [1280, 900], [390, 844]]) {
+    expect(await box(w, h, true), `${w}`).toEqual(await box(w, h, false));
+  }
 });
