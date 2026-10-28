@@ -185,7 +185,7 @@ test('a hidden tab stops the cheer replay and waits a full hold after it comes b
   expect(played - back).toBeGreaterThanOrEqual(3990);
 });
 
-test('the cheer hold reads its token; leaving the page drops it and coming back plays it again', async ({ page }) => {
+test('the cheer hold reads its token; coming back to the page waits a full hold first', async ({ page }) => {
   await openApp(page);
   // A shorter token proves the hold is read from --motion-delay-cheer-replay, not a fixed 4 s.
   await page.evaluate(() => document.documentElement.style.setProperty('--motion-delay-cheer-replay', '1000ms'));
@@ -207,11 +207,46 @@ test('the cheer hold reads its token; leaving the page drops it and coming back 
   await page.click('#sidebar [data-page="settings"]');
   await expect(video).toHaveCount(0);
   await page.waitForTimeout(1500);
-  // Coming back is a new visit (like the wave on step 1): it plays at once, then holds again.
+  // Coming back after the first visit: frame 0 for one full hold, then it plays (motion.md).
+  // Catch the new clip's first play from the moment it is added.
+  const back = await page.evaluate(() => {
+    window.__cheerPlay = null;
+    new MutationObserver((_, mo) => {
+      const v = document.querySelector('video[data-lumi-video][src="assets/lumi/cheer.webm"]');
+      if (!v) return;
+      mo.disconnect();
+      v.addEventListener('play', () => { window.__cheerPlay = [performance.now(), v.currentTime]; }, { once: true });
+    }).observe(document.body, { subtree: true, childList: true });
+    return performance.now();
+  });
   await page.click('#sidebar [data-page="publish"]');
   await expect(video).toBeVisible();
-  await expect.poll(() => video.evaluate((v) => !v.paused && v.currentTime > 0)).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.__cheerPlay), { timeout: 5000 }).not.toBeNull();
+  const [at, t] = await page.evaluate(() => window.__cheerPlay);
+  expect(at - back).toBeGreaterThanOrEqual(990);
+  expect(at - back).toBeLessThan(2500);
+  // 'play' is dispatched after playback starts, so allow a few frames past 0.
+  expect(t).toBeLessThan(0.05);
   await expect(video).toHaveCount(1);
+});
+
+test('the cheer clip pauses on frame 0 out of view and waits a full hold when it scrolls back', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openApp(page);
+  await page.evaluate(() => document.documentElement.style.setProperty('--motion-delay-cheer-replay', '1000ms'));
+  await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+  const video = page.locator('video[data-lumi-video][src="assets/lumi/cheer.webm"]');
+  await expect(video).toBeVisible();
+  await expect.poll(() => video.evaluate((v) => !v.paused && v.currentTime > 0)).toBe(true);
+  // Move the clip out of view (a transform, so the test does not depend on how long the page is).
+  await video.evaluate((v) => { v.style.transform = 'translateY(-200vh)'; });
+  await expect.poll(() => video.evaluate((v) => [v.paused, v.currentTime])).toEqual([true, 0]);
+  await page.waitForTimeout(1500);
+  expect(await video.evaluate((v) => v.paused)).toBe(true);
+  const back = await page.evaluate(() => performance.now());
+  await video.evaluate((v) => { v.style.transform = ''; });
+  const played = await video.evaluate((v) => new Promise((res) => v.addEventListener('play', () => res(performance.now()), { once: true })));
+  expect(played - back).toBeGreaterThanOrEqual(990);
 });
 
 test('Lumi thinks while the user types, then goes back to waving on step 1', async ({ page }) => {
