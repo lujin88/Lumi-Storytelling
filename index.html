@@ -251,7 +251,8 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue);bo
 .nav+.nav:not(.bottomnav){margin-top:var(--s-4)}
 .topbar{border-bottom:0}
 @media(min-width:721px){.breadcrumb{visibility:hidden}}
-.toast{top:auto;bottom:calc(var(--composer-h) + var(--s-6));box-shadow:none}
+/* --footer-h is the live footer height (set from JS); at 390px the step button wraps under the composer */
+.toast{top:auto;bottom:calc(var(--footer-h,calc(var(--composer-h) + var(--s-3) + var(--s-4))) + var(--s-1));box-shadow:none}
 #content .map-banner,#content .map-banner.warn,#content .map-banner.ok{background:transparent;padding:0;border-radius:0;margin:0 0 var(--s-4)}
 #content .map-banner.warn{color:var(--danger)}
 #content .map-banner.ok{color:var(--ok)}
@@ -1550,6 +1551,7 @@ document.addEventListener('keydown',e=>{if(e.target.id!=='audNew'||e.key!=='Ente
 try{if(!state.sample&&/^(我为一家咨询公司的研究团队重新设计了|I redesigned the research-to-presentation workflow)/.test(state.brief||'')){state.sample=true;state.preSample=null}}catch(e){}
 document.addEventListener('change',e=>{if(!e.target.matches?.('[data-style-pick]'))return;const v=e.target.value;if(v==='__add'){e.target.value=state.visualSource||'empty';styleModal();return}if(v==='__edit'){const id=(state.visualSource||'').slice(6);e.target.value=state.visualSource;styleModal(id);return}state.visualSource=v;persist();render()});
 function applyTheme(){const h=new Date().getHours(),d=h>=19||h<7;document.documentElement.classList.toggle('dark',d);document.documentElement.style.colorScheme=d?'dark':'light'}applyTheme();setInterval(applyTheme,60000);
+if(window.ResizeObserver&&$('#footer'))new ResizeObserver(([e])=>document.documentElement.style.setProperty('--footer-h',e.target.offsetHeight+'px')).observe($('#footer'));
 function render(){if(state.page==='map')state.page='story';if(state.page==='talk')state.page='build';settleDraft();
  shell();
  if(state.restoreOpen){$('#content').classList.add('restore-active');$('#content').innerHTML=`<section class="page page-restore">${restoreView()}</section>`;lumiAnim.page=null;$('#footer').innerHTML='';persist();return}
