@@ -68,6 +68,9 @@ Lumi the mascot appears on the intro, in the story score face, on the step 5 fil
 8. **Checkboxes follow the selected pattern**: 18px, 4px radius, `line` border; checked = `action-bg` fill, `action-line` border and check. Never the browser's black checkbox. The row around a checked box stays unfilled; keyboard focus uses `:focus-visible`. See `SelectionState`.
 9. **Two surfaces, never mixed.** *Panel* = `sunken` fill, no border (guidance box, file card on step 5). *Outlined card* = `paper` fill (same as the page) + 1px `line` border (StoryScore). Don't give a panel a border or an outlined card a fill.
 10. **Guidance boxes**: a `sunken` panel with a 13px/550 lead line ("写清这四点，Lumi 就能帮你起草：") and the prompts as a list with `action-line` dots.
+11. **Missing connections point to the fix.** A missing-key or missing-provider message uses ConnectionPrompt. The whole prompt opens Settings at the matching provider row; that row is scrolled into view, focused and highlighted, with its setup help beside the key field. Help repeats the same provider guidance and links to the same row. Never leave the user at the top of Settings to find the service themselves.
+
+Motion values and reduced-motion behavior live in [`motion.md`](motion.md). Component-specific motion lives with the component; StoryScore is the first example.
 
 ## Sections
 
@@ -76,3 +79,15 @@ A page with two jobs shows two sections, each with a 13px/600 label and an optio
 ## Layout
 
 Sidebar `side` 232px: logo and the 中/EN toggle on one row, then 40px nav rows. No top bar on desktop; downloads live in step 5. Content padding `s-6` top, `gutter` sides. Composer fixed at the bottom on the same gutter. Under 720px the sidebar hides, the footer stacks and the CTA goes full width at 48px.
+
+### Step 1 content + Lumi
+
+Lu selected Option A on 2026-10-27 (Buzz event `c0f7e99e`): keep the setup questions stacked at the left and place Lumi on the right edge of the same 960px rail used by the material section. The comparison renders remain as decision history in [`docs/research/design-handoff/README.md`](../docs/research/design-handoff/README.md); Options B and C are not implementation alternatives.
+
+At reviewed desktop widths of 1280px and above, the setup area is a 960px grid with `408px minmax(0, 1fr) 256px` columns. Questions occupy column 1 and Lumi occupies column 3. Lumi is 256×245px, its right edge is exactly the material rail's right edge, and its top edge aligns with the `用在哪` / `Use case` label. Its bottom must remain above the material section. Preserve the media aspect ratio with `object-fit: contain`; do not crop or shift the figure inside its box.
+
+At 1905px the rail is x=296–1256 and Lumi is x=1000–1256. At 1280px the rail is x=272–1232 and Lumi is x=976–1232. At both widths the questions remain 408px wide. These measurements come from the selected Option A renders linked above; visual QA checks the shared top and right anchors rather than hard-coding viewport coordinates.
+
+When the 960px rail no longer fits, keep Option A's anchors and reduce the art before changing the layout: Lumi is 192px wide from 1001–1279px and 150px wide from 721–1000px. Use `minmax(0, 408px) minmax(24px, 1fr) auto` columns so the question column can shrink and its controls can wrap inside the column while Lumi stays in the rightmost column. Set Lumi to `justify-self: end` and `align-self: start`; its top remains aligned with the first setup label and its right edge remains aligned with the responsive material rail. If the question block is shorter than the nominal figure height, reduce Lumi further rather than cropping it or letting it enter the material section. These widths restore the responsive scale rules from commit `2f5f14d`.
+
+At 720px and below, Step 1 becomes one column: Lumi hides, the three purpose choices stack full width, and the four duration choices stay in one equal-width row. The material section and composer use the `gutter` edges, so at 390px their x coordinates are 16–374.
