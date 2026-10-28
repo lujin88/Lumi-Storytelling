@@ -1,0 +1,8 @@
+{
+  "about": "The interface is in English but the user wrote slide 2 in Chinese, so the prompt comes back in Chinese. The page sends the slide as the user sees it and returns the prompt text as written.",
+  "uiLang": "en",
+  "slide": { "index": 1, "title": "访谈结论一天内整理完", "body": "以前要三天，现在研究员当天就能给出三条结论。" },
+  "modelOutput": {
+    "prompt": "一张堆满访谈便签的长桌，几只看不清面孔的手把便签一张张归拢成整齐的三列，镜头从桌面上方缓慢推近，柔和的晨光从侧面照进来，画面安静、干净，偏暖的灰色调。"
+  }
+}
