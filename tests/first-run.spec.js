@@ -59,6 +59,12 @@ test('a wrong key shows a one-line error in its row and is not marked connected'
   const err = page.locator('.prov-err');
   await expect(err).toHaveCount(1);
   await expect(err).toHaveText('Claude 不认这个密钥。重新复制一个再试。');
+  // The error sits inside its row, so the row grows and its divider moves below the text.
+  await expect(claudeRow(page).locator('.prov-err')).toHaveCount(1);
+  const [errBox, rowBox, inputBox] = await Promise.all([err.boundingBox(), claudeRow(page).boundingBox(), page.locator('#key-claude').boundingBox()]);
+  const rowPadBottom = await claudeRow(page).evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom));
+  expect(errBox.y).toBeGreaterThanOrEqual(inputBox.y + inputBox.height);
+  expect(errBox.y + errBox.height).toBeLessThanOrEqual(rowBox.y + rowBox.height - rowPadBottom + 0.5);
   // Typing a new key clears the old error.
   await page.fill('#key-claude', CLAUDE_KEY + '-2');
   await expect(err).toHaveCount(0);
@@ -125,7 +131,7 @@ test('each failure kind has its own one-line message', async ({ page }) => {
     await page.click(`[data-action="connectApi:${id}"]`);
     const row = page.locator('.prov-row', { has: page.locator(`[data-action="connectApi:${id}"]`) });
     await expect(row.locator('.connection-status')).toHaveText('连接失败');
-    await expect(row.locator('xpath=following-sibling::*[1]')).toHaveText(message);
+    await expect(row.locator('.prov-err')).toHaveText(message);
   }
   expect(errors).toEqual([]);
 });
@@ -200,3 +206,95 @@ for (const width of [1900, 1512, 1280, 390]) {
     expect(errors).toEqual([]);
   });
 }
+
+// Visual review of #38: at 1280px the English "Connection failed" label ran
+// under the model dropdown, and squeezing the status in beside the key left
+// the key field 77px wide at 1001px. Below 1200px the status sits under the
+// key field; above, it has its own column that must end before the dropdown.
+const STATUSES = ['disconnected', 'checking', 'configured', 'connected', 'error'];
+
+/** Put every provider row in `status`, open Settings, and measure each key row. */
+function settingsRows(page, lang, status) {
+  return page.evaluate(({ lang, status }) => {
+    state.lang = lang;
+    for (const id of ['claude', 'openai', 'gemini', 'jimeng']) {
+      state.providerStatus[id] = status;
+      if (status === 'error') state.providerMessage[id] = providerErrorText(id, id === 'jimeng' ? 'login' : 'credit');
+    }
+    go('settings');
+    return [...document.querySelectorAll('.prov-row')].filter((row) => row.querySelector('.connection-status')).map((row) => {
+      const label = row.querySelector('.connection-status');
+      const text = document.createRange();
+      text.selectNodeContents(label);
+      const t = text.getBoundingClientRect();
+      const s = row.querySelector('select').getBoundingClientRect();
+      const input = row.querySelector('input[id^="key-"]');
+      const box = input?.getBoundingClientRect();
+      const style = input && getComputedStyle(input);
+      const ctx = document.createElement('canvas').getContext('2d');
+      if (style) ctx.font = style.font;
+      return {
+        label: label.textContent,
+        clear: t.bottom <= s.top || t.top >= s.bottom || s.left - t.right >= 4,
+        id: input?.id,
+        width: box?.width,
+        placeholderFits: !input || ctx.measureText(input.placeholder).width
+          <= box.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
+      };
+    });
+  }, { lang, status });
+}
+
+for (const width of [901, 1001]) {
+  test(`the key field keeps its room and takes a click in the middle at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const errors = await openApp(page);
+    for (const lang of ['en', 'zh']) {
+      for (const status of STATUSES) {
+        const rows = await settingsRows(page, lang, status);
+        for (const row of rows) {
+          expect(row.clear, `${lang} ${status} ${row.label}`).toBe(true);
+          if (!row.id) continue;
+          // 109px is the key field's width on main before #38.
+          expect(row.width, `${lang} ${status} #${row.id}`).toBeGreaterThanOrEqual(109);
+          expect(row.placeholderFits, `${lang} ${status} #${row.id} placeholder`).toBe(true);
+        }
+      }
+    }
+    for (const id of ['key-claude', 'key-openai', 'key-gemini']) {
+      await page.locator(`#${id}`).click({ position: await page.locator(`#${id}`).evaluate((el) => ({ x: el.offsetWidth / 2, y: el.offsetHeight / 2 })) });
+      await expect(page.locator(`#${id}`)).toBeFocused();
+    }
+    expect(errors).toEqual([]);
+  });
+}
+
+for (const width of [1280, 1512, 1905]) {
+  test(`connection status labels stay clear of the model dropdown at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const errors = await openApp(page);
+    for (const lang of ['en', 'zh']) {
+      for (const status of STATUSES) {
+        const rows = await settingsRows(page, lang, status);
+        expect(rows.filter((r) => !r.clear).map((r) => r.label), `${lang} ${status}`).toEqual([]);
+      }
+    }
+    expect(errors).toEqual([]);
+  });
+}
+
+test('the settings rows fit a 390px screen in every connection state', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const errors = await openApp(page, { http: true });
+  for (const lang of ['en', 'zh']) {
+    for (const status of STATUSES) {
+      await settingsRows(page, lang, status);
+      // d40e7f0 scrolled sideways to 423px with the English error labels.
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), `${lang} ${status}`).toBe(390);
+    }
+  }
+  expect(errors).toEqual([]);
+});
