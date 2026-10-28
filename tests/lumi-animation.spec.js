@@ -296,6 +296,58 @@ test('reduced motion switched on while the cheer plays stops it at once', async 
   await expect(page.locator('img[data-lumi="clip"]').first()).toBeVisible();
 });
 
+for (const when of ['hold', 'play']) {
+  test(`reduced motion switched off (on during the ${when}) shows the clip's frame 0 before the hold starts`, async ({ page }) => {
+    // The still must not stand in for the hold: frame 0 is on screen first, then one full hold.
+    test.setTimeout(60_000);
+    await openApp(page);
+    await page.evaluate(() => document.documentElement.style.setProperty('--motion-delay-cheer-replay', '2000ms'));
+    await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+    const video = page.locator('video[data-lumi-video][src="assets/lumi/cheer.webm"]');
+    const still = page.locator('img[data-lumi="clip"]').first();
+    await expect.poll(() => video.evaluate((v) => !v.paused && v.currentTime > 0)).toBe(true);
+    if (when === 'hold') {
+      await video.evaluate(async (v) => {
+        v.playbackRate = 4;
+        await new Promise((res) => v.addEventListener('ended', res, { once: true }));
+        await new Promise((res) => v.addEventListener('seeked', res, { once: true }));
+      });
+    }
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await expect(video).toBeHidden();
+    await expect(still).toBeVisible();
+    await video.evaluate((v) => {
+      window.__cheerPlay = null;
+      window.__handed = null;
+      v.addEventListener('play', () => { window.__cheerPlay = performance.now(); }, { once: true });
+      const el = document.querySelector('img[data-lumi="clip"]');
+      new MutationObserver((_, mo) => {
+        if (el.style.display !== 'none') return;
+        window.__handed = performance.now();
+        mo.disconnect();
+      }).observe(el, { attributes: true, attributeFilter: ['style'] });
+    });
+    const off = await page.evaluate(() => performance.now());
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    // Well inside the 2 s hold: the handover is done and nothing has played yet.
+    await expect.poll(() => page.evaluate(() => window.__handed), { timeout: 1000 }).not.toBeNull();
+    await expect(still).toBeHidden();
+    const handed = await page.evaluate(() => window.__handed);
+    const shown = await video.evaluate((v) => ({
+      opacity: getComputedStyle(v).opacity,
+      paused: v.paused,
+      t: v.currentTime,
+      pending: lumiAnim.pending.has(document.querySelector('img[data-lumi="clip"]')),
+    }));
+    expect(shown).toEqual({ opacity: '1', paused: true, t: 0, pending: false });
+    expect(handed - off).toBeLessThan(1500);
+    expect(await page.evaluate(() => window.__cheerPlay)).toBeNull();
+    // The hold is counted from the handover, not from the switch.
+    await expect.poll(() => page.evaluate(() => window.__cheerPlay), { timeout: 5000 }).not.toBeNull();
+    expect(await page.evaluate(() => window.__cheerPlay) - handed).toBeGreaterThanOrEqual(1990);
+  });
+}
+
 test('the cheer hold token is read in ms or s', async ({ page }) => {
   await openApp(page);
   const ms = (value) => page.evaluate((v) => {
