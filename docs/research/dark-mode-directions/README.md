@@ -85,19 +85,19 @@ Color is never the only state signal: selection retains border or leading bar, f
 
 | 1905px | 390px |
 | --- | --- |
-| ![Current dark mode at 1905px](direction-current-1905.png) | ![Current dark mode at 390px](direction-current-390.png) |
+| ![Current dark mode at 1905px](https://github.com/lujin88/Lumi-Storytelling/blob/c16f74bcb41943d053bffd754fc8e14bbcf51548/docs/research/dark-mode-directions/direction-current-1905.png?raw=true) | ![Current dark mode at 390px](https://github.com/lujin88/Lumi-Storytelling/blob/c16f74bcb41943d053bffd754fc8e14bbcf51548/docs/research/dark-mode-directions/direction-current-390.png?raw=true) |
 
 ### 1905px
 
 | A — Night Paper | B — Blueprint |
 | --- | --- |
-| ![Direction A at 1905px](direction-a-1905.png) | ![Direction B at 1905px](direction-b-1905.png) |
+| ![Direction A at 1905px](https://github.com/lujin88/Lumi-Storytelling/blob/c16f74bcb41943d053bffd754fc8e14bbcf51548/docs/research/dark-mode-directions/direction-a-1905.png?raw=true) | ![Direction B at 1905px](https://github.com/lujin88/Lumi-Storytelling/blob/c16f74bcb41943d053bffd754fc8e14bbcf51548/docs/research/dark-mode-directions/direction-b-1905.png?raw=true) |
 
 ### 390px
 
 | A — Night Paper | B — Blueprint |
 | --- | --- |
-| ![Direction A at 390px](direction-a-390.png) | ![Direction B at 390px](direction-b-390.png) |
+| ![Direction A at 390px](https://github.com/lujin88/Lumi-Storytelling/blob/c16f74bcb41943d053bffd754fc8e14bbcf51548/docs/research/dark-mode-directions/direction-a-390.png?raw=true) | ![Direction B at 390px](https://github.com/lujin88/Lumi-Storytelling/blob/c16f74bcb41943d053bffd754fc8e14bbcf51548/docs/research/dark-mode-directions/direction-b-390.png?raw=true) |
 
 ## Research references
 
