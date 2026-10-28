@@ -1,0 +1,18 @@
+{
+  "provider-error.gone.check": {
+    "zh": "{provider} 停用了 Lumi 检查密钥用的接口，跟你的密钥无关。Lumi 更新后才能连上。",
+    "en": "{provider} has retired the endpoint Lumi uses to check keys. Your key isn’t the problem; Lumi needs an update before it can connect."
+  },
+  "provider-error.gone.model": {
+    "zh": "{provider} 停用了你选的模型。去设置换一个模型，再试一次。",
+    "en": "{provider} has retired the model you chose. Pick another one in Settings, then try again."
+  },
+  "provider-error.gone.only-model": {
+    "zh": "{provider} 停用了 Lumi 用的模型。Lumi 更新后才能再用。",
+    "en": "{provider} has retired the model Lumi uses. Lumi needs an update before you can use it again."
+  },
+  "provider-error.denied": {
+    "zh": "{provider} 拒绝了这次请求，可能是地区或账号权限的问题。",
+    "en": "{provider} refused this request. It may be your region or account permissions."
+  }
+}

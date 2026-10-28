@@ -4,7 +4,7 @@
 - `index.html`: everything. One `<style>`, one `<script>`, images inlined as data URIs.
 - `design-system/`: the visual standard (tokens, components, rules). Not loaded by the page.
 - `prompts/`: the prompts sent to Claude, OpenAI and Gemini, one `.md` each, with an example in `prompts/examples/`. `node scripts/embed-prompts.js` copies them into `index.html` as `<script type="text/plain" id="prompt-NAME">`; `tests/prompts.spec.js` fails if the copies drift.
-- `server/`: local service for Jimeng only (Dreamina CLI), listens on `127.0.0.1:4317`.
+- `server/`: local static server for `index.html` and `assets/`, listens on `127.0.0.1:4317`. No API routes, no keys.
 
 ## Data flow
 User input (composer, uploads, clicks) → global `state` → `render()` rebuilds the page from template strings → `persist()` saves to `localStorage` (`lumi-workbench-v1`).
