@@ -1,0 +1,15 @@
+{
+  "about": "The sample project in Chinese. The outcome draft adds a percentage that isn't in the step 2 answers; the page replaces that number with [待补]. The numbers that are in step 2 stay.",
+  "modelOutput": {
+    "answers": [
+      { "index": 0, "text": "客户每周要等三天才看到结论，两个大客户因此推迟了续约讨论。具体金额[待补]。" },
+      { "index": 4, "text": "试点四周后，从三天缩短到四小时，效率提升了 90%。这是试点里的数字，还没有全面推广。" }
+    ]
+  },
+  "expect": {
+    "answers": {
+      "0": "客户每周要等三天才看到结论，两个大客户因此推迟了续约讨论。具体金额[待补]。",
+      "4": "试点四周后，从三天缩短到四小时，效率提升了 [待补]%。这是试点里的数字，还没有全面推广。"
+    }
+  }
+}

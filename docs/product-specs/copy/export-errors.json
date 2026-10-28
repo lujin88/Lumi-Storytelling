@@ -1,0 +1,10 @@
+{
+  "export.videos-too-large": {
+    "zh": "下载没成功：演示文件里的视频加起来太大，浏览器处理不了。回到「页面和讲稿」，移除几个视频或换成小一点的，再下载。",
+    "en": "Download failed. The videos in the presentation add up to more than the browser can handle. In Slides & script, remove some videos or use smaller ones, then download again."
+  },
+  "export.failed": {
+    "zh": "下载没成功，再试一次。",
+    "en": "Download failed. Try again."
+  }
+}

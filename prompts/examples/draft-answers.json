@@ -1,0 +1,21 @@
+{
+  "about": "Chinese notes with no answers yet. The model drafts three answers and leaves three empty. One quote uses a half-width comma and a space where the notes have a full-width comma, so it still counts. One quote isn't in the notes, so that answer is dropped.",
+  "notes": "我为一家咨询公司的研究团队重新设计了 AI 辅助的研究到汇报流程。以前从客户访谈到给客户演示要花三天，资料散落在 Notion、Figma 和邮件里。研究负责人反对，他担心 AI 写的结论客户不信。",
+  "modelOutput": {
+    "answers": [
+      { "id": "stake", "text": "客户要等三天才能看到研究结论，资料也散在好几个工具里。", "quote": "以前从客户访谈到给客户演示要花三天, 资料散落在 Notion、Figma 和邮件里" },
+      { "id": "reframe", "text": "", "quote": "" },
+      { "id": "challenge", "text": "研究负责人反对，他担心客户不相信 AI 写的结论。", "quote": "研究负责人反对，他担心 AI 写的结论客户不信。" },
+      { "id": "decision", "text": "", "quote": "" },
+      { "id": "outcome", "text": "流程从三天缩短到四小时。", "quote": "从三天缩短到四小时" },
+      { "id": "wisdom", "text": "", "quote": "" }
+    ]
+  },
+  "expect": {
+    "drafted": {
+      "stake": "客户要等三天才能看到研究结论，资料也散在好几个工具里。",
+      "challenge": "研究负责人反对，他担心客户不相信 AI 写的结论。"
+    },
+    "missing": ["reframe", "decision", "outcome", "wisdom"]
+  }
+}

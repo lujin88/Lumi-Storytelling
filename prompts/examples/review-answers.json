@@ -1,0 +1,11 @@
+{
+  "about": "The sample project in Chinese. The model asks one follow-up on the outcome. A second question for the same answer and one for an unknown id are dropped.",
+  "modelOutput": {
+    "followups": [
+      { "id": "outcome", "question": "四小时是怎么算的？统计了几个项目？" },
+      { "id": "outcome", "question": "团队是从哪天开始复用模板的？" },
+      { "id": "budget", "question": "预算是多少？" }
+    ]
+  },
+  "expect": { "followups": [{ "parent": "outcome", "q": "四小时是怎么算的？统计了几个项目？" }] }
+}
