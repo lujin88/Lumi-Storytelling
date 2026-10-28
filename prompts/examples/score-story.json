@@ -1,0 +1,13 @@
+{
+  "about": "The sample project in Chinese. The pivot quote isn't in the answers, so pivot drops to 0. The afterlife score of 7 is clamped to 2. Total 8; the rule score for the sample is 10.",
+  "modelOutput": {
+    "dims": [
+      { "id": "tension", "score": 2, "quote": "研究负责人反对，他担心 AI 生成的结论不可信", "reason": "说清了谁反对、为什么。" },
+      { "id": "decision", "score": 2, "quote": "代价是比纯自动慢一些", "reason": "说出了放弃的东西和代价。" },
+      { "id": "pivot", "score": 2, "quote": "大家以为是没人愿意用新工具", "reason": "有前后对比。" },
+      { "id": "signal", "score": 2, "quote": "我放弃了全自动生成", "reason": "说了自己做的决定。" },
+      { "id": "afterlife", "score": 7, "quote": "从三天缩短到四小时", "reason": "有数字，也有教训。" }
+    ]
+  },
+  "expect": { "dims": { "tension": 2, "decision": 2, "pivot": 0, "signal": 2, "afterlife": 2 }, "total": 8, "ruleTotal": 10 }
+}
