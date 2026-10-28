@@ -64,3 +64,21 @@ test('mobile slide rows keep 16px side padding', async ({ page }) => {
   await expect(row).toHaveCSS('padding-left', '16px');
   await expect(row).toHaveCSS('padding-right', '16px');
 });
+
+// Visual review on #72: at 390px the slide modal kept the 32px desktop padding, because
+// a later `.modal{padding:var(--s-6)!important}` overrode the narrow-screen 16px.
+// The page goes dark 19:00-07:00 (applyTheme), so the clock picks the theme.
+for (const [scheme, time] of [['light', '2026-10-25T10:00:00'], ['dark', '2026-10-25T21:00:00']]) {
+  test(`${scheme}: the wide slide modal keeps 16px padding at 390px`, async ({ page }) => {
+    await page.clock.install({ time: new Date(time) });
+    await page.setViewportSize({ width: 390, height: 850 });
+    await openApp(page);
+    expect(await page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(scheme === 'dark');
+    await fillStepOne(page, NOTES);
+    await page.locator('#sidebar [data-page="build"]').evaluate((el) => el.click());
+    await page.locator('[data-action="deckZoom:0"]').first().evaluate((el) => el.click());
+    const modal = page.locator('#modal.wide');
+    await expect(modal).toBeVisible();
+    for (const side of ['top', 'right', 'bottom', 'left']) await expect(modal).toHaveCSS(`padding-${side}`, '16px');
+  });
+}
