@@ -12,6 +12,9 @@
 # The WebM keeps the clip's own frame rate. The WebP drops to WEBP_FPS: alpha in an
 # animated WebP is stored per frame, so the 1 MB budget goes to quality, not frames.
 #
+# LOOP=0 (default) makes the WebP repeat forever, for the looping poses (wave, cheer,
+# thinking); LOOP=1 plays it once and holds the last frame, for a one-shot like jump.
+#
 # Usage: scripts/lumi-clip.sh <in.mp4> <pose> [fps] [webp quality]
 # Needs ffmpeg (libvpx-vp9), cwebp and webpmux (Homebrew "webp") and python3 with
 # Pillow and numpy.
@@ -29,6 +32,7 @@ CRF=${CRF:-16}
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=$HERE/../assets/lumi
 LIMIT=${LIMIT:-1048576}
+LOOP=${LOOP:-0}
 
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
@@ -50,8 +54,7 @@ for f in "$WORK"/webp/f*.png; do
   cwebp -quiet -q "$QUALITY" -alpha_q "$ALPHA_QUALITY" -m 6 -sharp_yuv "$f" -o "${f%.png}.webp"
   frames+=(-frame "${f%.png}.webp" "+$DELAY+0+0+1-b")
 done
-# Plays once and holds the last frame; the page swaps back to the still when the state ends.
-webpmux "${frames[@]}" -loop 1 -bgcolor 0,0,0,0 -o "$OUT/$POSE.webp" >/dev/null
+webpmux "${frames[@]}" -loop "$LOOP" -bgcolor 0,0,0,0 -o "$OUT/$POSE.webp" >/dev/null
 
 for f in "$OUT/$POSE.webm" "$OUT/$POSE.webp"; do
   size=$(stat -f%z "$f" 2>/dev/null || stat -c%s "$f")
