@@ -1,0 +1,12 @@
+name: verify
+# 每个 PR 自动跑本项目的 scripts/verify.sh。merge-pr.sh 只在名叫 verify 的检查通过后才合并。
+# 要验什么写在 scripts/verify.sh 里，不改这个文件（改 .github/workflows/ 只由 Lu 合并）。
+on: [pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/verify.sh
