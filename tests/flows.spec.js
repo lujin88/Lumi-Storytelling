@@ -150,6 +150,28 @@ test('clicking any row opens the editor in that row, in all three groups', async
   }
 });
 
+test('switching from one row editor to another keeps the new editor open and its typing', async ({ page }) => {
+  await openApp(page);
+  await fillStepOne(page, NOTES);
+  await page.click('#footer [data-action="next"]');
+  await page.evaluate(() => {
+    state.found.reframe = { text: '先前的回答。' };
+    state.found.stake = { text: '推迟了一个季度。' };
+    render();
+  });
+  await page.click('[data-action="focus:reframe"]');
+  await expect(page.locator('[data-action="focus:reframe"] .inline-edit')).toBeFocused();
+  await page.keyboard.type('改');
+  await page.click('[data-action="focus:stake"]');
+  await page.keyboard.type('X');
+  // The first editor saves on its way out, 180ms later; the new one must survive that.
+  await page.waitForTimeout(400);
+  const editor = page.locator('[data-action="focus:stake"] .inline-edit');
+  await expect(editor).toBeFocused();
+  await expect(editor).toHaveValue('推迟了一个季度。X');
+  expect(await page.evaluate(() => [state.editing, state.found.reframe.text])).toEqual(['stake', '先前的回答。改']);
+});
+
 test('text typed in a row and then in the composer lands in that same row, in all three groups', async ({ page }) => {
   await storyWithFollowups(page);
   const cases = [
