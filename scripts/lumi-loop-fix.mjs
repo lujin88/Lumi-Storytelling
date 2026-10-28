@@ -4,12 +4,13 @@ import { basename, join } from 'node:path';
 
 // Re-export a range of an existing transparent VP9 clip without changing its frames.
 // Use a versioned output name; inspect the result before copying it into assets/lumi/.
-// Usage: node scripts/lumi-loop-fix.mjs input.webm outdir pose-v2 first last [crf] [webp quality]
-const [,, input, outputDir, name, firstArg, lastArg, crfArg = '20', qualityArg = '84'] = process.argv;
+// Usage: node scripts/lumi-loop-fix.mjs input.webm outdir pose-v2 first last [crf] [webp quality] [webp loops]
+const [,, input, outputDir, name, firstArg, lastArg, crfArg = '20', qualityArg = '84', loopsArg = '0'] = process.argv;
 if (!input || !outputDir || !name || firstArg === undefined || lastArg === undefined) {
-  throw new Error('usage: node lumi-loop-fix.mjs input.webm outdir name first last [crf] [webp quality]');
+  throw new Error('usage: node lumi-loop-fix.mjs input.webm outdir name first last [crf] [webp quality] [webp loops]');
 }
-const first = Number(firstArg), last = Number(lastArg), crf = Number(crfArg), quality = Number(qualityArg);
+const first = Number(firstArg), last = Number(lastArg), crf = Number(crfArg), quality = Number(qualityArg), loops = Number(loopsArg);
+if (!Number.isInteger(loops) || loops < 0 || loops > 65535) throw new Error('invalid WebP loop count');
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, { maxBuffer: 160 * 1024 * 1024, ...options });
   if (result.status !== 0) throw new Error(`${command} ${args.join(' ')}\n${result.stderr?.toString()}`);
@@ -44,6 +45,6 @@ for (const png of pngs) {
   run('cwebp', ['-quiet', '-q', String(quality), '-alpha_q', '85', '-m', '6', '-sharp_yuv', src, '-o', dst]);
   muxArgs.push('-frame', dst, `+${webpFrameMs}+0+0+1-b`);
 }
-run('webpmux', [...muxArgs, '-loop', '0', '-bgcolor', '0,0,0,0', '-o', webp]);
+run('webpmux', [...muxArgs, '-loop', String(loops), '-bgcolor', '0,0,0,0', '-o', webp]);
 if ([webm, webp].some(path => statSync(path).size >= 1048576)) throw new Error('output exceeds the 1 MiB asset limit');
-console.log(JSON.stringify({ input: basename(input), sourceFrames: frameCount, first, last, frames: selectedCount, crf, quality, webpFrameMs, webm: statSync(webm).size, webp: statSync(webp).size, outputDir }));
+console.log(JSON.stringify({ input: basename(input), sourceFrames: frameCount, first, last, frames: selectedCount, crf, quality, loops, webpFrameMs, webm: statSync(webm).size, webp: statSync(webp).size, outputDir }));

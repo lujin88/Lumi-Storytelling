@@ -31,6 +31,8 @@ the endpoints matched, a pose snap remained just before and after the seam.
 `scripts/lumi-loop-fix.mjs` now trims those frames instead. Wave keeps source
 frames 4–89 (86 frames, 3.58 s); cheer keeps 3–92 (90 frames, 3.75 s). For
 example, run `node scripts/lumi-loop-fix.mjs input.webm outdir wave-v2 4 89`.
+For cheer, pass `20 84 1` after the frame range to keep its WebP fallback
+single-play.
 The script writes transparent VP9 and a 40-frame animated WebP fallback into
 versioned filenames, matching their playback lengths within one WebP frame,
 then checks that both are under 1 MiB. The app uses the
@@ -39,12 +41,11 @@ stable filenames in this directory. Original renders in `source/` are unchanged.
 Frame differences were measured from decoded RGBA composited on white, sampling
 every fourth pixel and averaging absolute RGB differences on a 0–255 scale.
 Wave's original frame 92→93 jump measured 2.25; the trimmed 89→4 seam measures
-1.20 (median adjacent difference 0.49). Cheer's original 92→93 jump measured
+1.20 (median adjacent difference 0.49, 95th percentile 2.64). Cheer's original 92→93 jump measured
 3.48; the trimmed 92→3 seam measures 1.60 (median adjacent difference 3.28).
-These seam figures are from the final encoded WebM outputs. The WebP
-fallbacks currently loop continuously, including cheer. The planned
-play-once/pause/replay behavior waits for the approved pause duration and a
-page playback change; it is not implemented in this export.
+These seam figures are from the final encoded WebM outputs. Wave's WebP
+fallback loops continuously. Cheer's WebP has loop count 1, so it plays once
+and holds; restarting it after a pause still requires a page playback change.
 
 Think still uses the earlier six-frame endpoint easing in #58. Its seam has
 not been reworked in this pass.
