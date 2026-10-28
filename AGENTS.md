@@ -36,4 +36,5 @@ Read harness-core's `AGENTS.md` first (https://github.com/lujin88/harness-core),
 - Run: open `index.html` in a browser.
 - Test: `npm install` once, then `npm test` runs the full Playwright suite in `tests/` (opens `index.html` over `file://`, or over a mocked http origin where behavior differs, network blocked). Uses local Google Chrome; `PW_CHANNEL=chromium npm test` uses Playwright's Chromium after `npx playwright install chromium`.
 - Docs check: `bash scripts/check-docs.sh`.
+- Verify: `bash scripts/verify.sh` runs the docs check and the full test suite. It runs on every PR as the `verify` check; `merge-pr.sh` does not merge until it passes. Run it before opening a PR.
 - After editing a prompt in `prompts/`: `node scripts/embed-prompts.js`, then `npm test`.
