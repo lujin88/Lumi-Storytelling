@@ -11,7 +11,7 @@ const lumiState = (page) => page.locator('img[data-lumi]').first().getAttribute(
 
 const animationName = (locator) => locator.evaluate((el) => getComputedStyle(el).animationName);
 
-test('Lumi waves on open with the transparent WebM, then goes back to the still', async ({ page }) => {
+test('Lumi keeps waving on step 1 with a looping transparent WebM', async ({ page }) => {
   const errors = await openApp(page);
   const still = page.locator('img.intro-lumi[data-lumi]');
   const video = page.locator('video[data-lumi-video]');
@@ -22,17 +22,40 @@ test('Lumi waves on open with the transparent WebM, then goes back to the still'
   await expect(still).toBeHidden();
   await expect.poll(() => video.evaluate((v) => v.readyState)).toBeGreaterThan(0);
   expect(await video.evaluate((v) => v.duration)).toBeCloseTo(4, 0);
-  await expect.poll(() => lumiState(page), { timeout: 6000 }).toBe('idle');
-  // Idle keeps what the page had before the state machine: the intro Lumi was a still.
-  await expect(video).toHaveCount(0);
-  await expect(still).toBeVisible();
-  expect(await animationName(still)).toBe('none');
+  expect(await video.evaluate((v) => v.loop)).toBe(true);
+  // Past the 4 s clip it is still waving and still playing, not frozen on the last frame.
+  await page.waitForTimeout(5000);
+  expect(await lumiState(page)).toBe('wave');
+  await expect(video).toBeVisible();
+  expect(await video.evaluate((v) => v.ended)).toBe(false);
   expect(errors).toEqual([]);
+});
+
+test('leaving step 1 stops the wave; coming back starts it again', async ({ page }) => {
+  await openApp(page);
+  const video = page.locator('video[data-lumi-video]');
+  await expect(video).toHaveAttribute('src', 'assets/lumi/wave.webm');
+  await page.click('#sidebar [data-page="settings"]');
+  expect(await page.evaluate(() => lumiAnim.state)).toBe('idle');
+  await expect(video).toHaveCount(0);
+  await page.click('#sidebar [data-page="dump"]');
+  expect(await lumiState(page)).toBe('wave');
+  await expect(video).toHaveAttribute('src', 'assets/lumi/wave.webm');
+});
+
+test('a re-render past the clip length keeps the loop going from the right place', async ({ page }) => {
+  await openApp(page);
+  // Pretend the wave started 9.5 s ago, then rebuild the page as render() does after any edit.
+  await page.evaluate(() => { lumiAnim.starts.wave = performance.now() - 9500; render(); });
+  const video = page.locator('video[data-lumi-video]');
+  await expect.poll(() => video.evaluate((v) => v.readyState)).toBeGreaterThan(0);
+  const t = await video.evaluate((v) => v.currentTime);
+  expect(t).toBeGreaterThan(1);
+  expect(t).toBeLessThan(2.5);
 });
 
 test('a WebM that fails to load falls back to the animated WebP', async ({ page }) => {
   await openApp(page);
-  await expect.poll(() => lumiState(page), { timeout: 6000 }).toBe('idle');
   await page.evaluate(() => {
     LUMI_CLIPS.wave = { webm: 'assets/lumi/missing.webm', webp: 'assets/lumi/wave.webp' };
     lumiAnim.set('wave');
@@ -86,29 +109,94 @@ test.describe('phone width', () => {
   });
 });
 
+const LUMI_FILES = ['wave.webm', 'wave.webp', 'cheer.webm', 'cheer.webp'];
+
 test('each approved clip file stays under 1 MB', () => {
   // 1 MB = 1024 × 1024 bytes, the same limit scripts/lumi-clip.sh checks.
-  for (const file of ['wave.webm', 'wave.webp']) {
+  for (const file of LUMI_FILES) {
     const size = fs.statSync(path.resolve(__dirname, '..', 'assets', 'lumi', file)).size;
     expect(size, file).toBeLessThan(1024 * 1024);
   }
 });
 
-test('the download page keeps its celebrate loop after cheering', async ({ page }) => {
-  await openApp(page);
-  await page.click('[data-action="loadSample"]');
-  await page.click('#sidebar [data-page="publish"]');
-  const lumi = page.locator('img.character[data-lumi]');
-  await expect.poll(() => animationName(lumi)).toBe('lumiCheer');
-  await expect.poll(() => animationName(lumi), { timeout: 5000 }).toBe('lumiCelebrate');
+test('the looping WebP fallbacks repeat forever', () => {
+  // WebP container: the ANIM chunk holds a 4-byte background colour, then a 2-byte loop count (0 = forever).
+  for (const file of ['wave.webp', 'cheer.webp']) {
+    const buf = fs.readFileSync(path.resolve(__dirname, '..', 'assets', 'lumi', file));
+    const anim = buf.indexOf('ANIM');
+    expect(anim, file).toBeGreaterThan(0);
+    expect(buf.readUInt16LE(anim + 8 + 4), file).toBe(0);
+  }
 });
 
-test('Lumi thinks while the user types, then returns to idle', async ({ page }) => {
+test('the download page loops the cheer clip and keeps it', async ({ page }) => {
+  const errors = await openApp(page);
+  await page.click('[data-action="loadSample"]');
+  await page.click('#sidebar [data-page="publish"]');
+  const video = page.locator('video[data-lumi-video]');
+  await expect(video).toHaveAttribute('src', 'assets/lumi/cheer.webm');
+  await expect(video).toBeVisible();
+  expect(await video.evaluate((v) => v.loop)).toBe(true);
+  await page.waitForTimeout(5000);
+  expect(await page.evaluate(() => lumiAnim.state)).toBe('cheer');
+  await expect(video).toBeVisible();
+  expect(await video.evaluate((v) => v.ended)).toBe(false);
+  expect(errors).toEqual([]);
+});
+
+test('Lumi thinks while the user types, then goes back to waving on step 1', async ({ page }) => {
   await openApp(page);
-  await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('idle');
+  expect(await lumiState(page)).toBe('wave');
   await page.locator('#guideText').pressSequentially('我重新设计了');
   expect(await lumiState(page)).toBe('think');
-  await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('idle');
+  await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('wave');
+});
+
+/** Reads a <video> handle: still in the page, shown, and where it is in the clip. */
+const videoInfo = (handle) => handle.evaluate((v) => ({
+  connected: v.isConnected, shown: v.getClientRects().length > 0, paused: v.paused, t: v.currentTime, src: v.getAttribute('src'),
+}));
+
+test('typing on step 1 keeps the same wave playing (no think clip yet)', async ({ page }) => {
+  await openApp(page);
+  const video = page.locator('video[data-lumi-video]');
+  await expect.poll(() => video.evaluate((v) => v.currentTime)).toBeGreaterThan(0.5);
+  const wave = await video.elementHandle();
+  const before = (await videoInfo(wave)).t;
+  await page.locator('#guideText').pressSequentially('我重新设计了');
+  expect(await lumiState(page)).toBe('think');
+  // While typing: the wave is the only Lumi on screen, still playing, the still stays hidden.
+  let info = await videoInfo(wave);
+  expect(info).toMatchObject({ connected: true, shown: true, paused: false, src: 'assets/lumi/wave.webm' });
+  await expect(page.locator('img.intro-lumi[data-lumi]')).toBeHidden();
+  await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('wave');
+  // After typing: the same element, and the clip went on instead of starting over.
+  info = await videoInfo(wave);
+  expect(info).toMatchObject({ connected: true, shown: true, paused: false });
+  await expect(video).toHaveCount(1);
+  const elapsed = info.t < before ? info.t + 4 : info.t;
+  expect(elapsed - before).toBeGreaterThan(0.5);
+});
+
+test('with a think clip, typing switches clips and the wave picks up where it was', async ({ page }) => {
+  await openApp(page);
+  // Stand-in for the think clip until it is approved.
+  await page.evaluate(() => { LUMI_CLIPS.think = { webm: 'assets/lumi/cheer.webm', webp: 'assets/lumi/cheer.webp' }; });
+  const video = page.locator('video[data-lumi-video]');
+  await expect.poll(() => video.evaluate((v) => v.currentTime)).toBeGreaterThan(0.5);
+  const wave = await video.elementHandle();
+  const before = (await videoInfo(wave)).t;
+  await page.locator('#guideText').pressSequentially('我重新设计了');
+  const think = page.locator('video[data-lumi-video][src="assets/lumi/cheer.webm"]');
+  await expect(think).toBeVisible();
+  // The wave is hidden, not removed.
+  expect(await videoInfo(wave)).toMatchObject({ connected: true, shown: false });
+  await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('wave');
+  const info = await videoInfo(wave);
+  expect(info).toMatchObject({ connected: true, shown: true, paused: false });
+  await expect(think).toBeHidden();
+  const elapsed = info.t < before ? info.t + 4 : info.t;
+  expect(elapsed - before).toBeGreaterThan(0.5);
 });
 
 test('typing an API key does not trigger thinking', async ({ page }) => {
@@ -135,10 +223,11 @@ test('Lumi jumps when the story score rises', async ({ page }) => {
 test('Lumi cheers on the download page', async ({ page }) => {
   await openApp(page);
   await page.click('[data-action="loadSample"]');
-  await expect.poll(() => lumiState(page), { timeout: 5000 }).toBe('idle');
   await page.click('#sidebar [data-page="publish"]');
   await expect.poll(() => page.evaluate(() => lumiAnim.state)).toBe('cheer');
-  await expect.poll(() => page.evaluate(() => lumiAnim.state), { timeout: 5000 }).toBe('idle');
+  // It stays until the user leaves the page.
+  await page.click('#sidebar [data-page="settings"]');
+  expect(await page.evaluate(() => lumiAnim.state)).toBe('idle');
 });
 
 test('an approved clip replaces only the full-body renders', async ({ page }) => {
@@ -154,8 +243,9 @@ test('an approved clip replaces only the full-body renders', async ({ page }) =>
   for (const src of await page.locator('img[data-lumi]:not([data-lumi="clip"])').evaluateAll((els) => els.map((e) => e.getAttribute('src')))) {
     expect(src).not.toBe(clipSrc);
   }
-  // Back to idle (no clip yet), the original still comes back.
-  await expect.poll(() => clipImgs.first().getAttribute('src'), { timeout: 5000 }).not.toBe(clipSrc);
+  // Back to idle (no clip), the original still comes back.
+  await page.evaluate(() => lumiAnim.set('idle'));
+  await expect(clipImgs.first()).not.toHaveAttribute('src', clipSrc);
   await expect(clipImgs.first()).not.toHaveAttribute('data-lumi-clip', /./);
 });
 
@@ -175,6 +265,19 @@ test('reduced motion keeps the still even when a clip is approved', async ({ pag
     lumiAnim.set('wave');
   }, clipSrc);
   await expect(page.locator('img[data-lumi="clip"]').first()).not.toHaveAttribute('src', clipSrc);
+});
+
+test('reduced motion keeps the still on the download page and loads no cheer clip', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const clipRequests = [];
+  page.on('request', (r) => { if (/assets\/lumi\/cheer\.(webm|webp)/.test(r.url())) clipRequests.push(r.url()); });
+  await openApp(page);
+  await page.click('[data-action="loadSample"]');
+  await page.click('#sidebar [data-page="publish"]');
+  expect(await page.evaluate(() => lumiAnim.state)).toBe('cheer');
+  await page.waitForTimeout(500);
+  await expect(page.locator('video[data-lumi-video]')).toHaveCount(0);
+  expect(clipRequests).toEqual([]);
 });
 
 test('reduced motion keeps the still with the shipped clips', async ({ page }) => {
