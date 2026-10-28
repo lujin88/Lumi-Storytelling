@@ -1,0 +1,62 @@
+{
+  "connection.blocked.claude": {
+    "zh": "这一步要用 Claude，你的 Claude API 密钥还没连上。",
+    "en": "This step needs Claude, and your Claude API key isn’t connected yet."
+  },
+  "connection.blocked.openai": {
+    "zh": "这一步要用 OpenAI 处理图片，你的 OpenAI API 密钥还没连上。",
+    "en": "This step uses OpenAI for images, and your OpenAI API key isn’t connected yet."
+  },
+  "connection.blocked.gemini": {
+    "zh": "这个浏览器不支持语音识别，要用 Gemini 转写。你的 Gemini API 密钥还没连上。",
+    "en": "This browser can’t recognise speech, so voice input needs Gemini. Your Gemini API key isn’t connected yet."
+  },
+  "connection.degraded.gemini": {
+    "zh": "正在用浏览器自带的语音识别。连上 Gemini，转写更准。",
+    "en": "Using your browser’s speech recognition. Connect Gemini for more accurate transcripts."
+  },
+  "connection.open-settings": {
+    "zh": "去设置连接 {provider}",
+    "en": "Connect {provider} in Settings"
+  },
+  "connection.key-help": {
+    "zh": "在哪里拿密钥，怎么填？",
+    "en": "Where do I get a key, and how do I add it?"
+  },
+  "connection.get-key": {
+    "zh": "在 {site} 创建 {provider} API 密钥",
+    "en": "Create a {provider} API key in {site}"
+  },
+  "connection.paste-key": {
+    "zh": "复制密钥，粘贴到上面的输入框，再点「连接」。",
+    "en": "Copy the key, paste it into the field above, then select Connect."
+  },
+  "connection.key-stored": {
+    "zh": "密钥只存在这个浏览器里，调用 {provider} 时直接发给它，不经过别处，也不会导出。",
+    "en": "The key stays in this browser. It goes straight to {provider} when Lumi calls it, nowhere else, and is never exported."
+  },
+  "connection.key-not-stored": {
+    "zh": "双击打开时不会保存密钥，关掉页面后要重新填。",
+    "en": "Opened as a file, Lumi doesn’t save the key, so you’ll enter it again next time."
+  },
+  "help.connect-provider.q": {
+    "zh": "怎么填 API 密钥，怎么知道连上了？",
+    "en": "How do I add my API keys, and how do I know they work?"
+  },
+  "help.connect-provider.a": {
+    "zh": "Lumi 用你自己的 API 密钥调用 AI 服务，每个服务一把。点下面的服务名，会跳到设置里它那一行，输入框旁边就有拿密钥的步骤。连上后，那一行会显示「已连接」。",
+    "en": "Lumi calls AI services with your own API keys, one key per service. Select a service below to jump to its row in Settings. The steps to get a key are right beside the field. Once it’s connected, the row shows Connected."
+  },
+  "help.connect-provider.stored": {
+    "zh": "密钥只存在这个浏览器里，调用时直接发给对应的服务，不经过别处，也不会导出。",
+    "en": "Keys stay in this browser. Each one goes straight to its own service when Lumi calls it, nowhere else, and is never exported."
+  },
+  "help.connect-provider.not-stored": {
+    "zh": "双击打开时不会保存密钥，关掉页面后要重新填。",
+    "en": "Opened as a file, Lumi doesn’t save keys, so you’ll enter them again next time."
+  },
+  "settings.keys-note": {
+    "zh": "用你自己的 API 密钥。密钥只存在这个浏览器里，调用时直接发给对应的服务，不经过别处，也不会导出。",
+    "en": "Bring your own API keys. They stay in this browser, go straight to each service when Lumi calls it, and are never exported."
+  }
+}
