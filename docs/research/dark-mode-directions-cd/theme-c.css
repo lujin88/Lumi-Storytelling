@@ -1,0 +1,177 @@
+/* Design evidence only. Injected at capture time; not product code. */
+html.dark {
+  --base: #1e1a17;
+  --rail: #25211d;
+  --paper: #2b2621;
+  --surface: #342e27;
+  --sunken: #25211d;
+  --elevated: #3b342d;
+  --line: #5b5249;
+  --ink: #f4eee6;
+  --muted: #c1b7ab;
+  --blue: #a9bad3;
+  --soft: #3a414c;
+  --selected: #3a414c;
+  --info: #bed0e9;
+  --info-line: #66788f;
+  --ok: #b5d3aa;
+  --ok-line: #657d5d;
+  --warn: #e7c783;
+  --warn-line: #806836;
+  --danger: #efaaa3;
+  --danger-line: #854d49;
+  --action-bg: #3a414c;
+  --action-line: #a9bad3;
+  --action-ink: #bed0e9;
+}
+
+html.dark body,
+html.dark .main {
+  background: var(--base);
+  color: var(--ink);
+}
+
+html.dark #sidebar {
+  background: var(--rail);
+  border-color: var(--line);
+  box-shadow: inset -1px 0 #ffffff08;
+}
+
+html.dark #content {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(90deg, #ffffff08 1px, transparent 1px),
+    linear-gradient(#ffffff05 1px, transparent 1px);
+  background-size: 28px 28px;
+  border-inline: 1px solid #ffffff0c;
+  box-shadow: 0 0 0 1px #0000001f, 0 22px 54px #00000024;
+}
+
+html.dark #sidebar .nav button.active,
+html.dark #sidebar .bottomnav button.active {
+  background: var(--soft);
+  color: var(--ink);
+  box-shadow: inset 3px 0 var(--blue), inset 0 1px #ffffff0d;
+}
+
+html.dark #content .first-run,
+html.dark #content .brief-guide-box,
+html.dark #content .dl-card {
+  background: var(--surface) !important;
+  border: 1px solid #ffffff0b;
+  box-shadow: inset 0 1px #ffffff0d;
+}
+
+html.dark #content .score-card,
+html.dark #content .score-card.open,
+html.dark #content .dl-preview {
+  background: var(--elevated) !important;
+  border-color: var(--line) !important;
+  box-shadow: inset 0 1px #ffffff10;
+}
+
+html.dark button.secondary,
+html.dark #content .provider-connect.secondary,
+html.dark #content .review-go,
+html.dark .modal button.secondary,
+html.dark #content .choice,
+html.dark #content .template-chip,
+html.dark input,
+html.dark textarea,
+html.dark select,
+html.dark #footer .composer {
+  background: var(--elevated) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+  box-shadow: inset 0 1px #ffffff0d;
+}
+
+html.dark button.secondary:hover,
+html.dark #content .provider-connect.secondary:hover,
+html.dark #content .review-go:hover,
+html.dark .modal button.secondary:hover,
+html.dark #content .choice:hover,
+html.dark #content .template-chip:hover,
+html.dark #content .pkg-item:hover {
+  background: #433b33 !important;
+}
+
+html.dark button:disabled,
+html.dark #content .provider-connect:disabled {
+  opacity: 1;
+  background: var(--sunken) !important;
+  border-color: var(--line) !important;
+  color: var(--muted) !important;
+}
+
+html.dark .primary,
+html.dark button.primary {
+  background: var(--ink) !important;
+  border-color: var(--ink) !important;
+  color: var(--base) !important;
+}
+
+html.dark ::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+html.dark #content .choice.on,
+html.dark #content .choice[aria-pressed="true"],
+html.dark #content .choice.selected,
+html.dark #content .template-chip.on,
+html.dark #content .template-chip[aria-pressed="true"],
+html.dark #content .template-chip.selected {
+  background: var(--soft) !important;
+  border-color: var(--blue) !important;
+}
+
+html.dark #content .foundation-item:not(.current):not(.editing):hover,
+html.dark #content .deck-title:hover,
+html.dark #content .deck-points li[data-deck-field]:hover {
+  background: var(--surface) !important;
+  color: var(--ink);
+}
+
+html.dark #content .deck-title:focus,
+html.dark #content .deck-points li[data-deck-field]:focus {
+  background: var(--elevated);
+  color: var(--ink);
+  box-shadow: 0 0 0 2px var(--blue);
+}
+
+html.dark #footer {
+  background: linear-gradient(transparent, var(--base) 18%);
+}
+
+html.dark .modal {
+  background: var(--elevated);
+  border-color: var(--line);
+  box-shadow: inset 0 1px #ffffff12, 0 34px 100px #00000070;
+}
+
+html.dark :is(.deck-scale, .deck-thumb, .thumb, .slide, .slide-stage, .modal .deck-zoom) {
+  --paper: #f7f5f0;
+  --surface: #ffffff;
+  --sunken: #eeede8;
+  --line: #d7d4cc;
+  --ink: #252a38;
+  --muted: #677181;
+  --blue: #7e8fae;
+  --soft: #e7ecf3;
+  color: var(--ink);
+}
+
+html.dark #content .deck-row.is-missing .deck-thumb {
+  opacity: 1;
+}
+
+html.dark #content .deck-thumb {
+  border-color: var(--line);
+  box-shadow: 0 0 0 1px #0000002b;
+}
+
+html.dark #toast {
+  background: var(--ink);
+  color: var(--base);
+}

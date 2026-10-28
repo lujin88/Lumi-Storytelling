@@ -1,0 +1,348 @@
+[
+  {
+    "direction": "current",
+    "width": 1905,
+    "page": "step-1",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "current",
+    "width": 1905,
+    "page": "step-2",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "current",
+    "width": 1905,
+    "page": "step-3",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "current",
+    "width": 1905,
+    "page": "step-5",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "current",
+    "width": 1905,
+    "page": "settings",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "current",
+    "width": 390,
+    "page": "step-1",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "current",
+    "width": 390,
+    "page": "step-2",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "current",
+    "width": 390,
+    "page": "step-3",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "current",
+    "width": 390,
+    "page": "step-5",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "current",
+    "width": 390,
+    "page": "settings",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "A",
+    "width": 1905,
+    "page": "step-1",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "A",
+    "width": 1905,
+    "page": "step-2",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "A",
+    "width": 1905,
+    "page": "step-3",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "A",
+    "width": 1905,
+    "page": "step-5",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "A",
+    "width": 1905,
+    "page": "settings",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "A",
+    "width": 1905,
+    "measured": {
+      "connectButton": {
+        "color": "rgb(241, 238, 231)",
+        "background": "rgb(34, 33, 30)",
+        "border": "rgb(90, 87, 80)",
+        "opacity": "1",
+        "contrast": 13.895411420824036
+      },
+      "deckTitleHover": {
+        "color": "rgb(241, 238, 231)",
+        "background": "rgb(29, 28, 25)",
+        "border": "rgb(241, 238, 231)",
+        "opacity": "1",
+        "contrast": 14.70638623367807
+      },
+      "thumbnailTitle": {
+        "color": "rgb(37, 42, 56)",
+        "background": "rgb(247, 245, 240)",
+        "border": "rgb(37, 42, 56)",
+        "opacity": "1",
+        "contrast": 13.138827691682755
+      },
+      "mutedText": {
+        "color": "rgb(184, 178, 166)",
+        "background": "rgb(24, 23, 21)",
+        "border": "rgb(184, 178, 166)",
+        "opacity": "1",
+        "contrast": 8.49398478268718
+      }
+    }
+  },
+  {
+    "direction": "A",
+    "width": 390,
+    "page": "step-1",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "A",
+    "width": 390,
+    "page": "step-2",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "A",
+    "width": 390,
+    "page": "step-3",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "A",
+    "width": 390,
+    "page": "step-5",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "A",
+    "width": 390,
+    "page": "settings",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "A",
+    "width": 390,
+    "measured": {
+      "connectButton": {
+        "color": "rgb(241, 238, 231)",
+        "background": "rgb(34, 33, 30)",
+        "border": "rgb(90, 87, 80)",
+        "opacity": "1",
+        "contrast": 13.895411420824036
+      },
+      "deckTitleHover": {
+        "color": "rgb(241, 238, 231)",
+        "background": "rgb(29, 28, 25)",
+        "border": "rgb(241, 238, 231)",
+        "opacity": "1",
+        "contrast": 14.70638623367807
+      },
+      "thumbnailTitle": {
+        "color": "rgb(37, 42, 56)",
+        "background": "rgb(247, 245, 240)",
+        "border": "rgb(37, 42, 56)",
+        "opacity": "1",
+        "contrast": 13.138827691682755
+      },
+      "mutedText": {
+        "color": "rgb(184, 178, 166)",
+        "background": "rgb(24, 23, 21)",
+        "border": "rgb(184, 178, 166)",
+        "opacity": "1",
+        "contrast": 8.49398478268718
+      }
+    }
+  },
+  {
+    "direction": "B",
+    "width": 1905,
+    "page": "step-1",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "B",
+    "width": 1905,
+    "page": "step-2",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "B",
+    "width": 1905,
+    "page": "step-3",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "B",
+    "width": 1905,
+    "page": "step-5",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "B",
+    "width": 1905,
+    "page": "settings",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "B",
+    "width": 1905,
+    "measured": {
+      "connectButton": {
+        "color": "rgb(238, 244, 249)",
+        "background": "rgb(24, 35, 46)",
+        "border": "rgb(70, 88, 106)",
+        "opacity": "1",
+        "contrast": 14.365346670129568
+      },
+      "deckTitleHover": {
+        "color": "rgb(238, 244, 249)",
+        "background": "rgb(32, 51, 74)",
+        "border": "rgb(238, 244, 249)",
+        "opacity": "1",
+        "contrast": 11.59461668316637
+      },
+      "thumbnailTitle": {
+        "color": "rgb(37, 42, 56)",
+        "background": "rgb(247, 245, 240)",
+        "border": "rgb(37, 42, 56)",
+        "opacity": "1",
+        "contrast": 13.138827691682755
+      },
+      "mutedText": {
+        "color": "rgb(171, 185, 197)",
+        "background": "rgb(17, 24, 32)",
+        "border": "rgb(171, 185, 197)",
+        "opacity": "1",
+        "contrast": 8.914333335095808
+      }
+    }
+  },
+  {
+    "direction": "B",
+    "width": 390,
+    "page": "step-1",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "B",
+    "width": 390,
+    "page": "step-2",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "B",
+    "width": 390,
+    "page": "step-3",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "B",
+    "width": 390,
+    "page": "step-5",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "B",
+    "width": 390,
+    "page": "settings",
+    "overflow": 0,
+    "errors": []
+  },
+  {
+    "direction": "B",
+    "width": 390,
+    "measured": {
+      "connectButton": {
+        "color": "rgb(238, 244, 249)",
+        "background": "rgb(24, 35, 46)",
+        "border": "rgb(70, 88, 106)",
+        "opacity": "1",
+        "contrast": 14.365346670129568
+      },
+      "deckTitleHover": {
+        "color": "rgb(238, 244, 249)",
+        "background": "rgb(32, 51, 74)",
+        "border": "rgb(238, 244, 249)",
+        "opacity": "1",
+        "contrast": 11.59461668316637
+      },
+      "thumbnailTitle": {
+        "color": "rgb(37, 42, 56)",
+        "background": "rgb(247, 245, 240)",
+        "border": "rgb(37, 42, 56)",
+        "opacity": "1",
+        "contrast": 13.138827691682755
+      },
+      "mutedText": {
+        "color": "rgb(171, 185, 197)",
+        "background": "rgb(17, 24, 32)",
+        "border": "rgb(171, 185, 197)",
+        "opacity": "1",
+        "contrast": 8.914333335095808
+      }
+    }
+  }
+]

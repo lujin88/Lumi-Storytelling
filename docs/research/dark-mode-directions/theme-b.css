@@ -1,0 +1,145 @@
+/* Design evidence only. Injected at capture time; not product code. */
+html.dark {
+  --paper: #111820;
+  --surface: #18232e;
+  --sunken: #141d26;
+  --line: #46586a;
+  --ink: #eef4f9;
+  --muted: #abb9c5;
+  --blue: #91b7e5;
+  --soft: #20334a;
+  --selected: #20334a;
+  --info: #b0cff2;
+  --info-line: #4a6786;
+  --ok: #8fc7ad;
+  --ok-line: #3f6a58;
+  --warn: #e4bf78;
+  --warn-line: #745a2d;
+  --danger: #f0a1a1;
+  --danger-line: #7b4248;
+}
+
+html.dark body {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+html.dark #sidebar {
+  background: var(--sunken);
+  border-color: var(--line);
+}
+
+html.dark #sidebar .nav button.active,
+html.dark #sidebar .bottomnav button.active {
+  background: var(--soft);
+  color: var(--ink);
+  box-shadow: inset 3px 0 0 var(--info);
+}
+
+html.dark button.secondary,
+html.dark #content .provider-connect.secondary,
+html.dark #content .review-go,
+html.dark .modal button.secondary {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+
+html.dark button.secondary:hover,
+html.dark #content .provider-connect.secondary:hover,
+html.dark #content .review-go:hover,
+html.dark .modal button.secondary:hover {
+  background: var(--soft) !important;
+  border-color: var(--blue) !important;
+}
+
+html.dark button:disabled,
+html.dark #content .provider-connect:disabled {
+  opacity: 1;
+  background: var(--sunken) !important;
+  border-color: var(--line) !important;
+  color: var(--muted) !important;
+}
+
+html.dark .primary,
+html.dark button.primary {
+  background: var(--ink) !important;
+  border-color: var(--ink) !important;
+  color: var(--paper) !important;
+}
+
+html.dark input,
+html.dark textarea,
+html.dark select,
+html.dark #footer .composer {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+html.dark ::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+html.dark #content .choice,
+html.dark #content .template-chip {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+
+html.dark #content .choice:hover,
+html.dark #content .template-chip:hover,
+html.dark #content .pkg-item:hover {
+  background: var(--sunken) !important;
+}
+
+html.dark #content .choice.on,
+html.dark #content .choice[aria-pressed="true"],
+html.dark #content .choice.selected,
+html.dark #content .template-chip.on,
+html.dark #content .template-chip[aria-pressed="true"],
+html.dark #content .template-chip.selected {
+  background: var(--soft) !important;
+  border-color: var(--blue) !important;
+}
+
+html.dark #content .deck-title:hover,
+html.dark #content .deck-points li[data-deck-field]:hover {
+  background: var(--soft);
+  color: var(--ink);
+}
+
+html.dark #content .deck-title:focus,
+html.dark #content .deck-points li[data-deck-field]:focus {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 0 0 2px var(--blue);
+}
+
+html.dark #content .deck-row.is-missing .deck-thumb {
+  opacity: 1;
+}
+
+html.dark :is(.deck-scale, .deck-thumb, .thumb, .slide, .slide-stage, .modal .deck-zoom) {
+  --paper: #f7f5f0;
+  --surface: #ffffff;
+  --sunken: #eeede8;
+  --line: #d7d4cc;
+  --ink: #252a38;
+  --muted: #677181;
+  --blue: #7e8fae;
+  --soft: #e7ecf3;
+  color: var(--ink);
+}
+
+html.dark #content .deck-thumb {
+  border-color: var(--line);
+  box-shadow: 0 0 0 1px #00000038;
+}
+
+html.dark #toast {
+  background: var(--ink);
+  color: var(--paper);
+}

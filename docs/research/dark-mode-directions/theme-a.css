@@ -1,0 +1,143 @@
+/* Design evidence only. Injected at capture time; not product code. */
+html.dark {
+  --paper: #181715;
+  --surface: #22211e;
+  --sunken: #1d1c19;
+  --line: #5a5750;
+  --ink: #f1eee7;
+  --muted: #b8b2a6;
+  --blue: #a8b9d8;
+  --soft: #2b313b;
+  --selected: #2b313b;
+  --info: #b8cae8;
+  --info-line: #53627a;
+  --ok: #a7c99e;
+  --ok-line: #506a4c;
+  --warn: #e0c080;
+  --warn-line: #6e5a31;
+  --danger: #e6a09b;
+  --danger-line: #744542;
+}
+
+html.dark body,
+html.dark #sidebar {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+html.dark #sidebar {
+  border-color: var(--line);
+}
+
+html.dark #sidebar .nav button.active,
+html.dark #sidebar .bottomnav button.active {
+  background: var(--soft);
+  color: var(--ink);
+}
+
+html.dark button.secondary,
+html.dark #content .provider-connect.secondary,
+html.dark #content .review-go,
+html.dark .modal button.secondary {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+
+html.dark button.secondary:hover,
+html.dark #content .provider-connect.secondary:hover,
+html.dark #content .review-go:hover,
+html.dark .modal button.secondary:hover {
+  background: var(--sunken) !important;
+}
+
+html.dark button:disabled,
+html.dark #content .provider-connect:disabled {
+  opacity: 1;
+  background: var(--sunken) !important;
+  border-color: var(--line) !important;
+  color: var(--muted) !important;
+}
+
+html.dark .primary,
+html.dark button.primary {
+  background: var(--ink) !important;
+  border-color: var(--ink) !important;
+  color: var(--paper) !important;
+}
+
+html.dark input,
+html.dark textarea,
+html.dark select,
+html.dark #footer .composer {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+html.dark ::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+html.dark #content .choice,
+html.dark #content .template-chip {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+
+html.dark #content .choice:hover,
+html.dark #content .template-chip:hover,
+html.dark #content .pkg-item:hover {
+  background: var(--sunken) !important;
+}
+
+html.dark #content .choice.on,
+html.dark #content .choice[aria-pressed="true"],
+html.dark #content .choice.selected,
+html.dark #content .template-chip.on,
+html.dark #content .template-chip[aria-pressed="true"],
+html.dark #content .template-chip.selected {
+  background: var(--soft) !important;
+  border-color: var(--blue) !important;
+}
+
+html.dark #content .deck-title:hover,
+html.dark #content .deck-points li[data-deck-field]:hover {
+  background: var(--sunken);
+  color: var(--ink);
+}
+
+html.dark #content .deck-title:focus,
+html.dark #content .deck-points li[data-deck-field]:focus {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 0 0 2px var(--blue);
+}
+
+html.dark #content .deck-row.is-missing .deck-thumb {
+  opacity: 1;
+}
+
+html.dark :is(.deck-scale, .deck-thumb, .thumb, .slide, .slide-stage, .modal .deck-zoom) {
+  --paper: #f7f5f0;
+  --surface: #ffffff;
+  --sunken: #eeede8;
+  --line: #d7d4cc;
+  --ink: #252a38;
+  --muted: #677181;
+  --blue: #7e8fae;
+  --soft: #e7ecf3;
+  color: var(--ink);
+}
+
+html.dark #content .deck-thumb {
+  border-color: var(--line);
+  box-shadow: 0 0 0 1px #00000024;
+}
+
+html.dark #toast {
+  background: var(--ink);
+  color: var(--paper);
+}
