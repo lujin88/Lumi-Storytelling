@@ -7,7 +7,7 @@ created: 2026-10-28
 
 # Dark mode directions C and D
 
-This is a second direction round after Lu rejected A and B as lacking texture and reading as one block of black. The renders use current `main` at `ee452b7` plus the merge commit on this design branch. Proposal CSS is injected only for capture; no production file changes are included.
+This is a second direction round after Lu rejected A and B as lacking texture and reading as one block of black. The renders use current `main` at `b4f827c` plus the merge commit on this design branch. Proposal CSS is injected only for capture; no production file changes are included.
 
 Both directions follow the same structural rule from Apple Dark Mode and the cited product screens: the environment is the darkest plane, navigation and content are separate middle planes, and cards / dialogs are the lightest plane. Neither uses near-black. The design stays flat; depth comes from adjacent luminance, 1px hairlines and a restrained top highlight.
 
