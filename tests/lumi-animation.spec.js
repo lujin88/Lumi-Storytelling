@@ -131,19 +131,87 @@ test('the looping WebP fallbacks repeat forever', () => {
   }
 });
 
-test('the download page loops the cheer clip and keeps it', async ({ page }) => {
+test('the download page plays the cheer clip once, holds frame 0 for 4 s, then plays it again', async ({ page }) => {
+  // design-system/motion.md, "Download-page cheer rhythm": WebM plays once, holds on frame 0 for
+  // motion-delay-cheer-replay (4000ms), then replays. Two full cycles at 4x speed.
+  test.setTimeout(60_000);
   const errors = await openApp(page);
   await page.click('[data-action="loadSample"]');
   await page.click('#sidebar [data-page="publish"]');
   const video = page.locator('video[data-lumi-video]');
   await expect(video).toHaveAttribute('src', 'assets/lumi/cheer.webm');
   await expect(video).toBeVisible();
-  expect(await video.evaluate((v) => v.loop)).toBe(true);
-  await page.waitForTimeout(5000);
+  expect(await video.evaluate((v) => v.loop)).toBe(false);
+  const holds = await video.evaluate(async (v) => {
+    if (v.readyState < 1) await new Promise((res) => v.addEventListener('loadedmetadata', res, { once: true }));
+    v.playbackRate = 4;
+    const out = [];
+    for (let i = 0; i < 2; i++) {
+      await new Promise((res) => v.addEventListener('ended', res, { once: true }));
+      await new Promise((res) => v.addEventListener('seeked', res, { once: true }));
+      const from = performance.now(), at = { t: v.currentTime, paused: v.paused, shown: v.getClientRects().length > 0 };
+      await new Promise((res) => v.addEventListener('play', res, { once: true }));
+      out.push({ ...at, ms: performance.now() - from });
+    }
+    return out;
+  });
+  for (const h of holds) {
+    expect(h).toMatchObject({ t: 0, paused: true, shown: true });
+    expect(h.ms).toBeGreaterThanOrEqual(3990);
+    expect(h.ms).toBeLessThan(4400);
+  }
   expect(await page.evaluate(() => lumiAnim.state)).toBe('cheer');
-  await expect(video).toBeVisible();
-  expect(await video.evaluate((v) => v.ended)).toBe(false);
   expect(errors).toEqual([]);
+});
+
+test('a hidden tab stops the cheer replay and waits a full hold after it comes back', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+  const video = page.locator('video[data-lumi-video][src="assets/lumi/cheer.webm"]');
+  await expect(video).toBeVisible();
+  await expect.poll(() => video.evaluate((v) => v.currentTime)).toBeGreaterThan(0);
+  const setHidden = (hidden) => page.evaluate((h) => {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => h });
+    document.dispatchEvent(new Event('visibilitychange'));
+  }, hidden);
+  await setHidden(true);
+  await expect.poll(() => video.evaluate((v) => [v.paused, v.currentTime])).toEqual([true, 0]);
+  // Hidden for longer than the hold: still no replay.
+  await page.waitForTimeout(4500);
+  expect(await video.evaluate((v) => v.paused)).toBe(true);
+  const back = await page.evaluate(() => performance.now());
+  await setHidden(false);
+  const played = await video.evaluate((v) => new Promise((res) => v.addEventListener('play', () => res(performance.now()), { once: true })));
+  expect(played - back).toBeGreaterThanOrEqual(3990);
+});
+
+test('the cheer hold reads its token; leaving the page drops it and coming back plays it again', async ({ page }) => {
+  await openApp(page);
+  // A shorter token proves the hold is read from --motion-delay-cheer-replay, not a fixed 4 s.
+  await page.evaluate(() => document.documentElement.style.setProperty('--motion-delay-cheer-replay', '1000ms'));
+  await page.click('[data-action="loadSample"]');
+  await page.click('#sidebar [data-page="publish"]');
+  const video = page.locator('video[data-lumi-video][src="assets/lumi/cheer.webm"]');
+  await expect(video).toBeVisible();
+  const ms = await video.evaluate(async (v) => {
+    if (v.readyState < 1) await new Promise((res) => v.addEventListener('loadedmetadata', res, { once: true }));
+    v.playbackRate = 4;
+    await new Promise((res) => v.addEventListener('ended', res, { once: true }));
+    const from = performance.now();
+    await new Promise((res) => v.addEventListener('play', res, { once: true }));
+    return performance.now() - from;
+  });
+  expect(ms).toBeGreaterThanOrEqual(990);
+  expect(ms).toBeLessThan(2500);
+  // Leave mid-play: the clip goes with the page and its old hold timer starts nothing.
+  await page.click('#sidebar [data-page="settings"]');
+  await expect(video).toHaveCount(0);
+  await page.waitForTimeout(1500);
+  // Coming back is a new visit (like the wave on step 1): it plays at once, then holds again.
+  await page.click('#sidebar [data-page="publish"]');
+  await expect(video).toBeVisible();
+  await expect.poll(() => video.evaluate((v) => !v.paused && v.currentTime > 0)).toBe(true);
+  await expect(video).toHaveCount(1);
 });
 
 test('Lumi thinks while the user types, then goes back to waving on step 1', async ({ page }) => {
@@ -608,7 +676,7 @@ test('without assets/lumi/ the download page still bounces in place and never sc
 });
 
 test('the cheer clip on the download page stays inside the viewport and the page does not scroll sideways', async ({ page }) => {
-  // Five widths, each reading one loop at half speed (8 s) after waiting for the first restart.
+  // Five widths, each reading one whole play at half speed (8 s) from frame 0.
   test.setTimeout(120_000);
   // Served over http so the clip frames can be read back from a canvas.
   // 1500-1599 has the big stage with a 40px gutter, 1600 and up a 64px one.
@@ -626,30 +694,27 @@ test('the cheer clip on the download page stays inside the viewport and the page
       if (v.readyState < 2) await new Promise((res) => v.addEventListener('loadeddata', res, { once: true }));
       const c = document.createElement('canvas'), x = c.getContext('2d', { willReadFrequently: true });
       c.width = v.videoWidth; c.height = v.videoHeight;
+      // Restart from frame 0 and read until the play ends (the clip plays once, then holds).
+      v.pause();
+      if (v.currentTime !== 0) { v.currentTime = 0; await new Promise((res) => v.addEventListener('seeked', res, { once: true })); }
       v.playbackRate = 0.5;
-      let max = -1, frames = 0, last = -1, wraps = 0;
-      await new Promise((done) => {
-        const read = (now, meta) => {
-          // Read from the first loop restart to the next one: exactly one loop.
-          if (meta.mediaTime < last) wraps++;
-          last = meta.mediaTime;
-          if (wraps >= 2) return done();
-          if (wraps === 1) {
-            x.clearRect(0, 0, c.width, c.height); x.drawImage(v, 0, 0);
-            const d = x.getImageData(0, 0, c.width, c.height).data;
-            for (let i = 3; i < d.length; i += 4) if (d[i] > 128) max = Math.max(max, ((i - 3) / 4) % c.width);
-            frames++;
-          }
-          v.requestVideoFrameCallback(read);
-        };
-        v.requestVideoFrameCallback(read);
-      });
+      let max = -1, frames = 0, ended = false;
+      const read = () => {
+        x.clearRect(0, 0, c.width, c.height); x.drawImage(v, 0, 0);
+        const d = x.getImageData(0, 0, c.width, c.height).data;
+        for (let i = 3; i < d.length; i += 4) if (d[i] > 128) max = Math.max(max, ((i - 3) / 4) % c.width);
+        frames++;
+        if (!ended) v.requestVideoFrameCallback(read);
+      };
+      v.requestVideoFrameCallback(read);
+      await Promise.all([v.play(), new Promise((res) => v.addEventListener('ended', res, { once: true }))]);
+      ended = true;
       // object-fit: contain, and the box has the clip's aspect ratio.
       const b = v.getBoundingClientRect();
       return { right: b.x + (max + 1) * (b.width / c.width), frames };
     });
     // cheer.webm has 97 frames at 24 fps.
-    expect(frames, `${w} frames read in one loop`).toBeGreaterThanOrEqual(95);
+    expect(frames, `${w} frames read in one play`).toBeGreaterThanOrEqual(95);
     expect(right, `${w} Lumi's right edge`).toBeLessThanOrEqual(w - 4);
   }
 });
