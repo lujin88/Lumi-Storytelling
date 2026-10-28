@@ -23,7 +23,7 @@
 
 | 位置 | 文案 | key |
 |---|---|---|
-| 输入框下面的展开按钮 | 在哪里拿密钥，怎么填？ / How do I get a key? | `connection.key-help` |
+| 输入框下面的展开按钮 | 在哪里拿密钥，怎么填？ / Where do I get a key, and how do I add it? | `connection.key-help` |
 | 展开第 1 步（外链，末尾接 `arrow-right-up-line` 图标，和 `prov-doc` 一样，不在文案里写 ↗） | 在 {site} 创建 {provider} API 密钥 / Create a {provider} API key in {site} | `connection.get-key` |
 | 展开第 2 步 | 复制密钥，粘贴到上面的输入框，再点「连接」。 / Copy the key, paste it into the field above, then select Connect. | `connection.paste-key` |
 | 展开末尾，网页打开（`KEYS_PERSIST` 为真） | 密钥只存在这个浏览器里，调用 {provider} 时直接发给它，不经过别处，也不会导出。 / The key stays in this browser. It goes straight to {provider} when Lumi calls it, nowhere else, and is never exported. | `connection.key-stored` |
@@ -80,7 +80,7 @@
 | `connection.blocked.gemini` | 这个浏览器不支持语音识别，要用 Gemini 转写。你的 Gemini API 密钥还没连上。 | This browser can’t recognise speech, so voice input needs Gemini. Your Gemini API key isn’t connected yet. |
 | `connection.degraded.gemini` | 正在用浏览器自带的语音识别。连上 Gemini，转写更准。 | Using your browser’s speech recognition. Connect Gemini for more accurate transcripts. |
 | `connection.open-settings` | 去设置连接 {provider} | Connect {provider} in Settings |
-| `connection.key-help` | 在哪里拿密钥，怎么填？ | How do I get a key? |
+| `connection.key-help` | 在哪里拿密钥，怎么填？ | Where do I get a key, and how do I add it? |
 | `connection.get-key` | 在 {site} 创建 {provider} API 密钥 | Create a {provider} API key in {site} |
 | `connection.paste-key` | 复制密钥，粘贴到上面的输入框，再点「连接」。 | Copy the key, paste it into the field above, then select Connect. |
 | `connection.key-stored` | 密钥只存在这个浏览器里，调用 {provider} 时直接发给它，不经过别处，也不会导出。 | The key stays in this browser. It goes straight to {provider} when Lumi calls it, nowhere else, and is never exported. |
