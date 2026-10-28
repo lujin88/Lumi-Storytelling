@@ -412,3 +412,54 @@ test('reduced motion keeps the still with the shipped clips', async ({ page }) =
   expect(await still.getAttribute('src')).not.toMatch(/assets\/lumi\/wave\./);
   expect(clipRequests).toEqual([]);
 });
+
+/** Every Lumi <img> the user can see has loaded pixels (no alt text in its place). */
+const visibleLumiWidths = (page) => page.$$eval('img[data-lumi]', (els) =>
+  els.filter((el) => el.getClientRects().length).map((el) => el.naturalWidth));
+
+test('every step shows a loaded Lumi image, not its alt text', async ({ page }) => {
+  await openApp(page);
+  await page.click('[data-action="loadSample"]');
+  for (const step of ['dump', 'story', 'build', 'defend', 'publish']) {
+    await page.click(`#sidebar [data-page="${step}"]`);
+    await expect.poll(() => visibleLumiWidths(page), { message: step }).not.toContainEqual(0);
+  }
+});
+
+test('a clip whose files do not load falls back to the still, on step 1 and the download page', async ({ page }) => {
+  // Same as opening index.html without assets/lumi/ next to it.
+  await page.context().route(/assets\/lumi\//, (route) => route.abort());
+  const webpFailed = (name) => page.waitForEvent('requestfailed', (r) => r.url().endsWith(`assets/lumi/${name}.webp`));
+  let failed = webpFailed('wave');
+  await openApp(page);
+  await failed;
+  await page.click('[data-action="loadSample"]');
+  for (const [step, clip] of [['dump', 'wave'], ['publish', 'cheer']]) {
+    if (step === 'publish') failed = webpFailed(clip);
+    await page.click(`#sidebar [data-page="${step}"]`);
+    await failed;
+    const lumi = page.locator('#content img[data-lumi="clip"]');
+    await expect(lumi, step).toBeVisible();
+    await expect.poll(() => lumi.evaluate((el) => el.naturalWidth), { message: step }).toBeGreaterThan(0);
+    await expect(page.locator('video[data-lumi-video]')).toHaveCount(0);
+  }
+});
+
+test('the download page Lumi takes the same box whether the clip plays or the still falls back', async ({ browser }) => {
+  const box = async (blocked) => {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    if (blocked) await page.context().route(/assets\/lumi\//, (route) => route.abort());
+    await openApp(page);
+    await page.click('#sidebar [data-page="publish"]');
+    const media = page.locator(blocked ? '#content .pub-art img[data-lumi="clip"]' : '#content .pub-art video[data-lumi-video][src="assets/lumi/cheer.webm"]');
+    await expect(media).toBeVisible();
+    if (blocked) await expect.poll(() => media.evaluate((el) => el.getAttribute('src').startsWith('data:'))).toBe(true);
+    const size = await media.evaluate((el) => [el.offsetWidth, el.offsetHeight, el.parentElement.offsetWidth, el.parentElement.offsetHeight]);
+    await page.close();
+    return size;
+  };
+  const clip = await box(false);
+  const still = await box(true);
+  expect(still).toEqual(clip);
+  expect(clip[0]).toBe(240);
+});
