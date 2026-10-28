@@ -249,6 +249,89 @@ test('the cheer clip pauses on frame 0 out of view and waits a full hold when it
   expect(played - back).toBeGreaterThanOrEqual(990);
 });
 
+test('reduced motion switched on during the cheer hold shows the still and never replays', async ({ page }) => {
+  // motion.md, cheer-reduced: no timer or replay, and react live when the media query changes.
+  test.setTimeout(60_000);
+  await openApp(page);
+  await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+  const video = page.locator('video[data-lumi-video][src="assets/lumi/cheer.webm"]');
+  const still = page.locator('img[data-lumi="clip"]').first();
+  await expect(video).toBeVisible();
+  // Wait for the first play to end and the hold on frame 0 to begin.
+  await video.evaluate(async (v) => {
+    if (v.readyState < 1) await new Promise((res) => v.addEventListener('loadedmetadata', res, { once: true }));
+    v.playbackRate = 4;
+    await new Promise((res) => v.addEventListener('ended', res, { once: true }));
+    await new Promise((res) => v.addEventListener('seeked', res, { once: true }));
+  });
+  await video.evaluate((v) => { window.__cheerPlays = 0; v.addEventListener('play', () => window.__cheerPlays++); });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(video).toBeHidden();
+  await expect(still).toBeVisible();
+  await expect(still).not.toHaveAttribute('src', /assets\/lumi\/cheer\./);
+  // Longer than the 4 s hold: the timer that was running when reduce came on starts nothing.
+  await page.waitForTimeout(4500);
+  expect(await video.evaluate((v) => v.paused)).toBe(true);
+  expect(await page.evaluate(() => window.__cheerPlays)).toBe(0);
+  await expect(video).toBeHidden();
+  await expect(still).toBeVisible();
+  // Reduce off again: the clip comes back on frame 0 and waits one full hold before it plays.
+  await page.evaluate(() => document.documentElement.style.setProperty('--motion-delay-cheer-replay', '1000ms'));
+  const back = await page.evaluate(() => performance.now());
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await expect(video).toBeVisible();
+  const played = await video.evaluate((v) => new Promise((res) => v.addEventListener('play', () => res(performance.now()), { once: true })));
+  expect(played - back).toBeGreaterThanOrEqual(990);
+  expect(await page.evaluate(() => window.__cheerPlays)).toBe(1);
+});
+
+test('reduced motion switched on while the cheer plays stops it at once', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+  const video = page.locator('video[data-lumi-video][src="assets/lumi/cheer.webm"]');
+  await expect.poll(() => video.evaluate((v) => !v.paused && v.currentTime > 0)).toBe(true);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(video).toBeHidden();
+  expect(await video.evaluate((v) => v.paused)).toBe(true);
+  await expect(page.locator('img[data-lumi="clip"]').first()).toBeVisible();
+});
+
+test('the cheer hold token is read in ms or s', async ({ page }) => {
+  await openApp(page);
+  const ms = (value) => page.evaluate((v) => {
+    document.documentElement.style.setProperty('--motion-delay-cheer-replay', v);
+    return lumiAnim.holdMs('assets/lumi/cheer.webm');
+  }, value);
+  expect(await ms('4000ms')).toBe(4000);
+  expect(await ms('4s')).toBe(4000);
+  expect(await ms('1.5s')).toBe(1500);
+  expect(await page.evaluate(() => lumiAnim.holdMs('assets/lumi/wave.webm'))).toBe(0);
+});
+
+test('leaving the download page clears the cheer hold timer', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+  const video = page.locator('video[data-lumi-video][src="assets/lumi/cheer.webm"]');
+  await expect(video).toBeVisible();
+  await video.evaluate(async (v) => {
+    if (v.readyState < 1) await new Promise((res) => v.addEventListener('loadedmetadata', res, { once: true }));
+    v.playbackRate = 4;
+    await new Promise((res) => v.addEventListener('ended', res, { once: true }));
+    await new Promise((res) => v.addEventListener('seeked', res, { once: true }));
+  });
+  // In the hold: a timer is pending. Record which timers get cleared while leaving.
+  const timer = await page.evaluate(() => {
+    window.__cleared = [];
+    const clear = window.clearTimeout;
+    window.clearTimeout = (id) => { window.__cleared.push(id); return clear(id); };
+    return lumiAnim.holdTimer;
+  });
+  expect(timer).toBeTruthy();
+  await page.click('#sidebar [data-page="settings"]');
+  await expect(video).toHaveCount(0);
+  expect(await page.evaluate(() => window.__cleared)).toContain(timer);
+});
+
 test('Lumi thinks while the user types, then goes back to waving on step 1', async ({ page }) => {
   await openApp(page);
   expect(await lumiState(page)).toBe('wave');
