@@ -302,3 +302,76 @@ test('the composer answers the row that is open in the editor', async ({ page })
   await expect(page.locator('[data-action="fuFocus:2"] .f-text')).toHaveText('全自动生成。');
   expect(await page.evaluate(() => state.followups[0].text)).toBe('');
 });
+
+/** Safari fires the keydown that confirms or closes an input method after compositionend: isComposing is false, keyCode is 229. */
+const imeKeydown = (page, selector, key) => page.evaluate(([s, k]) => {
+  const e = new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true });
+  Object.defineProperty(e, 'keyCode', { value: 229 });
+  return document.querySelector(s).dispatchEvent(e);
+}, [selector, key]);
+
+test('Enter that confirms an input method does not send the composer', async ({ page }) => {
+  await openApp(page);
+  await page.click('[data-action="loadSample"]');
+  await page.click('#sidebar [data-page="story"]');
+  const before = await page.evaluate(() => JSON.stringify([state.found, state.answers]));
+  await page.click('#guideText');
+  await page.keyboard.type('IME');
+  expect(await imeKeydown(page, '#guideText', 'Enter')).toBe(true);
+  await expect(page.locator('#guideText')).toHaveValue('IME');
+  expect(await page.evaluate(() => JSON.stringify([state.found, state.answers]))).toBe(before);
+});
+
+test('Enter or Esc that closes an input method keeps the row editor open with its text', async ({ page }) => {
+  await openApp(page);
+  await page.click('[data-action="loadSample"]');
+  await page.click('#sidebar [data-page="story"]');
+  const id = await page.evaluate(() => FOUNDATION.find((f) => foundationValue(f).text).id);
+  const saved = await page.evaluate((k) => foundationValue(FOUNDATION.find((f) => f.id === k)).text, id);
+  await page.click(`[data-action="focus:${id}"]`);
+  await page.keyboard.type(' X');
+  for (const key of ['Enter', 'Escape']) {
+    expect(await imeKeydown(page, '#content .inline-edit', key), key).toBe(true);
+    await expect(page.locator('#content .inline-edit'), key).toHaveValue(saved + ' X');
+  }
+  expect(await page.evaluate((k) => foundationValue(FOUNDATION.find((f) => f.id === k)).text, id)).toBe(saved);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#content .inline-edit')).toHaveCount(0);
+});
+
+test('Enter or Esc that closes an input method stays in the slide field', async ({ page }) => {
+  await openApp(page);
+  await page.click('[data-action="loadSample"]');
+  await page.click('#sidebar [data-page="build"]');
+  const field = page.locator('#content [data-deck-field="title"]').first();
+  await field.evaluate((el) => { el.contentEditable = 'true'; el.focus(); });
+  for (const key of ['Enter', 'Escape']) {
+    expect(await imeKeydown(page, '#content [data-deck-field="title"]', key), key).toBe(true);
+    await expect(field, key).toBeFocused();
+  }
+  await page.keyboard.press('Escape');
+  await expect(field).not.toBeFocused();
+});
+
+test('Esc that closes an input method keeps a draft moved into the composer', async ({ page }) => {
+  await storyWithFollowups(page);
+  await page.click('[data-action="fuFocus:1"]');
+  await page.keyboard.type(' X');
+  await page.click('#guideText');
+  expect(await imeKeydown(page, '#guideText', 'Escape')).toBe(true);
+  await expect(page.locator('#guideText')).toHaveValue('推迟了一个季度。 X');
+});
+
+test('Enter that confirms an input method does not add the custom audience yet', async ({ page }) => {
+  await openApp(page);
+  await page.click('[data-action="loadSample"]');
+  await page.click('#sidebar [data-page="dump"]');
+  const field = page.locator('#audNew');
+  await field.fill('设计总监');
+  const before = await page.evaluate(() => JSON.stringify(audCustom()));
+  expect(await imeKeydown(page, '#audNew', 'Enter')).toBe(true);
+  await expect(field).toHaveValue('设计总监');
+  expect(await page.evaluate(() => JSON.stringify(audCustom()))).toBe(before);
+  await field.press('Enter');
+  expect(await page.evaluate(() => audCustom())).toContain('设计总监');
+});
