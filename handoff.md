@@ -2,32 +2,34 @@
 
 Project manager writes this. Current state only, one page max. Lu's decisions go in `decisions.md`.
 
-State as of 2026-10-27 20:16 UTC, main `46592f6`. GitHub bot works again; all work goes through PRs. Lu tests only at `http://127.0.0.1:4317`.
+State as of 2026-10-28 11:30 UTC, main `ef9e56c`. All work goes through PRs; PRs need the `verify` check (#74). Lu tests only at `http://127.0.0.1:4317`.
 
 ## 现在在做什么
-- Old PRs synced and passed (QA 2026-10-27 20:15): #38 `683ffc8` (https://github.com/lujin88/Lumi-Storytelling/pull/38#issuecomment-6452510953), #52 `ecba101` (https://github.com/lujin88/Lumi-Storytelling/pull/52#issuecomment-6452511383); #39 `14c95ae`, #41 `bf6ad1e`, #45 `d9a2cb0`, #61 `6650555` merged main with no conflicts. #44 flaky runs not reproduced (40/40 each, main 3x 114/114).
-- Lumi stack merge rule: merge #38, then retarget #39 to main before merging it; same for #41, #45, #61 in order. Otherwise the child lands on a dead branch. #61 base stays on #41's branch until #41 merges. #29 waits for #60.
-- Developer | then: "停用" copy in code (`gone.check` / `gone.model` / `gone.only-model`, per `docs/product-specs/copy/provider-errors.md`), new PR from main, one test per case. Then #72 follow-ups (new PR from main after #72 merges): clear the step 5 export error when a video is removed or replaced; test for the RangeError → too-large branch.
-- #56 waits for a visual review (step 1 composer runs under Lumi at 1914px); visual QA and designer are down (Codex adapter outdated, Lu to reinstall).
-- #58 waits for the Lumi stack, then the cheer "play, pause, replay" code (and `lumi-animation.spec.js:97-104`), then a rebase (QA 2026-10-27).
+- QA: merge #73 (step 5 export copy, QA and visual passed on `7eb7fb6`) once `verify` runs; #72 follows it.
+- Developer, in order: #29 (Claude drafting) merges main again (conflicts after the Lumi stack merged), then QA re-review and visual re-check of step 2 focus, then QA merges. Then #72: 390px wide modal padding to `s-4` (visual review 2026-10-28 08:24 on `2a5bdf2`), visual re-check, merge.
+- Developer, after that, each a new PR from main: 390px toast covers the input (light and dark screenshots, visual re-check) → cheer "play once, pause, replay" for WebM only, pause from `motion-delay-cheer-replay`, `lumi-animation.spec.js:97-104` updated, WebP keeps looping until #58 → fix the `lumi-animation.spec.js:181` timing flake (10 reruns under load) plus a test for "one current row after review with a Claude key".
+- Developer, later: "停用" copy in code (`gone.check` / `gone.model` / `gone.only-model`, per `docs/product-specs/copy/provider-errors.md`); #72 follow-ups after #72 merges (clear the step 5 export error when a video is removed or replaced; test for the RangeError → too-large branch).
+- Motion designer: #58 needs the frame-0 still for cheer and the WebP duration in the manifest (WebP loop count 1 is done in `dbcd3fe`). Merge order: cheer PR → #58.
+- Visual designer: dark mode A / B is up (#75). After Lu picks, step 2 "full-body Lumi vs current" draft on current main, then dark contrast fixes in the chosen direction.
 
-## 等 Lu 的事
-0. Merge the Lumi stack: #38 → (retarget #39 to main) #39 → #41 → #45 → #61, each retargeted to main before merging; #52; close #44.
-1. Merge (all passed on their current head, clean against main): #46, #60, #51; #62 then #63 (don't delete #62's branch: #66 is stacked on it); #57, #37, #49, #54, #71.
-2. Design #70 (video prompt in the edit modal): pass or changes. Then merge #70 → #73 (copy) → #72 (V3, QA 130 tests on `2a5bdf2`).
-3. Lu said "已经解锁了" (19:13); asked whether that means the bot may merge. Unanswered.
-4. Reinstall the codex ACP adapter (visual QA and designer down).
-5. Native-speaker review: 18 lines plus #73's 5 lines in `docs/product-specs/copy/native-review-2026-10-27.md` (#68, merged). Can wait until V3 fills in the format numbers.
-6. Older, status to confirm: dark mode palette (`design/dark-mode-system`); `bar.md` v2 (`research/bar-md-v2` `d2fce3a`, local only, not pushed; #50 holds v1); step 2 full-body Lumi layout (decisions 2026-10-24) before head tilt, thinking and jump are generated.
-
-## PM to-do
-- #64 (video provider plan) is superseded by the 2026-10-27 "no video provider" decision; E1–E3 done in #69, E4 cancelled. Move the rest out, then ask Lu to close it.
-- #35: check whether #57 replaces its step 1 part before asking Lu to merge.
-- #66: retarget to main after #62 merges; then review. Its copy waits for #29.
-- #52 follow-ups (not blocking): thumbnail test misses "scale too small"; scale only recomputes on window resize, switch to ResizeObserver if a layout-only change (e.g. collapsing a sidebar) is added.
-- GitHub publish path in `index.html` is unreachable (no button, no `/api/github`) and shows a raw English error on export failure. Publishing is Lu's call; if it comes back, use the reviewed export copy first (QA on #72).
-- Export size limit (2^29-24) was measured in Chrome 156 only; Safari and Firefox limits to confirm.
-- #28 stays open as an archive (decisions 2026-10-23).
+## 等 Lu 决定的事
+1. #75 dark mode: pick A ("夜间纸张", designer's pick) or B ("蓝图工作台"). Blocks the step 2 draft and the dark contrast fixes.
+2. Team instructions in Buzz Desktop are out of date (Jimeng `server/`, clip status). PM proposed the new text on 2026-10-28; waits for Lu's OK.
+3. Step 2 full-body Lumi: pass or change, once the draft is up. Head tilt, thinking and jump clips wait for it.
+4. `bar.md` v2 (`research/bar-md-v2` `d2fce3a`, local only; #50 holds v1). The full-site acceptance needs it.
+5. Native-speaker review: 18 lines plus #73's 5 lines in `docs/product-specs/copy/native-review-2026-10-27.md`.
+6. Close #64 (superseded by the 2026-10-27 "no video provider" decision) and #35 (replaced by #57, #45 and the new step 2 draft); PM to confirm the rest of #35 is covered before asking.
 
 ## 最近完成的
-- 2026-10-27 merged: #67 (Jimeng removed; server serves static files only), #43 (video upload-only; Claude writes a per-slide video prompt), #69 (key check: 15 s timeout, 404 retired, 403 region/account; QA 113 tests on `b647969`), #55 (byte ranges for static files; QA 107 tests on `b6b6b12`), #68 (video prompt and provider error copy).
+- 2026-10-28 merged: Lumi stack #38 #39 #41 #44 #45 #61 (main `ef9e56c`; QA and visual passed on each head).
+- 2026-10-28 merged: #60 (V01–V06 visual fixes), #70 (video prompt design), #74 (`verify` check on every PR).
+- 2026-10-28 merged: #46 #56 #57 #49 #54 #37 #51 #52 #62 #63.
+- 2026-10-27 merged: #67 (Jimeng removed; server serves static files only), #43, #69, #55, #68.
+- 2026-10-27 decided: no video provider; cheer plays once, pauses, replays.
+
+## 下一步
+- After #29 and #72: the site-wide fixes list (dark contrast, 390 overflow, zoom dialog font size, about 6 items), then a full-site visual acceptance against `bar.md`.
+- Release is asked only after that acceptance passes (decisions 2026-10-28).
+- #66 (help FAQ copy): review after #29 merges.
+- #28 stays open as an archive (decisions 2026-10-23).
+- Export size limit (2^29-24) was measured in Chrome 156 only; Safari and Firefox to confirm.
