@@ -19,12 +19,31 @@ The Lumi renders used in `index.html`, extracted so agents can use them as refer
 
 | Pose | Source clip | `webm` | `webp` |
 |---|---|---|---|
-| wave | Dreamina seedance2.0 mini, task `cd75c5b3` | 777,221 B | 890,402 B |
+| wave | Dreamina seedance2.0 mini, task `cd75c5b3` | 628,020 B | 817,548 B |
+| think | Dreamina seedance2.0 mini, task `2c49178f` | 659,263 B | 801,430 B |
+| cheer | Dreamina seedance2.0 mini, task `b3e4fd1f` | 897,469 B | 805,818 B |
 | jump | Dreamina seedance2.0 mini, task `caa805fc`, from `standing.webp` | 873,773 B | 887,206 B |
+
+Wave, think and cheer were re-exported from their existing transparent WebM clips
+without a paid generation. `scripts/lumi-loop-fix.mjs` eases the final six 24 fps
+frames toward the first frame, then writes transparent VP9 and animated WebP.
+The WebP selects 40 frames across the same 4-second motion, including the exact
+first and last source frames. Wave and think use WebP loop count 0 (continuous).
+Cheer uses loop count 1: it plays once and holds its last frame. The page's
+playback controller must restart it after a pause; the pause length is pending
+review. To make the one-play WebP from a continuous export, run `webpmux
+-set loop 1 cheer.webp -o cheer-once-v2.webp`; this changes loop metadata
+without re-encoding frames. Original renders in `source/` are unchanged.
+
+Decoded first/last-frame premultiplied RGBA PSNR for WebM is 95.6 dB (wave),
+92.0 dB (think) and 94.2 dB (cheer). The corresponding WebP frames decode
+identically. Both exceed the 40 dB seam target; the figures describe the seam,
+not the visual quality of every frame. Versioned working exports are kept
+locally; the app uses the stable filenames above.
 
 The jump clip is a one-shot reaction for a rising step-2 score. Its generated audio
 was removed. It is included as an asset only; page playback waits for the
 approved full-body Lumi layout. The source MP4 is not committed. The transparent
 exports use `FIT="480 -8 3" CANVAS="480 460"` so the full jump stays in frame.
 
-Other poses are tracked in separate PRs.
+The idle clip is kept unmerged (#28).
