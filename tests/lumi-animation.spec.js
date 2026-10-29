@@ -824,23 +824,41 @@ test('step 1 Lumi is 256px wide from 1280px up, 192px down to 1001px, 150px belo
   }
 });
 
-test('step 1 Lumi stands beside the option rows inside the content column and stays put when a purpose is picked', async ({ page }) => {
-  for (const w of [1905, 1512, 1280, 1279, 1001]) {
-    await page.setViewportSize({ width: w, height: 900 });
-    await page.emulateMedia({ reducedMotion: 'reduce' });
-    await openApp(page);
-    const lumiBox = () => page.locator(`${WAVE}:visible, img.intro-lumi[data-lumi]:visible`).first().boundingBox();
-    const before = await lumiBox();
-    const card = await page.locator('.first-run').boundingBox();
-    const rows = await page.locator('.dump-left .choice-row.compact').boundingBox();
-    // Right edge inside the content column; left edge close to the rows, not pushed to the far side.
-    expect(before.x + before.width, `${w}px right edge`).toBeLessThanOrEqual(card.x + card.width + 0.5);
-    expect(before.x - (rows.x + rows.width), `${w}px gap to rows`).toBeLessThanOrEqual(64);
-    // The interviewer chips wrap inside the column instead of widening it.
-    await page.locator('[data-action="purpose:interview"]').click();
-    await expect(page.locator('.aud-group')).toBeVisible();
-    expect(Math.round((await lumiBox()).x), `${w}px after picking a purpose`).toBe(Math.round(before.x));
-    expect(await sidewaysScroll(page), `${w}px sideways scroll`).toBe(0);
+// Option A (design-system/README.md, "Step 1 content + Lumi"): Lumi's right edge is the material rail's right edge and her top is the
+// first setup label's top, in both languages and before and after a purpose adds the audience rows.
+test('step 1 Lumi sits on the material rail edge, top aligned with the first setup label, and stays put when a purpose is picked', async ({ page }) => {
+  for (const [w, questions] of [[1905, 408], [1512, 408], [1280, 408], [1279, 408], [1001, 408], [1000, 408], [721, null]]) {
+    for (const lang of ['zh', 'en']) {
+      await page.setViewportSize({ width: w, height: 900 });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await openApp(page);
+      await page.evaluate((l) => { state.lang = l; render(); }, lang);
+      const at = `${w}px ${lang}`;
+      const lumiBox = () => page.locator(`${WAVE}:visible, img.intro-lumi[data-lumi]:visible`).first().boundingBox();
+      const anchors = async () => {
+        const lumi = await lumiBox();
+        const rail = await page.locator('.brief-saved').boundingBox();
+        const label = await page.locator('.setup-row .setup-label').first().boundingBox();
+        return { lumi, rail, label };
+      };
+      const check = async (when) => {
+        const { lumi, rail, label } = await anchors();
+        expect(Math.abs(lumi.x + lumi.width - (rail.x + rail.width)), `${at} ${when} right edge`).toBeLessThanOrEqual(0.5);
+        expect(Math.abs(lumi.y - label.y), `${at} ${when} top`).toBeLessThanOrEqual(0.5);
+        expect(rail.y - (lumi.y + lumi.height), `${at} ${when} above the material`).toBeGreaterThanOrEqual(24);
+        return lumi;
+      };
+      const before = await check('first view');
+      if (questions) expect(Math.round((await page.locator('.setup-row').boundingBox()).width), `${at} question column`).toBe(questions);
+      // The interviewer chips wrap inside the question column instead of widening it or moving Lumi.
+      await page.locator('[data-action="purpose:interview"]').click();
+      await expect(page.locator('.aud-group')).toBeVisible();
+      const after = await check('after picking a purpose');
+      expect([after.x, after.y], `${at} Lumi stays put`).toEqual([before.x, before.y]);
+      const chips = await page.locator('.setup-row button:visible').evaluateAll((els) => Math.max(...els.map((el) => el.getBoundingClientRect().right)));
+      expect(after.x - chips, `${at} gap to the questions`).toBeGreaterThanOrEqual(24);
+      expect(await sidewaysScroll(page), `${at} sideways scroll`).toBe(0);
+    }
   }
 });
 
