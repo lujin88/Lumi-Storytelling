@@ -792,13 +792,18 @@ test('the download page shows the preview card and Lumi on a fixed stage, same b
         await expect(page.locator('.dl-stage img[data-lumi]')).toBeHidden();
       }
       const title = await page.evaluate(() => getScenes()[0][state.lang]);
-      await expect(page.locator('.dl-preview .dl-slide h3')).toHaveText(title);
+      await expect(page.locator('.dl-preview .dl-slide .slide.cover h2')).toHaveText(title);
       await expect(page.locator('.dl-preview .dl-score strong')).toContainText('/10');
-      // Stage and media are measured in one go, relative to the stage: the page itself may still be sliding in.
+      // Measure after the page's arrive slide-in (translateY 5px to 0) has ended. Mid-slide both rects carry a
+      // fractional translate, and the media top at 1280 is exactly -13.5px from the stage, so the float noise left
+      // after subtracting them rounded to -13 one run and -14 the next. Settled values are exact, so no rounding.
+      // Waits for children too, so an entrance added later inside the page is covered; looping animations never finish.
+      await page.evaluate(() => Promise.all(document.querySelector('#content .page').getAnimations({ subtree: true })
+        .filter((a) => a.effect && a.effect.getComputedTiming().endTime !== Infinity).map((a) => a.finished.catch(() => {}))));
       const [st, media] = await page.evaluate(() => {
         const st = document.querySelector('.dl-stage').getBoundingClientRect();
         const m = [...document.querySelectorAll('.dl-stage > *')].find((el) => getComputedStyle(el).display !== 'none').getBoundingClientRect();
-        return [[st.width, st.height], [m.x - st.x, m.y - st.y, m.width, m.height]].map((a) => a.map(Math.round));
+        return [[st.width, st.height], [m.x - st.x, m.y - st.y, m.width, m.height]];
       });
       expect(st, `${w} stage`).toEqual(stage);
       if (reduce) expect(media, `${w} still vs clip`).toEqual(clipBox);
@@ -889,19 +894,125 @@ test('the cheer clip on the download page stays inside the viewport and the page
   }
 });
 
-test('the download preview title shows whole lines and stays inside the slide at every width', async ({ page }) => {
+// Visual review of de57eae (D1): the "first slide" preview is the step 3 first slide, not a separate mock-up.
+test('the download preview shows the same first slide as step 3, scaled to fit at every width', async ({ page }) => {
   await openApp(page);
-  await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
-  for (const w of [390, 1000, 1280, 1499, 1500, 1512, 1600, 1699, 1700, 1900]) {
+  await page.evaluate(() => { if (!state.sample) loadSample(); go('build'); });
+  const deckFirst = await page.locator('#content .deck-row[data-deck="0"] .deck-scale').innerHTML();
+  await page.evaluate(() => go('publish'));
+  expect(await page.locator('.dl-slide .deck-scale').innerHTML()).toBe(deckFirst);
+  expect(await page.locator('.dl-slide').getAttribute('class')).toBe(await page.evaluate(() => `dl-slide tpl-${deckSrc()}`));
+  for (const w of [390, 1000, 1280, 1499, 1512, 1700, 1900]) {
     await page.setViewportSize({ width: w, height: 900 });
-    const [lines, bottomGap] = await page.locator('.dl-slide h3').evaluate((h) => {
-      const s = h.parentElement.getBoundingClientRect(), b = h.getBoundingClientRect();
-      return [b.height / parseFloat(getComputedStyle(h).lineHeight), s.bottom - parseFloat(getComputedStyle(h.parentElement).paddingBottom) - b.bottom];
-    });
-    // A squeezed title showed half of its second line at 1512.
-    expect(Math.abs(lines - Math.round(lines)), `${w} whole lines (${lines})`).toBeLessThan(0.05);
-    expect(bottomGap, `${w} inside the slide`).toBeGreaterThanOrEqual(0);
+    // The whole 960x540 slide is shown inside the 1px border: nothing cut, nothing left over.
+    // The scale is set on resize, so wait for it to catch up with the new width.
+    await expect.poll(() => page.evaluate(() => {
+      const box = document.querySelector('.dl-slide'), slide = box.querySelector('.slide').getBoundingClientRect();
+      return Math.round(Math.abs(slide.width - box.clientWidth)) <= 1 && slide.height <= box.clientHeight + 0.5;
+    }), { message: `${w} slide fits the box` }).toBe(true);
   }
+});
+
+// Visual recheck of 1b8a7d8 (D1): same HTML is not the same slide if the step 3 text rules do not reach step 5.
+// Visual recheck of d292c30: the sample cover has no body text or number, so a second case adds both; the step 3
+// zoom modal has to match too.
+test('the step 3 thumbnail, zoom modal and download preview show the first slide with the same text styles and line breaks', async ({ page }) => {
+  await openApp(page);
+  await page.evaluate(() => { if (!state.sample) loadSample(); });
+  // Computed styles and offset sizes are the unscaled 960x540 slide, before the scale transform.
+  const read = (root) => page.evaluate((root) => {
+    const slide = document.querySelector(root + ' .slide');
+    return ['h2', 'p', '.stat'].map((sel) => {
+      const el = slide.querySelector(sel);
+      if (!el) return null;
+      const cs = getComputedStyle(el), lh = parseFloat(cs.lineHeight);
+      return { sel, fontSize: cs.fontSize, lineHeight: cs.lineHeight, marginTop: cs.marginTop, marginBottom: cs.marginBottom, width: el.offsetWidth, lines: Math.round(el.offsetHeight / lh) };
+    });
+  }, root);
+  const cases = [
+    ['sample cover', () => {}],
+    // Same slideHTML path, with a number layout and body text long enough to wrap.
+    ['cover with body text and a number', () => {
+      const s = getScenes()[0];
+      s.type = 'number';
+      s.zhp = s.enp = '交付时间从两周降到三天，评审轮次从五轮减到两轮，产品经理和研究员第一次在同一份文档里对齐了优先级。';
+    }],
+  ];
+  for (const [name, setup] of cases) {
+    await page.evaluate(setup);
+    for (const w of [390, 1000, 1512, 1905]) {
+      await page.setViewportSize({ width: w, height: 900 });
+      await page.evaluate(() => go('build'));
+      const build = await read('#content .deck-row[data-deck="0"] .deck-scale');
+      await page.click('[data-action="deckZoom:0"]');
+      await expect(page.locator('#modal .deck-zoom-scale .slide')).toBeVisible();
+      const zoom = await read('#modal .deck-zoom-scale');
+      await page.evaluate(() => $('#modal').close());
+      await page.evaluate(() => go('publish'));
+      const publish = await read('.dl-slide .deck-scale');
+      expect(build[0], `${name} ${w} step 3 first slide has a title`).not.toBeNull();
+      if (name !== 'sample cover') {
+        expect(build[1], `${name} ${w} body text`).not.toBeNull();
+        expect(build[2], `${name} ${w} number`).not.toBeNull();
+        expect(build[1].lines, `${name} ${w} body text wraps`).toBeGreaterThan(1);
+      }
+      expect(zoom, `${name} ${w} zoom modal`).toEqual(build);
+      expect(publish, `${name} ${w} download preview`).toEqual(build);
+    }
+  }
+});
+
+// QA of 4b63fac: `.modal h2` / `.modal p` were scoped with :not(:where(.slide *)) so they stop reaching the zoomed
+// slide. Dialog text outside the slide must keep exactly the dialog styles every other modal uses.
+test('text outside the slide in the zoom modal keeps the dialog styles of other modals', async ({ page }) => {
+  // Direct and nested h2, p and p.small, as dialogs use them.
+  const probe = () => page.evaluate(() => {
+    const host = document.createElement('div');
+    host.innerHTML = '<h2 data-probe>Title</h2><p data-probe>Body</p><p class="small" data-probe>Note</p><div><h2 data-probe>Nested title</h2><p data-probe>Nested body</p></div>';
+    const m = document.querySelector('#modal');
+    m.append(...host.childNodes);
+    const keys = ['fontSize', 'fontWeight', 'lineHeight', 'color', 'marginTop', 'marginBottom', 'paddingRight'];
+    return [...m.querySelectorAll('[data-probe]')].map((el) => { const cs = getComputedStyle(el); return [el.textContent, ...keys.map((k) => cs[k])]; });
+  });
+  for (const w of [390, 1512]) {
+    await page.setViewportSize({ width: w, height: 900 });
+    // Fresh page, plain modal first, so this compares against a modal that has never been wide.
+    await openApp(page);
+    await page.evaluate(() => { if (!state.sample) loadSample(); go('build'); micGuide(); });
+    await expect(page.locator('#modal h2')).toBeVisible();
+    const plain = await probe();
+    await page.evaluate(() => $('#modal').close());
+    await page.click('[data-action="deckZoom:0"]');
+    await expect(page.locator('#modal .deck-zoom-scale .slide')).toBeVisible();
+    const zoom = await probe();
+    await page.evaluate(() => $('#modal').close());
+    expect(zoom.length, `${w} probes found`).toBe(5);
+    // The dialog title rule really applies (semibold), so the comparison is not two unstyled copies.
+    expect(plain[0][2], `${w} dialog h2 weight`).toBe('600');
+    expect(zoom, `${w} zoom modal vs microphone guide modal`).toEqual(plain);
+  }
+});
+
+// The zoom modal adds `wide` (960px). It used to stay on #modal, so every later dialog opened 960px wide.
+test('a dialog opened after the zoom modal is back to its normal width', async ({ page }) => {
+  await page.setViewportSize({ width: 1512, height: 900 });
+  await openApp(page);
+  const width = () => page.evaluate(() => Math.round(document.querySelector('#modal').getBoundingClientRect().width));
+  await page.evaluate(() => { if (!state.sample) loadSample(); go('build'); micGuide(); });
+  await expect(page.locator('#modal h2')).toBeVisible();
+  const normal = await width();
+  expect(normal, 'microphone guide before any zoom').toBe(540);
+  await page.evaluate(() => $('#modal').close());
+  await page.click('[data-action="deckZoom:0"]');
+  await expect(page.locator('#modal .deck-zoom-scale .slide')).toBeVisible();
+  expect(await width(), 'zoom modal').toBe(960);
+  // Paging inside the zoom modal re-renders it and must stay wide.
+  await page.click('#modal [data-action="deckZoom:1"]');
+  expect(await width(), 'zoom modal, slide 2').toBe(960);
+  await page.evaluate(() => { $('#modal').close(); micGuide(); });
+  await expect(page.locator('#modal h2')).toBeVisible();
+  expect(await width(), 'microphone guide after zoom').toBe(normal);
+  await expect(page.locator('#modal')).not.toHaveClass(/\bwide\b/);
 });
 
 test('the download page Lumi takes the same box whether the clip plays or the still falls back', async ({ browser }) => {
@@ -920,5 +1031,80 @@ test('the download page Lumi takes the same box whether the clip plays or the st
   };
   for (const [w, h] of [[1900, 1000], [1280, 900], [390, 844]]) {
     expect(await box(w, h, true), `${w}`).toEqual(await box(w, h, false));
+  }
+});
+
+test('step 1 Lumi is 256px wide from 1280px up, 192px down to 1001px, 150px below, and clears the content around it', async ({ page }) => {
+  for (const [w, width] of [[1905, 256], [1512, 256], [1280, 256], [1279, 192], [1001, 192], [1000, 150]]) {
+    await page.setViewportSize({ width: w, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const errors = await openApp(page);
+    // The wave clip takes the still's place, so measure whichever one is on screen.
+    const shown = page.locator(`${WAVE}:visible, img.intro-lumi[data-lumi]:visible`).first();
+    await expect(shown).toBeVisible();
+    const lumi = await shown.boundingBox();
+    expect(Math.round(lumi.width), `${w}px`).toBe(width);
+    // At least 24px to the setup rows beside it and to the card above and the brief box below.
+    const box = (sel) => page.locator(sel).first().boundingBox();
+    for (const sel of ['.dump-left .choice-row', '.dump-left .choice-row.compact']) {
+      const r = await box(sel);
+      expect(lumi.x - (r.x + r.width), `${w}px ${sel}`).toBeGreaterThanOrEqual(24);
+    }
+    const card = await box('.first-run');
+    expect(lumi.y - (card.y + card.height), `${w}px card`).toBeGreaterThanOrEqual(24);
+    const brief = await box('.brief-saved');
+    expect(brief.y - (lumi.y + lumi.height), `${w}px brief`).toBeGreaterThanOrEqual(24);
+    expect(await sidewaysScroll(page), `${w}px sideways scroll`).toBe(0);
+    expect(errors).toEqual([]);
+  }
+});
+
+// Option A (design-system/README.md, "Step 1 content + Lumi"): Lumi's right edge is the material rail's right edge and her top is the
+// first setup label's top, in both languages and before and after a purpose adds the audience rows.
+test('step 1 Lumi sits on the material rail edge, top aligned with the first setup label, and stays put when a purpose is picked', async ({ page }) => {
+  for (const [w, questions] of [[1905, 408], [1512, 408], [1280, 408], [1279, 408], [1001, 408], [1000, 408], [721, null]]) {
+    for (const lang of ['zh', 'en']) {
+      await page.setViewportSize({ width: w, height: 900 });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await openApp(page);
+      await page.evaluate((l) => { state.lang = l; render(); }, lang);
+      const at = `${w}px ${lang}`;
+      const lumiBox = () => page.locator(`${WAVE}:visible, img.intro-lumi[data-lumi]:visible`).first().boundingBox();
+      const anchors = async () => {
+        const lumi = await lumiBox();
+        const rail = await page.locator('.brief-saved').boundingBox();
+        const label = await page.locator('.setup-row .setup-label').first().boundingBox();
+        return { lumi, rail, label };
+      };
+      const check = async (when) => {
+        const { lumi, rail, label } = await anchors();
+        expect(Math.abs(lumi.x + lumi.width - (rail.x + rail.width)), `${at} ${when} right edge`).toBeLessThanOrEqual(0.5);
+        expect(Math.abs(lumi.y - label.y), `${at} ${when} top`).toBeLessThanOrEqual(0.5);
+        expect(rail.y - (lumi.y + lumi.height), `${at} ${when} above the material`).toBeGreaterThanOrEqual(24);
+        return lumi;
+      };
+      const before = await check('first view');
+      if (questions) expect(Math.round((await page.locator('.setup-row').boundingBox()).width), `${at} question column`).toBe(questions);
+      // The interviewer chips wrap inside the question column instead of widening it or moving Lumi.
+      await page.locator('[data-action="purpose:interview"]').click();
+      await expect(page.locator('.aud-group')).toBeVisible();
+      const after = await check('after picking a purpose');
+      expect([after.x, after.y], `${at} Lumi stays put`).toEqual([before.x, before.y]);
+      const chips = await page.locator('.setup-row button:visible').evaluateAll((els) => Math.max(...els.map((el) => el.getBoundingClientRect().right)));
+      expect(after.x - chips, `${at} gap to the questions`).toBeGreaterThanOrEqual(24);
+      expect(await sidewaysScroll(page), `${at} sideways scroll`).toBe(0);
+    }
+  }
+});
+
+test('the download page Lumi is 60% of its first 673px size from 1272px up', async ({ page }) => {
+  for (const w of [1905, 1512, 1280]) {
+    await page.setViewportSize({ width: w, height: 1000 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await openApp(page);
+    await page.evaluate(() => { if (!state.sample) loadSample(); go('publish'); });
+    const still = page.locator('.dl-stage img[data-lumi]');
+    await expect(still).toBeVisible();
+    expect(await still.evaluate((el) => [el.offsetWidth, el.offsetHeight]), `${w}px`).toEqual([404, 407]);
   }
 });

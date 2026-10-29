@@ -7,5 +7,6 @@ A single-choice option for setup questions on step 1: 用在哪 (面试 / 汇报
 - Rest: `surface` fill, 1px `line` border.
 - Hover: `sunken` fill, border unchanged.
 - Selected: `action-bg` fill, 1px `action-line` border, `ink` text. Never an `ink` border or a grey fill.
-- Layout: an equal-width grid with gap `s-2` (3 columns for 用在哪, 4 for 讲多久); under 720px 用在哪 drops to one column, 讲多久 keeps four.
+- Label is the same 14px/500 in both rows and does not get bolder when selected; the fill and border show the selection.
+- Layout: fixed 96px columns with gap `s-2` (3 for 用在哪, 4 for 讲多久), left-aligned, never stretched to the page width; under 720px 用在哪 drops to one full-width column, 讲多久 keeps four equal columns.
 - A `<button>` with `aria-pressed`; the group has a visible label above it.
