@@ -397,3 +397,51 @@ test('Enter that confirms an input method does not add the custom audience yet',
   await field.press('Enter');
   expect(await page.evaluate(() => audCustom())).toContain('设计总监');
 });
+
+// Full-site list (2026-10-26): an empty project scored 0/10 but step 5 still said the story was ready.
+// Copy: docs/product-specs/copy/step5-not-ready.json (UX copy, 42bce62). Condition A: empty project only.
+for (const [lang, copy] of [
+  ['zh', { title: '你的故事还没准备好。', sub: '先回到「收集素材」，把你知道的写下来。', note: '还没有内容可以评分', subNo: '素材里还找不到这些问题的答案。先到「找到故事」答几个。', noteNo: '还没有答案可以评分', readyTitle: '你的故事，准备好了。', ready: '已准备' }],
+  ['en', { title: 'Your story isn’t ready yet.', sub: 'Go back to Gather and write down what you know.', note: 'Nothing to score yet', subNo: 'Your notes don’t answer the story questions yet. Answer a few in Find the story.', noteNo: 'No answers to score yet', readyTitle: 'Your story is ready.', ready: 'Ready' }],
+]) {
+  test(`step 5 says an empty project is not ready, and a story with answers is (${lang})`, async ({ page }) => {
+    const errors = await openApp(page, { storage: { 'lumi-workbench-v1': JSON.stringify({ lang }) } });
+    await page.evaluate(() => go('publish'));
+    await expect(page.locator('#content h1')).toHaveText(copy.title);
+    await expect(page.locator('#content .heading p')).toHaveText(copy.sub);
+    await expect(page.locator('.dl-score strong')).toContainText('0/10');
+    await expect(page.locator('.dl-score p')).toHaveText(copy.note);
+    await expect(page.locator('.dl-ready')).toHaveCount(0);
+    // Content with a low score is not an empty project: the normal copy, not this set (cross review, 42bce62).
+    await page.evaluate(() => { state.found[FOUNDATION[0].id] = { text: 'x' }; go('publish'); });
+    expect(await page.evaluate(() => audit().total)).toBeLessThanOrEqual(2);
+    await expect(page.locator('#content h1')).toHaveText(copy.readyTitle);
+    await expect(page.locator('.dl-score p')).not.toHaveText(copy.note);
+    await page.evaluate(() => { delete state.found[FOUNDATION[0].id]; loadSample(); go('publish'); });
+    await expect(page.locator('#content h1')).toHaveText(copy.readyTitle);
+    await expect(page.locator('.dl-score p')).not.toHaveText(copy.note);
+    await expect(page.locator('.dl-ready')).toHaveText(copy.ready);
+    expect(errors).toEqual([]);
+  });
+
+  // Condition B (UX copy, 030e711): step 1 has notes, but no story question has an answer, either typed
+  // or found in the notes. "Go back to Gather" is wrong for them; they wrote notes already.
+  test(`step 5 tells a user whose notes answer no question to go to Find the story (${lang})`, async ({ page }) => {
+    const errors = await openApp(page, { storage: { 'lumi-workbench-v1': JSON.stringify({ lang }) } });
+    await page.evaluate(() => { state.brief = '   \n '; go('publish'); });
+    await expect(page.locator('#content .heading p')).toHaveText(copy.sub); // whitespace is not notes
+    await page.evaluate(() => { state.brief = 'Hello. 你好。'; go('publish'); });
+    expect(await page.evaluate(() => openFoundations().length === FOUNDATION.length)).toBe(true);
+    await expect(page.locator('#content h1')).toHaveText(copy.title);
+    await expect(page.locator('#content .heading p')).toHaveText(copy.subNo);
+    await expect(page.locator('.dl-score strong')).toContainText('0/10');
+    await expect(page.locator('.dl-score p')).toHaveText(copy.noteNo);
+    await expect(page.locator('.dl-ready')).toHaveCount(0);
+    // One answer from the notes alone makes it a story with content: the normal copy.
+    await page.evaluate((notes) => { state.brief = 'Hello. ' + notes; go('publish'); }, NOTES);
+    expect(await page.evaluate(() => openFoundations().length < FOUNDATION.length)).toBe(true);
+    await expect(page.locator('#content h1')).toHaveText(copy.readyTitle);
+    await expect(page.locator('.dl-score p')).not.toHaveText(copy.noteNo);
+    expect(errors).toEqual([]);
+  });
+}
