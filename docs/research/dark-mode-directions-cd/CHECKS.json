@@ -1,0 +1,472 @@
+{
+  "source": {
+    "app": "index.html",
+    "theme": "theme-d.css"
+  },
+  "captures": [
+    {
+      "theme": "light",
+      "page": "step-1",
+      "width": 390,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "page": "step-2",
+      "width": 390,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "page": "step-3",
+      "width": 390,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "page": "step-5",
+      "width": 390,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "page": "settings",
+      "width": 390,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "page": "step-1",
+      "width": 390,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "page": "step-2",
+      "width": 390,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "page": "step-3",
+      "width": 390,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "page": "step-5",
+      "width": 390,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "page": "settings",
+      "width": 390,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "page": "step-1",
+      "width": 1512,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "page": "step-2",
+      "width": 1512,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "page": "step-3",
+      "width": 1512,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "page": "step-5",
+      "width": 1512,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "page": "settings",
+      "width": 1512,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "page": "step-1",
+      "width": 1512,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "page": "step-2",
+      "width": 1512,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "page": "step-3",
+      "width": 1512,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "page": "step-5",
+      "width": 1512,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "page": "settings",
+      "width": 1512,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "page": "step-1",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "page": "step-2",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "page": "step-3",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "page": "step-5",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "page": "settings",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "page": "step-1",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "page": "step-2",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "page": "step-3",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "page": "step-5",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "page": "settings",
+      "width": 1905,
+      "overflow": 0,
+      "errors": []
+    }
+  ],
+  "tokens": {
+    "base": "#211e1d",
+    "rail": "#292523",
+    "paper": "#302b29",
+    "surface": "#393330",
+    "elevated": "#433c38",
+    "line": "#998d85",
+    "ink": "#f5f0eb",
+    "muted": "#c7bdb6",
+    "blue": "#adbad1",
+    "soft": "#3d424d",
+    "info": "#c2cde0",
+    "ok": "#b7d2ac",
+    "warn": "#e8c987",
+    "danger": "#efaaa4"
+  },
+  "contrast": [
+    {
+      "label": "Primary text on base",
+      "foreground": "ink",
+      "background": "base",
+      "kind": "normal text",
+      "threshold": 4.5,
+      "foregroundHex": "#f5f0eb",
+      "backgroundHex": "#211e1d",
+      "ratio": 14.62,
+      "pass": true
+    },
+    {
+      "label": "Secondary text on base",
+      "foreground": "muted",
+      "background": "base",
+      "kind": "normal text",
+      "threshold": 4.5,
+      "foregroundHex": "#c7bdb6",
+      "backgroundHex": "#211e1d",
+      "ratio": 8.98,
+      "pass": true
+    },
+    {
+      "label": "Essential boundary on base",
+      "foreground": "line",
+      "background": "base",
+      "kind": "component boundary / icon",
+      "threshold": 3,
+      "foregroundHex": "#998d85",
+      "backgroundHex": "#211e1d",
+      "ratio": 5.13,
+      "pass": true
+    },
+    {
+      "label": "Primary text on rail",
+      "foreground": "ink",
+      "background": "rail",
+      "kind": "normal text",
+      "threshold": 4.5,
+      "foregroundHex": "#f5f0eb",
+      "backgroundHex": "#292523",
+      "ratio": 13.41,
+      "pass": true
+    },
+    {
+      "label": "Secondary text on rail",
+      "foreground": "muted",
+      "background": "rail",
+      "kind": "normal text",
+      "threshold": 4.5,
+      "foregroundHex": "#c7bdb6",
+      "backgroundHex": "#292523",
+      "ratio": 8.23,
+      "pass": true
+    },
+    {
+      "label": "Essential boundary on rail",
+      "foreground": "line",
+      "background": "rail",
+      "kind": "component boundary / icon",
+      "threshold": 3,
+      "foregroundHex": "#998d85",
+      "backgroundHex": "#292523",
+      "ratio": 4.7,
+      "pass": true
+    },
+    {
+      "label": "Primary text on paper",
+      "foreground": "ink",
+      "background": "paper",
+      "kind": "normal text",
+      "threshold": 4.5,
+      "foregroundHex": "#f5f0eb",
+      "backgroundHex": "#302b29",
+      "ratio": 12.34,
+      "pass": true
+    },
+    {
+      "label": "Secondary text on paper",
+      "foreground": "muted",
+      "background": "paper",
+      "kind": "normal text",
+      "threshold": 4.5,
+      "foregroundHex": "#c7bdb6",
+      "backgroundHex": "#302b29",
+      "ratio": 7.57,
+      "pass": true
+    },
+    {
+      "label": "Essential boundary on paper",
+      "foreground": "line",
+      "background": "paper",
+      "kind": "component boundary / icon",
+      "threshold": 3,
+      "foregroundHex": "#998d85",
+      "backgroundHex": "#302b29",
+      "ratio": 4.33,
+      "pass": true
+    },
+    {
+      "label": "Primary text on surface",
+      "foreground": "ink",
+      "background": "surface",
+      "kind": "normal text",
+      "threshold": 4.5,
+      "foregroundHex": "#f5f0eb",
+      "backgroundHex": "#393330",
+      "ratio": 10.97,
+      "pass": true
+    },
+    {
+      "label": "Secondary text on surface",
+      "foreground": "muted",
+      "background": "surface",
+      "kind": "normal text",
+      "threshold": 4.5,
+      "foregroundHex": "#c7bdb6",
+      "backgroundHex": "#393330",
+      "ratio": 6.73,
+      "pass": true
+    },
+    {
+      "label": "Essential boundary on surface",
+      "foreground": "line",
+      "background": "surface",
+      "kind": "component boundary / icon",
+      "threshold": 3,
+      "foregroundHex": "#998d85",
+      "backgroundHex": "#393330",
+      "ratio": 3.85,
+      "pass": true
+    },
+    {
+      "label": "Primary text on elevated",
+      "foreground": "ink",
+      "background": "elevated",
+      "kind": "normal text",
+      "threshold": 4.5,
+      "foregroundHex": "#f5f0eb",
+      "backgroundHex": "#433c38",
+      "ratio": 9.55,
+      "pass": true
+    },
+    {
+      "label": "Secondary text on elevated",
+      "foreground": "muted",
+      "background": "elevated",
+      "kind": "normal text",
+      "threshold": 4.5,
+      "foregroundHex": "#c7bdb6",
+      "backgroundHex": "#433c38",
+      "ratio": 5.86,
+      "pass": true
+    },
+    {
+      "label": "Essential boundary on elevated",
+      "foreground": "line",
+      "background": "elevated",
+      "kind": "component boundary / icon",
+      "threshold": 3,
+      "foregroundHex": "#998d85",
+      "backgroundHex": "#433c38",
+      "ratio": 3.35,
+      "pass": true
+    },
+    {
+      "label": "Primary button text",
+      "foreground": "base",
+      "background": "ink",
+      "threshold": 4.5,
+      "kind": "normal text",
+      "foregroundHex": "#211e1d",
+      "backgroundHex": "#f5f0eb",
+      "ratio": 14.62,
+      "pass": true
+    },
+    {
+      "label": "Selected / focus icon",
+      "foreground": "blue",
+      "background": "soft",
+      "threshold": 3,
+      "kind": "icon / focus",
+      "foregroundHex": "#adbad1",
+      "backgroundHex": "#3d424d",
+      "ratio": 5.14,
+      "pass": true
+    },
+    {
+      "label": "Information text / icon",
+      "foreground": "info",
+      "background": "soft",
+      "threshold": 4.5,
+      "kind": "normal text",
+      "foregroundHex": "#c2cde0",
+      "backgroundHex": "#3d424d",
+      "ratio": 6.28,
+      "pass": true
+    },
+    {
+      "label": "Supported status",
+      "foreground": "ok",
+      "background": "elevated",
+      "threshold": 4.5,
+      "kind": "normal text",
+      "foregroundHex": "#b7d2ac",
+      "backgroundHex": "#433c38",
+      "ratio": 6.61,
+      "pass": true
+    },
+    {
+      "label": "Stated status",
+      "foreground": "warn",
+      "background": "elevated",
+      "threshold": 4.5,
+      "kind": "normal text",
+      "foregroundHex": "#e8c987",
+      "backgroundHex": "#433c38",
+      "ratio": 6.76,
+      "pass": true
+    },
+    {
+      "label": "Missing status",
+      "foreground": "danger",
+      "background": "elevated",
+      "threshold": 4.5,
+      "kind": "normal text",
+      "foregroundHex": "#efaaa4",
+      "backgroundHex": "#433c38",
+      "ratio": 5.64,
+      "pass": true
+    }
+  ],
+  "sheets": [
+    "renders/review-d-390.png",
+    "renders/review-d-1512.png",
+    "renders/review-d-1905.png"
+  ]
+}
