@@ -785,6 +785,10 @@ html.dark :is(#content .deck-thumb,.modal .deck-zoom){color:var(--ink)}
 #content .page-dump .setup-row .choice-row.compact{display:grid;grid-template-columns:repeat(4,96px);gap:var(--s-2)}
 @media(max-width:1000px){#content .dump-top{grid-template-columns:minmax(0,1fr) 160px}#content .dump-top .intro-lumi{width:150px}}
 @media(max-width:720px){#content .dump-top{grid-template-columns:1fr}#content .dump-top .intro-art{display:none}#content .page-dump .setup-row .choice-row.compact{grid-template-columns:repeat(4,minmax(0,1fr))}}
+/* bar.md 1 (visualqa #23472): purpose buttons fixed 96px, row 304px, not stretched; phone keeps the single column */
+@media(min-width:721px){#content .page-dump .setup-row .choice-row:not(.compact){display:grid;grid-template-columns:repeat(3,96px);gap:var(--s-2);max-width:none;width:max-content}#content .page-dump .setup-row .choice-row.compact{width:max-content}#content .page-dump .choice-row:not(.compact) .choice{padding:0 var(--s-2);justify-content:center;text-align:center}}
+/* visualqa #23472: at 390 the fixed footer (wraps to ~134px) covered the last 13.5px of Add a slide; reserve the live footer height + safe area */
+@media(max-width:720px){#content:has(.page-build){padding-bottom:calc(var(--footer-h,134px) + var(--s-4) + env(safe-area-inset-bottom))}}
 /* no top bar: two columns only; language lives next to the logo */
 #sidebar .brand-row{display:flex;align-items:center;justify-content:space-between;gap:var(--s-2);margin-bottom:var(--s-6);padding-right:var(--s-2)}
 #sidebar .brand-row .brand{margin-bottom:0!important}
