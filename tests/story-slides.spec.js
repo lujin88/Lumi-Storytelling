@@ -42,9 +42,12 @@ test.describe('without key: causal order, <=20-char titles, points, and neutral 
     })));
 
     expect(scenes.map((s) => s.job)).toEqual(['stake', 'challenge', 'reframe', 'decision', 'outcome', 'wisdom']);
+    // Slide 05 (outcome, index 4) has a 5-char first clause ("试点四周后"), so accumulating clauses up to <=20 chars yields the full two-clause prefix without mid-word clipping ("…研究团…")
+    expect(scenes[4].title).toBe('试点四周后，从三天缩短到四小时');
     for (const s of scenes) {
       expect(s.titleLen, `title "${s.title}" should be <= 20 chars`).toBeLessThanOrEqual(20);
       expect(s.titleLen, `title "${s.title}" should not be a tiny fragment`).toBeGreaterThanOrEqual(6);
+      expect(s.title, `title "${s.title}" in sample project should end cleanly at a clause boundary without ellipsis`).not.toContain('…');
       expect(s.points.length, `slide ${s.job} should have bullet points`).toBeGreaterThan(0);
     }
 
@@ -79,7 +82,11 @@ test.describe('without key: causal order, <=20-char titles, points, and neutral 
     await openApp(page);
     const check = (sentence, lang) => page.evaluate(([s, l]) => ruleSlideTitle(s, l), [sentence, lang]);
 
-    // First clause is only 4 chars ("研究反对") -> falls back to clipping the full sentence to 20 chars
+    // Sample slide 05 sentence: first clause is 5 chars ("试点四周后"), accumulating the second clause ("从三天缩短到四小时") gives 15 chars at the semicolon boundary instead of clipping mid-word ("试点四周后，从三天缩短到四小时；研究团…")
+    const sampleOutcome = await check('试点四周后，从三天缩短到四小时；研究团队开始复用我们的模板。', 'zh');
+    expect(sampleOutcome).toBe('试点四周后，从三天缩短到四小时');
+
+    // First clause is only 4 chars ("研究反对") and adding the second clause exceeds 20 chars -> falls back to clipping the full sentence to 20 chars
     const shortClause = await check('研究反对，他担心 AI 生成的结论完全不可信而且客户会当场质疑。', 'zh');
     expect(shortClause).not.toBe('研究反对');
     expect(shortClause.length).toBe(20);
@@ -89,8 +96,12 @@ test.describe('without key: causal order, <=20-char titles, points, and neutral 
     const goodClause = await check('研究负责人当时明确反对，他担心 AI 生成的结论不可信。', 'zh');
     expect(goodClause).toBe('研究负责人当时明确反对');
 
-    // English: first clause has only 2 words ("They objected") -> falls back to 10-word clip
-    const enShort = await check('They objected, because nobody trusted automated findings in front of enterprise clients.', 'en');
+    // English: first clause has 2 words ("After pilot"), accumulating second clause ("three days became four hours") stays <= 10 words and ends at semicolon boundary
+    const enAccum = await check('After pilot, three days became four hours; the research team started reusing our templates across every client engagement.', 'en');
+    expect(enAccum).toBe('After pilot, three days became four hours');
+
+    // English: first clause has only 2 words ("They objected") and second clause exceeds 10 words -> falls back to 10-word clip
+    const enShort = await check('They objected, because nobody in the enterprise practice trusted automated findings in front of clients.', 'en');
     expect(enShort).not.toBe('They objected');
     expect(enShort.split(/\s+/).length).toBeLessThanOrEqual(10);
 
