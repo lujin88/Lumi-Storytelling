@@ -223,6 +223,11 @@ test.describe('step 2 review and score', () => {
     await expect(page.locator('.sc-label')).toHaveText('完整度');
     await expect(page.locator('.sc-num')).toContainText('6/6');
     await expect(page.locator('.sc-note')).toHaveText('接上 key 才能评内容');
+    // keyboard: the note is a real button outside the toggle (Tab reaches it, Enter opens Settings)
+    expect(await page.locator('.sc-note').evaluate((el) => el.tagName)).toBe('BUTTON');
+    // no key = max 6: with all six answered the step-2 tip must not name a "weakest" question (threshold follows the max, not 9)
+    const tip = await page.evaluate(() => { state.page = 'story'; state.focus = null; return coachTips().join('|'); });
+    expect(tip).not.toMatch(/最弱|Weakest/);
     // Research sample 1 (keyword stuffing): must NOT show 10/10 or "充足", shows 6 questions 已填/未填
     const res1 = await page.evaluate(() => {
       const vals = ['客户。', '我发现了。', '客户很担心。', '代价很大。', '有反馈。', '下次。'];
