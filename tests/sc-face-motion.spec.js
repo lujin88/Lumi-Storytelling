@@ -26,4 +26,8 @@ test('score face stays within 1px of rest in jump/cheer/think', async ({ page })
     expect(maxUp, state).toBeGreaterThanOrEqual(0);
     expect(maxUp, state).toBeLessThanOrEqual(1.01);
   }
+  // StoryScore README: the face is a centred 27px square inside the 48px ring (visualqa #25228)
+  const box = await face.evaluate(el => { const r = el.getBoundingClientRect(), q = el.parentElement.getBoundingClientRect(); return { w: r.width, h: r.height, dx: (r.left + r.width / 2) - (q.left + q.width / 2), dy: (r.top + r.height / 2) - (q.top + q.height / 2) }; });
+  expect(box.w).toBeCloseTo(27, 0); expect(box.h).toBeCloseTo(27, 0);
+  expect(Math.abs(box.dx)).toBeLessThan(0.6); expect(Math.abs(box.dy)).toBeLessThan(1.6);
 });
