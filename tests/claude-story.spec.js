@@ -336,7 +336,7 @@ test.describe('step 4 drafts', () => {
     await expect.poll(() => page.evaluate(() => state.defend[4])).toBe(ex.expect.answers['4']);
     expect(await page.evaluate(() => state.defend[0])).toBe(ex.expect.answers['0']);
     // Questions Claude didn't answer get the rule draft (the step 2 answer).
-    expect(await page.evaluate(() => state.defend[2])).toBe(await page.evaluate(() => state.found.challenge.text));
+    expect(await page.evaluate(() => state.defend[1])).toBe(await page.evaluate(() => state.found.challenge.text));
     expect(await page.evaluate(() => [0, 4].map((i) => state.defIsDraft[i]))).toEqual([true, true]);
     await expect(page.locator('.q-card[data-def="4"] .def-ans')).toContainText('效率提升了 [待补]%');
     expect(seen).toHaveLength(1);
