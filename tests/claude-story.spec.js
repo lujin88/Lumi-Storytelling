@@ -146,7 +146,7 @@ test.describe('step 2 review and score', () => {
     await page.click('#sidebar [data-page="story"]');
     await page.evaluate(() => { state.found.challenge.text = '这件事很难，推进很慢。'; render(); });
     const rule = await storyScore(page);
-    expect(rule).toBe(9);
+    expect(rule).toBe(6);
     await expect.poll(() => page.evaluate(() => lumiAnim.state), { timeout: 5000 }).toBe('idle');
     await page.evaluate(() => { const set = lumiAnim.set.bind(lumiAnim); window.__sets = []; lumiAnim.set = (s) => { window.__sets.push(s); return set(s); }; });
     const dims = [['tension', '这件事很难'], ['decision', '代价是比纯自动慢一些'], ['pivot', '其实是步骤之间没人负责交接'], ['signal', '我放弃了全自动生成'], ['afterlife', '从三天缩短到四小时']].map(([id, quote]) => ({ id, score: 2, quote, reason: '' }));
@@ -156,7 +156,7 @@ test.describe('step 2 review and score', () => {
     expect(await page.evaluate(() => window.__sets)).not.toContain('jump');
   });
 
-  test('the card says estimate until Claude reviews, and "not specific enough yet" only where the user wrote something', async ({ page }) => {
+  test('the card says completeness until Claude reviews, and "not specific enough yet" only where the user wrote something', async ({ page }) => {
     const { errors } = await openSample(page);
     await page.click('#sidebar [data-page="story"]');
     const label = () => page.locator('.sc-label').innerText();
@@ -164,14 +164,20 @@ test.describe('step 2 review and score', () => {
       if ((await page.locator('.score-card.open').count()) === 0) await page.click('.sc-head');
       return page.evaluate(() => Object.fromEntries([...document.querySelectorAll('.sc-dims li')].map((li) => [li.querySelector('.sc-dn').textContent, li.querySelector('.sc-st').textContent])));
     };
-    // Before review, a row the user left empty: the rule score, marked as an estimate; the empty row says missing.
+    // Before review, a row the user left empty: the rule completeness lists all 6 questions with 已填 / 未填.
     await page.evaluate(() => { state.found.challenge.text = ''; render(); });
     expect(await page.evaluate(() => foundationValue(FOUNDATION.find((f) => f.id === 'challenge')).src)).toBe('missing');
-    expect(await label()).toBe('故事评分 · 预估');
+    expect(await label()).toBe('完整度');
     await expect(page.locator('.sc-note')).toHaveText('只看完整度。点「下一步」后 Lumi 会细看');
     expect(await storyScore(page)).toBe(await page.evaluate(() => ruleAudit().total));
-    expect((await levels())['冲突']).toBe('缺材料');
-    expect(Object.values(await levels())).not.toContain('还不够具体');
+    expect(await levels()).toEqual({
+      '为什么重要': '已填',
+      '真正的问题': '已填',
+      '真正的难点': '未填',
+      '关键决定': '已填',
+      '结果': '已填',
+      '学到了什么': '已填',
+    });
     // After review: Claude's score. Claude gives decision 0, but the user wrote a decision.
     await page.evaluate(() => { state.found.challenge.text = '这件事很难，推进很慢。'; render(); });
     const dims = [['tension', '这件事很难'], ['decision', ''], ['pivot', '其实是步骤之间没人负责交接'], ['signal', '我放弃了全自动生成'], ['afterlife', '从三天缩短到四小时']].map(([id, quote]) => ({ id, score: quote ? 2 : 0, quote, reason: '' }));
@@ -189,13 +195,13 @@ test.describe('step 2 review and score', () => {
     expect(await label()).toBe('Story score');
     expect((await levels())['Trade-off']).toBe('Not specific enough yet');
     await page.evaluate(() => { state.lang = 'zh'; render(); });
-    // Edited after the review: back to the rule score, marked as an estimate again.
+    // Edited after the review: back to the rule completeness.
     await page.evaluate(() => { state.found.wisdom.text += ' 下次我会先找反对的人聊。'; render(); });
-    expect(await label()).toBe('故事评分 · 预估');
+    expect(await label()).toBe('完整度');
     expect(await storyScore(page)).toBe(await page.evaluate(() => ruleAudit().total));
-    expect(Object.values(await levels())).not.toContain('还不够具体');
+    expect(Object.values(await levels())).toEqual(['已填', '已填', '已填', '已填', '已填', '已填']);
     await page.evaluate(() => { state.lang = 'en'; render(); });
-    expect(await label()).toBe('Story score · estimate');
+    expect(await label()).toBe('Completeness');
     // A row left empty: Next asks first; after "continue with gaps" Claude reviews, and that row still says missing.
     await page.evaluate(() => { state.lang = 'zh'; state.found.challenge.text = ''; state.storyReviewPass = false; render(); });
     await page.click('#footer [data-action="next"]');
@@ -208,6 +214,101 @@ test.describe('step 2 review and score', () => {
     expect(empty['冲突']).toBe('缺材料');
     expect(empty['取舍']).toBe('还不够具体');
     expect(errors).toEqual([]);
+  });
+
+  test('ruleAudit measures 6-question completeness only (已填/未填), signal checks only decision and challenge for "我", and without key shows "接上 key 才能评内容"', async ({ page }) => {
+    await openWithKeys(page, []);
+    await page.click('[data-action="firstRunSample"]');
+    await page.click('#sidebar [data-page="story"]');
+    await expect(page.locator('.sc-label')).toHaveText('完整度');
+    await expect(page.locator('.sc-num')).toContainText('6/6');
+    await expect(page.locator('.sc-note')).toHaveText('接上 key 才能评内容');
+    // keyboard: the note is a real button outside the toggle (Tab reaches it, Enter opens Settings)
+    expect(await page.locator('.sc-note').evaluate((el) => el.tagName)).toBe('BUTTON');
+    // no key = max 6: with all six answered the step-2 tip must not name a "weakest" question (threshold follows the max, not 9)
+    const tip = await page.evaluate(() => { state.page = 'story'; state.focus = null; return coachTips().join('|'); });
+    expect(tip).not.toMatch(/最弱|Weakest/);
+    // Research sample 1 (keyword stuffing): must NOT show 10/10 or "充足", shows 6 questions 已填/未填
+    const res1 = await page.evaluate(() => {
+      const vals = ['客户。', '我发现了。', '客户很担心。', '代价很大。', '有反馈。', '下次。'];
+      FOUNDATION.forEach((f, i) => { state.found[f.id] = { text: vals[i] }; });
+      state.scoreOpen = true;
+      render();
+      return {
+        au: ruleAudit(),
+        head: document.querySelector('.sc-head').innerText,
+        rows: [...document.querySelectorAll('.sc-dims li')].map((li) => [li.querySelector('.sc-dn').textContent, li.querySelector('.sc-st').textContent]),
+        bars: document.querySelectorAll('.sc-dims .sc-bar').length,
+        fixes: document.querySelectorAll('.sc-dims .sc-go').length,
+      };
+    });
+    expect(res1.au.total).toBe(6);
+    expect(res1.au.max).toBe(6);
+    expect(res1.head).not.toContain('10/10');
+    expect(res1.bars).toBe(0);
+    expect(res1.fixes).toBe(0);
+    expect(res1.rows).toEqual([
+      ['为什么重要', '已填'],
+      ['真正的问题', '已填'],
+      ['真正的难点', '已填'],
+      ['关键决定', '已填'],
+      ['结果', '已填'],
+      ['学到了什么', '已填'],
+    ]);
+    // In sample 1, "我" is only in reframe ("我发现了。"), not in decision or challenge -> signal is 1, not 2
+    expect(res1.au.signal).toBe(1);
+    // Only stake filled -> 1/6, gaps (未填) are ordered first before 已填 (bar.md #4)
+    const resStakeOnly = await page.evaluate(() => {
+      state.found = { stake: { text: '两个大客户因此推迟了续约讨论。' } };
+      state.brief = '';
+      render();
+      return {
+        au: ruleAudit(),
+        rows: [...document.querySelectorAll('.sc-dims li')].map((li) => [li.querySelector('.sc-dn').textContent, li.querySelector('.sc-st').textContent]),
+      };
+    });
+    expect(resStakeOnly.au.total).toBe(1);
+    expect(resStakeOnly.rows.slice(0, 5).map((r) => r[1])).toEqual(['未填', '未填', '未填', '未填', '未填']);
+    expect(resStakeOnly.rows[5]).toEqual(['为什么重要', '已填']);
+    // "接上 key" text meets 4.5:1 against its background in light and dark (visualqa #24778)
+    const ratios = await page.evaluate(() => {
+      const lum = (c) => { const [r, g, b] = c.match(/[\d.]+/g).slice(0, 3).map(Number).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+      const measure = () => { const el = document.querySelector('.sc-connect'); const fg = getComputedStyle(el).color; const bg = getComputedStyle(document.body).backgroundColor; const [l1, l2] = [lum(fg), lum(bg)].sort((x, y) => y - x); return (l1 + 0.05) / (l2 + 0.05); };
+      const light = measure(); document.documentElement.classList.add('dark'); const dark = measure(); document.documentElement.classList.remove('dark');
+      return { light, dark };
+    });
+    expect(ratios.light).toBeGreaterThanOrEqual(4.5);
+    expect(ratios.dark).toBeGreaterThanOrEqual(4.5);
+    // Clicking "接上 key 才能评内容" navigates to Settings and focuses #key-claude (Interaction rule 11)
+    await page.click('.sc-note');
+    await expect(page.locator('.page-settings')).toBeVisible();
+    await expect(page.locator('#key-claude')).toBeFocused();
+    // The Claude row is highlighted and explains why the user landed here
+    await expect(page.locator('#key-claude').locator('xpath=ancestor::div[contains(@class,"prov-row")]')).toHaveClass(/prov-hl/);
+    await expect(page.locator('#hint-claude')).toBeVisible();
+    await expect(page.locator('#key-claude')).toHaveAttribute('aria-describedby', 'hint-claude');
+    await page.click('#sidebar [data-page="story"]');
+    // Research sample 2 (concrete story without old keywords): signal has "我" in decision (2), completeness 6/6
+    const res2 = await page.evaluate(() => {
+      FOUNDATION.forEach((f) => { state.found[f.id] = { text: '已填写内容。' }; });
+      state.found.challenge = { text: '研究负责人不愿意让 AI 写结论' };
+      state.found.decision = { text: '我选了每一步让研究员复核，没有做全自动' };
+      render();
+      return ruleAudit();
+    });
+    expect(res2.total).toBe(6);
+    expect(res2.signal).toBe(2);
+    // checkScore for signal also checks only decision and challenge for quotes, and rejects a 1-char quote like "我"
+    const sigChecks = await page.evaluate(() => {
+      const v = { stake: '我负责研究工作。', reframe: '', challenge: '负责人不同意。', decision: '我选了分步复核。', outcome: '', wisdom: '' };
+      const all = (q) => ['tension', 'decision', 'pivot', 'signal', 'afterlife'].map((id) => ({ id, score: 2, quote: q, reason: '' }));
+      return {
+        fromStake: checkScore({ dims: all('我负责研究工作') }, v).signal,
+        tooShort: checkScore({ dims: all('我') }, v).signal,
+        fromDecision: checkScore({ dims: all('我选了分步复核') }, v).signal,
+      };
+    });
+    expect(sigChecks).toEqual({ fromStake: 0, tooShort: 0, fromDecision: 2 });
   });
 
   test('if the Claude review fails, the rules review and the error shows on step 2', async ({ page }) => {
