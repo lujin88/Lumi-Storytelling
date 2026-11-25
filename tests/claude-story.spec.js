@@ -146,7 +146,7 @@ test.describe('step 2 review and score', () => {
     await page.click('#sidebar [data-page="story"]');
     await page.evaluate(() => { state.found.challenge.text = '这件事很难，推进很慢。'; render(); });
     const rule = await storyScore(page);
-    expect(rule).toBe(9);
+    expect(rule).toBe(6);
     await expect.poll(() => page.evaluate(() => lumiAnim.state), { timeout: 5000 }).toBe('idle');
     await page.evaluate(() => { const set = lumiAnim.set.bind(lumiAnim); window.__sets = []; lumiAnim.set = (s) => { window.__sets.push(s); return set(s); }; });
     const dims = [['tension', '这件事很难'], ['decision', '代价是比纯自动慢一些'], ['pivot', '其实是步骤之间没人负责交接'], ['signal', '我放弃了全自动生成'], ['afterlife', '从三天缩短到四小时']].map(([id, quote]) => ({ id, score: 2, quote, reason: '' }));
@@ -156,7 +156,7 @@ test.describe('step 2 review and score', () => {
     expect(await page.evaluate(() => window.__sets)).not.toContain('jump');
   });
 
-  test('the card says estimate until Claude reviews, and "not specific enough yet" only where the user wrote something', async ({ page }) => {
+  test('the card says completeness until Claude reviews, and "not specific enough yet" only where the user wrote something', async ({ page }) => {
     const { errors } = await openSample(page);
     await page.click('#sidebar [data-page="story"]');
     const label = () => page.locator('.sc-label').innerText();
@@ -164,10 +164,10 @@ test.describe('step 2 review and score', () => {
       if ((await page.locator('.score-card.open').count()) === 0) await page.click('.sc-head');
       return page.evaluate(() => Object.fromEntries([...document.querySelectorAll('.sc-dims li')].map((li) => [li.querySelector('.sc-dn').textContent, li.querySelector('.sc-st').textContent])));
     };
-    // Before review, a row the user left empty: the rule score, marked as an estimate; the empty row says missing.
+    // Before review, a row the user left empty: the rule completeness; the empty row says missing.
     await page.evaluate(() => { state.found.challenge.text = ''; render(); });
     expect(await page.evaluate(() => foundationValue(FOUNDATION.find((f) => f.id === 'challenge')).src)).toBe('missing');
-    expect(await label()).toBe('故事评分 · 预估');
+    expect(await label()).toBe('完整度');
     await expect(page.locator('.sc-note')).toHaveText('只看完整度。点「下一步」后 Lumi 会细看');
     expect(await storyScore(page)).toBe(await page.evaluate(() => ruleAudit().total));
     expect((await levels())['冲突']).toBe('缺材料');
@@ -189,13 +189,13 @@ test.describe('step 2 review and score', () => {
     expect(await label()).toBe('Story score');
     expect((await levels())['Trade-off']).toBe('Not specific enough yet');
     await page.evaluate(() => { state.lang = 'zh'; render(); });
-    // Edited after the review: back to the rule score, marked as an estimate again.
+    // Edited after the review: back to the rule completeness.
     await page.evaluate(() => { state.found.wisdom.text += ' 下次我会先找反对的人聊。'; render(); });
-    expect(await label()).toBe('故事评分 · 预估');
+    expect(await label()).toBe('完整度');
     expect(await storyScore(page)).toBe(await page.evaluate(() => ruleAudit().total));
     expect(Object.values(await levels())).not.toContain('还不够具体');
     await page.evaluate(() => { state.lang = 'en'; render(); });
-    expect(await label()).toBe('Story score · estimate');
+    expect(await label()).toBe('Completeness');
     // A row left empty: Next asks first; after "continue with gaps" Claude reviews, and that row still says missing.
     await page.evaluate(() => { state.lang = 'zh'; state.found.challenge.text = ''; state.storyReviewPass = false; render(); });
     await page.click('#footer [data-action="next"]');
@@ -208,6 +208,45 @@ test.describe('step 2 review and score', () => {
     expect(empty['冲突']).toBe('缺材料');
     expect(empty['取舍']).toBe('还不够具体');
     expect(errors).toEqual([]);
+  });
+
+  test('ruleAudit measures 6-question completeness only, signal checks only decision and challenge for "我", and without key shows "接上 key 才能评内容"', async ({ page }) => {
+    await openWithKeys(page, []);
+    await page.click('[data-action="firstRunSample"]');
+    await page.click('#sidebar [data-page="story"]');
+    await expect(page.locator('.sc-label')).toHaveText('完整度');
+    await expect(page.locator('.sc-num')).toContainText('6/6');
+    await expect(page.locator('.sc-note')).toHaveText('接上 key 才能评内容');
+    // Research sample 1 (keyword stuffing): must NOT show 10/10, shows completeness 6/6
+    const res1 = await page.evaluate(() => {
+      const vals = ['客户。', '我发现了。', '客户很担心。', '代价很大。', '有反馈。', '下次。'];
+      FOUNDATION.forEach((f, i) => { state.found[f.id] = { text: vals[i] }; });
+      render();
+      return { au: ruleAudit(), head: document.querySelector('.sc-head').innerText };
+    });
+    expect(res1.au.total).toBe(6);
+    expect(res1.au.max).toBe(6);
+    expect(res1.head).not.toContain('10/10');
+    // In sample 1, "我" is only in reframe ("我发现了。"), not in decision or challenge -> signal is 1, not 2
+    expect(res1.au.dims.find((d) => d[0] === 'signal')[2]).toBe(1);
+    // Research sample 2 (concrete story without old keywords): tension and decision are filled (2), signal has "我" in decision (2), completeness 6/6
+    const res2 = await page.evaluate(() => {
+      state.found.challenge = { text: '研究负责人不愿意让 AI 写结论' };
+      state.found.decision = { text: '我选了每一步让研究员复核，没有做全自动' };
+      render();
+      return ruleAudit();
+    });
+    expect(res2.total).toBe(6);
+    expect(res2.dims.find((d) => d[0] === 'tension')[2]).toBe(2);
+    expect(res2.dims.find((d) => d[0] === 'decision')[2]).toBe(2);
+    expect(res2.dims.find((d) => d[0] === 'signal')[2]).toBe(2);
+    // checkScore for signal also checks only decision and challenge for quotes
+    const sigFromStake = await page.evaluate(() => {
+      const v = { stake: '我负责研究。', reframe: '', challenge: '负责人不同意。', decision: '选了分步复核。', outcome: '', wisdom: '' };
+      const all = ['tension', 'decision', 'pivot', 'signal', 'afterlife'].map((id) => ({ id, score: 2, quote: '我负责研究', reason: '' }));
+      return checkScore({ dims: all }, v);
+    });
+    expect(sigFromStake.signal).toBe(0);
   });
 
   test('if the Claude review fails, the rules review and the error shows on step 2', async ({ page }) => {

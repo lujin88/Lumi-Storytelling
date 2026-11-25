@@ -45,10 +45,10 @@ async function fillStepOne(page, notes) {
   await page.click('[data-action="purpose:interview"]');
 }
 
-/** Current story score as a number, read from the score card ("7/10"). */
+/** Current story score or completeness as a number, read from the score card ("8/10" or "6/6"). */
 async function storyScore(page) {
   const text = await page.locator('.sc-head').innerText();
-  const m = text.match(/(\d+)\s*\/\s*10/);
+  const m = text.match(/(\d+)\s*\/\s*(?:10|6)/);
   if (!m) throw new Error('score not found in: ' + text);
   return Number(m[1]);
 }
