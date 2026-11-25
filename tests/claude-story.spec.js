@@ -252,7 +252,7 @@ test.describe('step 2 review and score', () => {
     ]);
     // In sample 1, "我" is only in reframe ("我发现了。"), not in decision or challenge -> signal is 1, not 2
     expect(res1.au.signal).toBe(1);
-    // Only stake filled -> 1/6, stake is 已填 and the other 5 are 未填
+    // Only stake filled -> 1/6, gaps (未填) are ordered first before 已填 (bar.md #4)
     const resStakeOnly = await page.evaluate(() => {
       state.found = { stake: { text: '两个大客户因此推迟了续约讨论。' } };
       state.brief = '';
@@ -263,8 +263,13 @@ test.describe('step 2 review and score', () => {
       };
     });
     expect(resStakeOnly.au.total).toBe(1);
-    expect(resStakeOnly.rows[0]).toEqual(['为什么重要', '已填']);
-    expect(resStakeOnly.rows.slice(1).map((r) => r[1])).toEqual(['未填', '未填', '未填', '未填', '未填']);
+    expect(resStakeOnly.rows.slice(0, 5).map((r) => r[1])).toEqual(['未填', '未填', '未填', '未填', '未填']);
+    expect(resStakeOnly.rows[5]).toEqual(['为什么重要', '已填']);
+    // Clicking "接上 key 才能评内容" navigates to Settings and focuses #key-claude (Interaction rule 11)
+    await page.click('.sc-note');
+    await expect(page.locator('.page-settings')).toBeVisible();
+    await expect(page.locator('#key-claude')).toBeFocused();
+    await page.click('#sidebar [data-page="story"]');
     // Research sample 2 (concrete story without old keywords): signal has "我" in decision (2), completeness 6/6
     const res2 = await page.evaluate(() => {
       FOUNDATION.forEach((f) => { state.found[f.id] = { text: '已填写内容。' }; });
