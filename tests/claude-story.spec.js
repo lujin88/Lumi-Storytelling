@@ -270,10 +270,23 @@ test.describe('step 2 review and score', () => {
     expect(resStakeOnly.au.total).toBe(1);
     expect(resStakeOnly.rows.slice(0, 5).map((r) => r[1])).toEqual(['未填', '未填', '未填', '未填', '未填']);
     expect(resStakeOnly.rows[5]).toEqual(['为什么重要', '已填']);
+    // "接上 key" text meets 4.5:1 against its background in light and dark (visualqa #24778)
+    const ratios = await page.evaluate(() => {
+      const lum = (c) => { const [r, g, b] = c.match(/[\d.]+/g).slice(0, 3).map(Number).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+      const measure = () => { const el = document.querySelector('.sc-connect'); const fg = getComputedStyle(el).color; const bg = getComputedStyle(document.body).backgroundColor; const [l1, l2] = [lum(fg), lum(bg)].sort((x, y) => y - x); return (l1 + 0.05) / (l2 + 0.05); };
+      const light = measure(); document.documentElement.classList.add('dark'); const dark = measure(); document.documentElement.classList.remove('dark');
+      return { light, dark };
+    });
+    expect(ratios.light).toBeGreaterThanOrEqual(4.5);
+    expect(ratios.dark).toBeGreaterThanOrEqual(4.5);
     // Clicking "接上 key 才能评内容" navigates to Settings and focuses #key-claude (Interaction rule 11)
     await page.click('.sc-note');
     await expect(page.locator('.page-settings')).toBeVisible();
     await expect(page.locator('#key-claude')).toBeFocused();
+    // The Claude row is highlighted and explains why the user landed here
+    await expect(page.locator('#key-claude').locator('xpath=ancestor::div[contains(@class,"prov-row")]')).toHaveClass(/prov-hl/);
+    await expect(page.locator('#hint-claude')).toBeVisible();
+    await expect(page.locator('#key-claude')).toHaveAttribute('aria-describedby', 'hint-claude');
     await page.click('#sidebar [data-page="story"]');
     // Research sample 2 (concrete story without old keywords): signal has "我" in decision (2), completeness 6/6
     const res2 = await page.evaluate(() => {
