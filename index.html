@@ -953,7 +953,7 @@ html.dark .language-picker button[aria-pressed="true"],html.dark .seg button.on,
 /* director pass 2 */
 #content .page-dump .choice-row.compact .choice{height:var(--control-h);min-height:0;padding:0 var(--s-3);display:grid;place-items:center}
 #content .page-dump .choice-row.compact .choice strong{font-size:var(--fs-13);font-weight:var(--fw-medium)}
-#content .page-dump .choice-row.compact .choice.selected strong{font-weight:var(--fw-semibold)}
+#content .page-dump .choice-row:not(.compact) .choice strong{font-weight:var(--fw-medium)}
 @media(max-width:720px){#content .page-dump .choice-row.compact .choice{padding:0 var(--s-1);white-space:nowrap}}
 #content details.q-card[open]{background:transparent!important;box-shadow:none!important;border-left:0!important}
 #content details.q-card[open]>summary{background:transparent!important}
