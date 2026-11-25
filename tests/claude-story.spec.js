@@ -164,14 +164,20 @@ test.describe('step 2 review and score', () => {
       if ((await page.locator('.score-card.open').count()) === 0) await page.click('.sc-head');
       return page.evaluate(() => Object.fromEntries([...document.querySelectorAll('.sc-dims li')].map((li) => [li.querySelector('.sc-dn').textContent, li.querySelector('.sc-st').textContent])));
     };
-    // Before review, a row the user left empty: the rule completeness; the empty row says missing.
+    // Before review, a row the user left empty: the rule completeness lists all 6 questions with 已填 / 未填.
     await page.evaluate(() => { state.found.challenge.text = ''; render(); });
     expect(await page.evaluate(() => foundationValue(FOUNDATION.find((f) => f.id === 'challenge')).src)).toBe('missing');
     expect(await label()).toBe('完整度');
     await expect(page.locator('.sc-note')).toHaveText('只看完整度。点「下一步」后 Lumi 会细看');
     expect(await storyScore(page)).toBe(await page.evaluate(() => ruleAudit().total));
-    expect((await levels())['冲突']).toBe('缺材料');
-    expect(Object.values(await levels())).not.toContain('还不够具体');
+    expect(await levels()).toEqual({
+      '为什么重要': '已填',
+      '真正的问题': '已填',
+      '真正的难点': '未填',
+      '关键决定': '已填',
+      '结果': '已填',
+      '学到了什么': '已填',
+    });
     // After review: Claude's score. Claude gives decision 0, but the user wrote a decision.
     await page.evaluate(() => { state.found.challenge.text = '这件事很难，推进很慢。'; render(); });
     const dims = [['tension', '这件事很难'], ['decision', ''], ['pivot', '其实是步骤之间没人负责交接'], ['signal', '我放弃了全自动生成'], ['afterlife', '从三天缩短到四小时']].map(([id, quote]) => ({ id, score: quote ? 2 : 0, quote, reason: '' }));
@@ -193,7 +199,7 @@ test.describe('step 2 review and score', () => {
     await page.evaluate(() => { state.found.wisdom.text += ' 下次我会先找反对的人聊。'; render(); });
     expect(await label()).toBe('完整度');
     expect(await storyScore(page)).toBe(await page.evaluate(() => ruleAudit().total));
-    expect(Object.values(await levels())).not.toContain('还不够具体');
+    expect(Object.values(await levels())).toEqual(['已填', '已填', '已填', '已填', '已填', '已填']);
     await page.evaluate(() => { state.lang = 'en'; render(); });
     expect(await label()).toBe('Completeness');
     // A row left empty: Next asks first; after "continue with gaps" Claude reviews, and that row still says missing.
@@ -210,43 +216,76 @@ test.describe('step 2 review and score', () => {
     expect(errors).toEqual([]);
   });
 
-  test('ruleAudit measures 6-question completeness only, signal checks only decision and challenge for "我", and without key shows "接上 key 才能评内容"', async ({ page }) => {
+  test('ruleAudit measures 6-question completeness only (已填/未填), signal checks only decision and challenge for "我", and without key shows "接上 key 才能评内容"', async ({ page }) => {
     await openWithKeys(page, []);
     await page.click('[data-action="firstRunSample"]');
     await page.click('#sidebar [data-page="story"]');
     await expect(page.locator('.sc-label')).toHaveText('完整度');
     await expect(page.locator('.sc-num')).toContainText('6/6');
     await expect(page.locator('.sc-note')).toHaveText('接上 key 才能评内容');
-    // Research sample 1 (keyword stuffing): must NOT show 10/10, shows completeness 6/6
+    // Research sample 1 (keyword stuffing): must NOT show 10/10 or "充足", shows 6 questions 已填/未填
     const res1 = await page.evaluate(() => {
       const vals = ['客户。', '我发现了。', '客户很担心。', '代价很大。', '有反馈。', '下次。'];
       FOUNDATION.forEach((f, i) => { state.found[f.id] = { text: vals[i] }; });
+      state.scoreOpen = true;
       render();
-      return { au: ruleAudit(), head: document.querySelector('.sc-head').innerText };
+      return {
+        au: ruleAudit(),
+        head: document.querySelector('.sc-head').innerText,
+        rows: [...document.querySelectorAll('.sc-dims li')].map((li) => [li.querySelector('.sc-dn').textContent, li.querySelector('.sc-st').textContent]),
+        bars: document.querySelectorAll('.sc-dims .sc-bar').length,
+        fixes: document.querySelectorAll('.sc-dims .sc-go').length,
+      };
     });
     expect(res1.au.total).toBe(6);
     expect(res1.au.max).toBe(6);
     expect(res1.head).not.toContain('10/10');
+    expect(res1.bars).toBe(0);
+    expect(res1.fixes).toBe(0);
+    expect(res1.rows).toEqual([
+      ['为什么重要', '已填'],
+      ['真正的问题', '已填'],
+      ['真正的难点', '已填'],
+      ['关键决定', '已填'],
+      ['结果', '已填'],
+      ['学到了什么', '已填'],
+    ]);
     // In sample 1, "我" is only in reframe ("我发现了。"), not in decision or challenge -> signal is 1, not 2
-    expect(res1.au.dims.find((d) => d[0] === 'signal')[2]).toBe(1);
-    // Research sample 2 (concrete story without old keywords): tension and decision are filled (2), signal has "我" in decision (2), completeness 6/6
+    expect(res1.au.signal).toBe(1);
+    // Only stake filled -> 1/6, stake is 已填 and the other 5 are 未填
+    const resStakeOnly = await page.evaluate(() => {
+      state.found = { stake: { text: '两个大客户因此推迟了续约讨论。' } };
+      state.brief = '';
+      render();
+      return {
+        au: ruleAudit(),
+        rows: [...document.querySelectorAll('.sc-dims li')].map((li) => [li.querySelector('.sc-dn').textContent, li.querySelector('.sc-st').textContent]),
+      };
+    });
+    expect(resStakeOnly.au.total).toBe(1);
+    expect(resStakeOnly.rows[0]).toEqual(['为什么重要', '已填']);
+    expect(resStakeOnly.rows.slice(1).map((r) => r[1])).toEqual(['未填', '未填', '未填', '未填', '未填']);
+    // Research sample 2 (concrete story without old keywords): signal has "我" in decision (2), completeness 6/6
     const res2 = await page.evaluate(() => {
+      FOUNDATION.forEach((f) => { state.found[f.id] = { text: '已填写内容。' }; });
       state.found.challenge = { text: '研究负责人不愿意让 AI 写结论' };
       state.found.decision = { text: '我选了每一步让研究员复核，没有做全自动' };
       render();
       return ruleAudit();
     });
     expect(res2.total).toBe(6);
-    expect(res2.dims.find((d) => d[0] === 'tension')[2]).toBe(2);
-    expect(res2.dims.find((d) => d[0] === 'decision')[2]).toBe(2);
-    expect(res2.dims.find((d) => d[0] === 'signal')[2]).toBe(2);
-    // checkScore for signal also checks only decision and challenge for quotes
-    const sigFromStake = await page.evaluate(() => {
-      const v = { stake: '我负责研究。', reframe: '', challenge: '负责人不同意。', decision: '选了分步复核。', outcome: '', wisdom: '' };
-      const all = ['tension', 'decision', 'pivot', 'signal', 'afterlife'].map((id) => ({ id, score: 2, quote: '我负责研究', reason: '' }));
-      return checkScore({ dims: all }, v);
+    expect(res2.signal).toBe(2);
+    // checkScore for signal also checks only decision and challenge for quotes, and rejects a 1-char quote like "我"
+    const sigChecks = await page.evaluate(() => {
+      const v = { stake: '我负责研究工作。', reframe: '', challenge: '负责人不同意。', decision: '我选了分步复核。', outcome: '', wisdom: '' };
+      const all = (q) => ['tension', 'decision', 'pivot', 'signal', 'afterlife'].map((id) => ({ id, score: 2, quote: q, reason: '' }));
+      return {
+        fromStake: checkScore({ dims: all('我负责研究工作') }, v).signal,
+        tooShort: checkScore({ dims: all('我') }, v).signal,
+        fromDecision: checkScore({ dims: all('我选了分步复核') }, v).signal,
+      };
     });
-    expect(sigFromStake.signal).toBe(0);
+    expect(sigChecks).toEqual({ fromStake: 0, tooShort: 0, fromDecision: 2 });
   });
 
   test('if the Claude review fails, the rules review and the error shows on step 2', async ({ page }) => {
