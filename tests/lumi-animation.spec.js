@@ -846,9 +846,9 @@ test('without assets/lumi/ the download page still bounces in place and never sc
 });
 
 test('the cheer clip on the download page stays inside the viewport and the page does not scroll sideways', async ({ page }) => {
-  // Five widths, each reading one whole play at half speed (8 s) from frame 0.
+  // Five widths, stepping through every 24 fps frame from frame 0 to the end.
   test.setTimeout(120_000);
-  // Served over http so the clip frames can be read back from a canvas.
+  // Served over http (with byte-range support) so the clip can be seeked and read back from a canvas.
   // 1500-1599 has the big stage with a 40px gutter, 1600 and up a 64px one.
   for (const w of [1500, 1512, 1599, 1600, 1900]) {
     await page.setViewportSize({ width: w, height: 1000 });
@@ -857,31 +857,38 @@ test('the cheer clip on the download page stays inside the viewport and the page
     const video = page.locator('.dl-stage video[data-lumi-video]');
     await expect(video).toBeVisible();
     expect(await sidewaysScroll(page), `${w} sideways scroll`).toBe(0);
-    // Rightmost opaque pixel over one whole loop, read frame by frame with requestVideoFrameCallback.
-    // The star is raised furthest in a single frame (3.08 s of 4.04 s), so sampling on a timer misses it.
-    // Half speed so no frame is dropped while each one is read back.
+    // Rightmost opaque pixel over one whole play, stepped frame by frame while paused.
+    // The star is raised furthest in a single frame (frame 71 of 90, 2.958 s of 3.75 s), so
+    // sampling on a timer misses it, and real-time playback drops frames under headless Chromium's
+    // throttled compositor cadence. Seeking each 24 fps slot and confirming meta.mediaTime via
+    // requestVideoFrameCallback reads every decoded frame deterministically.
     const { right, frames } = await video.evaluate(async (v) => {
       if (v.readyState < 2) await new Promise((res) => v.addEventListener('loadeddata', res, { once: true }));
       const c = document.createElement('canvas'), x = c.getContext('2d', { willReadFrequently: true });
       c.width = v.videoWidth; c.height = v.videoHeight;
-      // Restart from frame 0 and read until the play ends (the clip plays once, then holds).
       v.pause();
-      if (v.currentTime !== 0) { v.currentTime = 0; await new Promise((res) => v.addEventListener('seeked', res, { once: true })); }
-      v.playbackRate = 0.5;
-      let max = -1, frames = 0, ended = false;
-      const read = () => {
+      const fps = 24;
+      const total = Math.round(v.duration * fps);
+      const seen = new Set();
+      let max = -1;
+      for (let f = 0; f < total; f++) {
+        // +0.25 frame avoids landing right before WebM's 1 ms-rounded frame PTS (e.g. 0.042 s).
+        const target = Math.min((f + 0.25) / fps, v.duration - 0.001);
+        let mt = v.currentTime;
+        if (Math.abs(v.currentTime - target) > 0.001) {
+          const gotFrame = new Promise((res) => v.requestVideoFrameCallback((_, meta) => res(meta.mediaTime)));
+          v.currentTime = target;
+          await new Promise((res) => v.addEventListener('seeked', res, { once: true }));
+          mt = await Promise.race([gotFrame, new Promise((res) => setTimeout(() => res(null), 500))]);
+        }
+        if (mt !== null) seen.add(Math.round(mt * fps));
         x.clearRect(0, 0, c.width, c.height); x.drawImage(v, 0, 0);
         const d = x.getImageData(0, 0, c.width, c.height).data;
         for (let i = 3; i < d.length; i += 4) if (d[i] > 128) max = Math.max(max, ((i - 3) / 4) % c.width);
-        frames++;
-        if (!ended) v.requestVideoFrameCallback(read);
-      };
-      v.requestVideoFrameCallback(read);
-      await Promise.all([v.play(), new Promise((res) => v.addEventListener('ended', res, { once: true }))]);
-      ended = true;
+      }
       // object-fit: contain, and the box has the clip's aspect ratio.
       const b = v.getBoundingClientRect();
-      return { right: b.x + (max + 1) * (b.width / c.width), frames };
+      return { right: b.x + (max + 1) * (b.width / c.width), frames: seen.size };
     });
     // cheer.webm has 90 frames at 24 fps (trimmed source frames 3–92).
     expect(frames, `${w} frames read in one play`).toBeGreaterThanOrEqual(88);
