@@ -883,8 +883,8 @@ test('the cheer clip on the download page stays inside the viewport and the page
       const b = v.getBoundingClientRect();
       return { right: b.x + (max + 1) * (b.width / c.width), frames };
     });
-    // cheer.webm has 97 frames at 24 fps.
-    expect(frames, `${w} frames read in one play`).toBeGreaterThanOrEqual(95);
+    // cheer.webm has 90 frames at 24 fps (trimmed source frames 3–92).
+    expect(frames, `${w} frames read in one play`).toBeGreaterThanOrEqual(88);
     expect(right, `${w} Lumi's right edge`).toBeLessThanOrEqual(w - 4);
   }
 });
