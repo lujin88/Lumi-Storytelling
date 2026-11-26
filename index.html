@@ -971,7 +971,8 @@ html.dark .language-picker button[aria-pressed="true"],html.dark .seg button.on,
 #content .foundation-item.current::before,#content .foundation-item.editing::before{display:none!important}
 #content .foundation-item.current .f-num{color:var(--ink)!important;font-weight:var(--fw-semibold)}
 #content .foundation-item:hover{background:var(--sunken)}
-html.dark #content .foundation-item:hover,html.dark #content .foundation-item.current,html.dark #content .foundation-item.editing,html.dark #content .deck-points li[data-deck-field]:hover,html.dark #content .deck-say:hover{background:var(--selected)!important}
+html.dark #content .foundation-item:hover,html.dark #content .foundation-item.current,html.dark #content .foundation-item.editing,html.dark #content .q-card:not([open]) summary:hover,html.dark #content .deck-title:hover,html.dark #content .deck-points li[data-deck-field]:hover,html.dark #content .deck-say:hover{background:var(--selected)!important}
+#content .q-card:not([open]) summary:hover .q-id,#content .q-card:not([open]) summary:hover::after{color:var(--ink)}
 html.dark #content .foundation-item .f-q{color:var(--ink)!important}
 .modal label{margin:var(--s-4) 0 var(--s-2)!important}
 .modal .style-drop{height:96px!important}
