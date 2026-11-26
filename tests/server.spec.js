@@ -1,26 +1,17 @@
 // @ts-check
-// The local Jimeng service (server/index.js), driven over HTTP with a fake
-// Dreamina CLI. No real CLI runs and no credits are spent.
+// The local static server (server/index.js), driven over HTTP.
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 const http = require('http');
 const net = require('net');
 const { test, expect } = require('@playwright/test');
 const { createHandler } = require('../server');
 
-/** Write a fake `dreamina` that prints `stdout` and exits with `code`. */
-function fakeCli(dir, { stdout = '', code = 0 } = {}) {
-  const bin = path.join(dir, 'dreamina');
-  fs.writeFileSync(bin, `#!/bin/sh\ncat <<'OUT'\n${stdout}\nOUT\nexit ${code}\n`, { mode: 0o755 });
-  return bin;
-}
-
-async function start(dreamina) {
+async function start() {
   const server = http.createServer();
   await new Promise((r) => server.listen(0, '127.0.0.1', () => r(undefined)));
   const port = /** @type {import('net').AddressInfo} */ (server.address()).port;
-  server.on('request', createHandler({ port, dreamina }));
+  server.on('request', createHandler({ port }));
   return { server, port, base: `http://127.0.0.1:${port}` };
 }
 
@@ -31,10 +22,11 @@ function request(port, { method = 'GET', path: p = '/', headers = {}, body } = {
       const chunks = [];
       res.on('data', (c) => chunks.push(c));
       res.on('end', () => {
-        const text = Buffer.concat(chunks).toString('utf8');
+        const raw = Buffer.concat(chunks);
+        const text = raw.toString('utf8');
         let json = null;
         try { json = JSON.parse(text); } catch {}
-        resolve({ status: res.statusCode, headers: res.headers, json, text });
+        resolve({ status: res.statusCode, headers: res.headers, json, text, raw });
       });
     });
     req.on('error', reject);
@@ -43,49 +35,22 @@ function request(port, { method = 'GET', path: p = '/', headers = {}, body } = {
   });
 }
 
-let tmp;
-test.beforeEach(() => { tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lumi-server-test-')); });
-test.afterEach(() => { fs.rmSync(tmp, { recursive: true, force: true }); });
-
-test('Jimeng check returns credits from the CLI and nothing else', async () => {
-  const { server, port } = await start(fakeCli(tmp, { stdout: '{"total_credit":120,"user_id":"u1","user_name":"Someone","vip_level":1}' }));
+test('No API: /api/ paths, other methods and foreign Host headers are refused', async () => {
+  // Jimeng was removed on 2026-10-27; every AI call goes from the browser to the provider.
+  const { server, port } = await start();
   try {
     const host = `127.0.0.1:${port}`;
-    const res = await request(port, { method: 'POST', path: '/api/providers/jimeng/test', headers: { host, origin: 'http://' + host } });
-    expect(res.status).toBe(200);
-    expect(res.json).toEqual({ ok: true, credits: 120 });
-  } finally { server.close(); }
-});
-
-test('Jimeng check maps login and missing CLI to their own codes', async () => {
-  const loggedOut = await start(fakeCli(tmp, { stdout: 'Error: not logged in, run dreamina login', code: 1 }));
-  const missing = await start(path.join(tmp, 'no-such-binary'));
-  try {
-    for (const [{ port }, status, code] of [[loggedOut, 401, 'jimeng_login'], [missing, 503, 'jimeng_cli_missing']]) {
-      const host = `127.0.0.1:${port}`;
-      const res = await request(port, { method: 'POST', path: '/api/providers/jimeng/test', headers: { host, origin: 'http://' + host } });
-      expect(res.status).toBe(status);
-      expect(res.json).toEqual({ code });
+    for (const p of ['/api/providers/jimeng/test', '/api/jimeng/video', '/api/jimeng/video/status']) {
+      expect((await request(port, { method: 'POST', path: p, headers: { host, origin: 'http://' + host } })).status, p).toBe(405);
+      expect((await request(port, { path: p, headers: { host } })).status, p).toBe(404);
     }
-  } finally { loggedOut.server.close(); missing.server.close(); }
-});
-
-test('API refuses other websites, file:// pages and foreign Host headers', async () => {
-  const { server, port } = await start(fakeCli(tmp, { stdout: '{"total_credit":1}' }));
-  try {
-    const host = `127.0.0.1:${port}`;
-    const call = (headers) => request(port, { method: 'POST', path: '/api/providers/jimeng/test', headers });
-    expect((await call({ host, origin: 'https://evil.example' })).status).toBe(403);
-    expect((await call({ host })).status).toBe(403); // no Origin
-    const fromFile = await call({ host, origin: 'null' });
-    expect(fromFile.status).toBe(403);
-    expect(fromFile.json).toEqual({ code: 'open_from_server' });
-    expect((await call({ host: `rebind.example:${port}`, origin: `http://rebind.example:${port}` })).status).toBe(403);
+    expect((await request(port, { method: 'OPTIONS', headers: { host, origin: 'null' } })).status).toBe(405);
+    expect((await request(port, { headers: { host: `rebind.example:${port}` } })).status).toBe(403);
   } finally { server.close(); }
 });
 
 test('Static files: only index.html and assets/, no path escape', async () => {
-  const { server, port } = await start(fakeCli(tmp));
+  const { server, port } = await start();
   try {
     const host = `127.0.0.1:${port}`;
     expect((await request(port, { headers: { host } })).status).toBe(200);
@@ -95,8 +60,59 @@ test('Static files: only index.html and assets/, no path escape', async () => {
   } finally { server.close(); }
 });
 
+test('Static files answer byte ranges, so the page can seek a clip', async () => {
+  const { server, port } = await start();
+  try {
+    const host = `127.0.0.1:${port}`;
+    const p = '/assets/lumi/wave.webm';
+    const file = fs.readFileSync(path.join(__dirname, '..', p));
+    const size = file.length;
+    const get = (range, extra = {}, method = 'GET') => request(port, { method, path: p, headers: { host, range, ...extra } });
+    // Whole file still says ranges are accepted.
+    const whole = await request(port, { path: p, headers: { host } });
+    expect(whole.status).toBe(200);
+    expect(whole.headers['accept-ranges']).toBe('bytes');
+    expect(Number(whole.headers['content-length'])).toBe(size);
+    for (const [range, first, last] of [['bytes=0-99', 0, 99], ['bytes=100-', 100, size - 1], ['bytes=-50', size - 50, size - 1], [`bytes=10-${size + 999}`, 10, size - 1], [`bytes=-${size + 999}`, 0, size - 1]]) {
+      const r = await get(range);
+      expect(r.status, range).toBe(206);
+      expect(r.headers['content-range'], range).toBe(`bytes ${first}-${last}/${size}`);
+      expect(r.headers['accept-ranges'], range).toBe('bytes');
+      expect(r.headers['content-type'], range).toBe('video/webm');
+      expect(Number(r.headers['content-length']), range).toBe(last - first + 1);
+      expect(r.raw.equals(file.subarray(first, last + 1)), range).toBe(true);
+    }
+    // HEAD with a range: same headers, no body.
+    const head = await get('bytes=0-99', {}, 'HEAD');
+    expect(head.status).toBe(206);
+    expect(head.headers['content-range']).toBe(`bytes 0-99/${size}`);
+    expect(head.text).toBe('');
+    // Past the end: 416 with the real size.
+    for (const range of [`bytes=${size}-`, `bytes=${size + 5}-${size + 10}`, 'bytes=-0']) {
+      const r = await get(range);
+      expect(r.status, range).toBe(416);
+      expect(r.headers['content-range'], range).toBe(`bytes */${size}`);
+      expect(r.text, range).toBe('');
+    }
+    // Malformed or several ranges: ignored, the whole file (RFC 9110 14.2). So is any If-Range:
+    // the server sends no ETag or Last-Modified, so no validator can match.
+    for (const [range, extra] of [['bytes=0-9,20-29', {}], ['bytes=9-0', {}], ['bytes=-', {}], ['items=0-9', {}], ['bytes=a-b', {}], ['bytes=0-9', { 'if-range': '"x"' }]]) {
+      const r = await get(range, extra);
+      expect(r.status, range).toBe(200);
+      expect(r.headers['content-range'], range).toBeUndefined();
+      expect(Number(r.headers['content-length']), range).toBe(size);
+    }
+    // A range never opens a file outside index.html and assets/.
+    for (const bad of ['/package.json', '/server/index.js', '/assets/../package.json', '/%2e%2e/%2e%2e/etc/passwd', '/assets/lumi/../../server/index.js', '/design-system/components/Button/preview.html', '/assets/../design-system/components/Button/preview.html']) {
+      const r = await request(port, { path: bad, headers: { host, range: 'bytes=0-9' } });
+      expect(r.status, bad).toBe(404);
+      expect(r.headers['content-range'], bad).toBeUndefined();
+    }
+  } finally { server.close(); }
+});
+
 test('A malformed request gets an error and the service keeps running', async () => {
-  const { server, port } = await start(fakeCli(tmp));
+  const { server, port } = await start();
   try {
     const host = `127.0.0.1:${port}`;
     expect((await request(port, { path: '/%E0%A4%A', headers: { host } })).status).toBe(400);
@@ -108,26 +124,5 @@ test('A malformed request gets an error and the service keeps running', async ()
     });
     expect(String(raw).split('\r\n')[0]).toBe('HTTP/1.1 400 Bad Request');
     expect((await request(port, { headers: { host } })).status).toBe(200);
-  } finally { server.close(); }
-});
-
-test('Video submit rejects bad input before calling the CLI', async () => {
-  const marker = path.join(tmp, 'called');
-  const bin = path.join(tmp, 'dreamina');
-  fs.writeFileSync(bin, `#!/bin/sh\ntouch ${marker}\necho '{"submit_id":"s1"}'\n`, { mode: 0o755 });
-  const { server, port } = await start(bin);
-  try {
-    const host = `127.0.0.1:${port}`;
-    const post = (body) => request(port, { method: 'POST', path: '/api/jimeng/video', headers: { host, origin: 'http://' + host, 'content-type': 'application/json' }, body: JSON.stringify(body) });
-    const image = 'data:image/png;base64,iVBORw0KGgo=';
-    for (const body of [{ prompt: 'wave' }, { image, prompt: '' }, { image, prompt: 'wave', duration: 99 }, { image, prompt: 'wave', ratio: '2:1' }]) {
-      expect((await post(body)).status, JSON.stringify(body)).toBe(400);
-    }
-    expect(fs.existsSync(marker)).toBe(false);
-    const ok = await post({ image, prompt: 'wave' });
-    expect(ok.json).toEqual({ submitId: 's1', status: 'queued' });
-    // Status is only served for tasks this server started.
-    const status = await request(port, { method: 'POST', path: '/api/jimeng/video/status', headers: { host, origin: 'http://' + host }, body: JSON.stringify({ submitId: 'someone-else' }) });
-    expect(status.status).toBe(404);
   } finally { server.close(); }
 });

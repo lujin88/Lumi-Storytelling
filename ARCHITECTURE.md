@@ -4,11 +4,18 @@
 - `index.html`: everything. One `<style>`, one `<script>`, images inlined as data URIs.
 - `design-system/`: the visual standard (tokens, components, rules). Not loaded by the page.
 - `prompts/`: the prompts sent to Claude, OpenAI and Gemini, one `.md` each, with an example in `prompts/examples/`. `node scripts/embed-prompts.js` copies them into `index.html` as `<script type="text/plain" id="prompt-NAME">`; `tests/prompts.spec.js` fails if the copies drift.
-- `server/`: local service for Jimeng only (Dreamina CLI), listens on `127.0.0.1:4317`.
+- `server/`: local static server for `index.html` and `assets/`, listens on `127.0.0.1:4317`. No API routes, no keys.
 
 ## Data flow
 User input (composer, uploads, clicks) → global `state` → `render()` rebuilds the page from template strings → `persist()` saves to `localStorage` (`lumi-workbench-v1`).
 AI calls go straight from the browser to the provider with the user's key: step 3 send → Claude Messages (structured output decides text or image edit) → OpenAI image edits only for an image edit; mic → Gemini `generateContent`, or the browser's own speech recognition without Gemini. Errors show as one inline line on the page (`state.aiError`).
+
+With Claude connected, step 2 and step 4 also call Claude (task 15); without it the rule code runs as before:
+- Entering step 2 drafts the open answers from the notes (`draft-answers`). An answer is kept only if its `quote` is in the notes (whitespace and full-/half-width punctuation ignored); drafts are cached per notes text.
+- Next on step 2 runs `review-answers` (follow-up questions only) and `score-story` together. The Claude score is cached per answer text and shown until the text changes; Lumi's jump always follows the rule score (`ruleAudit`). Code sets a dimension to 0 when its answer is empty or its quote isn't in it, and clamps scores to 0–2.
+- Entering step 3 drafts the six slides and speaker script in causal order (`stake` → `challenge` → `reframe` → `decision` → `outcome` → `wisdom`) from step 2 (`story-slides`) with whichever connected provider is available (Claude, OpenAI or Gemini). Slides the user has edited on step 3 are never overwritten unless the user clicks "Rebuild from answers" (`rebuildMap`). Without a key, rules split the first sentence into a ≤20-character title (falling back to clipping when a comma clause is shorter than 6 characters), keep the full sentence in the points, and link adjacent slides with neutral transitions (`但是难的地方在于：` / `所以我当时的判断是：` / …).
+- Entering step 4 drafts the empty answers from step 2 (`draft-defend`). Numbers not found in the step 2 answers are replaced with `[待补]` / `[Needed]` in code (on step 3 and step 4 alike).
+- Every Claude call streams (`stream: true`); the reply is joined before it is parsed. One Claude task runs at a time; the busy line above the composer (`#aiStatus`, `aria-live="polite"`) names it and can cancel it, and a cancelled task writes nothing. Requests still stop after 10 minutes.
 
 ## Boundaries
 - Event handling is delegated: `data-action="name:arg"` on elements, one handler on `document`.

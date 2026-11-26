@@ -5,42 +5,18 @@
 const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('@playwright/test');
-const { openApp } = require('./helpers');
+const { KEYS, CLAUDE, openApp, openWithKeys, claudeSSE, fulfillClaude } = require('./helpers');
 
 const ROOT = path.resolve(__dirname, '..');
 const prompt = (id) => fs.readFileSync(path.join(ROOT, 'prompts', id + '.md'), 'utf8').trim();
 const example = (id) => JSON.parse(fs.readFileSync(path.join(ROOT, 'prompts', 'examples', id + '.json'), 'utf8'));
 
-const KEYS = {
-  claude: 'FAKE-CLAUDE-KEY-FOR-TEST-ONLY',
-  openai: 'FAKE-OPENAI-KEY-FOR-TEST-ONLY',
-  gemini: 'FAKE-GEMINI-KEY-FOR-TEST-ONLY',
-};
-const CLAUDE = 'https://api.anthropic.com/v1/messages';
 const OPENAI = 'https://api.openai.com/v1/images/edits';
 const GEMINI = 'https://generativelanguage.googleapis.com/v1beta/models/**';
 // OpenAI's "edited" image: a marker, so the test can tell it from the upload.
 const EDITED_B64 = Buffer.from('edited-image').toString('base64');
 // 1×1 PNG, the uploaded image.
 const PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNg+M/wHwAEAQH/7yMK/wAAAABJRU5ErkJggg==';
-
-// The page re-checks saved keys on load (PRD 8.12); these answer that check with "valid".
-const KEY_CHECKS = [
-  'https://api.anthropic.com/v1/models**',
-  'https://api.openai.com/v1/models**',
-  'https://generativelanguage.googleapis.com/v1beta/models?**',
-];
-
-/** Open over http with the given keys saved; the load-time key check passes. */
-async function openWithKeys(page, ids) {
-  for (const url of KEY_CHECKS) await page.route(url, (route) => route.fulfill({ json: { data: [], models: [] } }));
-  const keys = Object.fromEntries(ids.map((id) => [id, KEYS[id]]));
-  const errors = await openApp(page, { http: true, storage: { 'lumi-api-keys-v1': JSON.stringify(keys) } });
-  for (const id of ids) await expect.poll(() => page.evaluate((id) => state.providerStatus[id], id)).toBe('connected');
-  const logs = [];
-  page.on('console', (m) => logs.push(m.text()));
-  return { errors, logs };
-}
 
 async function openBuild(page, ids) {
   const out = await openWithKeys(page, ids);
@@ -55,11 +31,11 @@ async function sendOnBuild(page, text) {
   await page.click('#footer [data-action="send"]');
 }
 
-/** Claude replies the way the Messages API does with structured output. */
+/** Claude replies the way the Messages API streams structured output. */
 function claudeReplies(page, output, seen = []) {
   return page.route(CLAUDE, (route) => {
     seen.push({ headers: route.request().headers(), body: route.request().postDataJSON() });
-    return route.fulfill({ json: { type: 'message', role: 'assistant', content: [{ type: 'text', text: JSON.stringify(output) }], stop_reason: 'end_turn' } });
+    return fulfillClaude(route, output);
   });
 }
 
@@ -92,6 +68,7 @@ test.describe('step 3 send', () => {
     expect(headers['anthropic-version']).toBe('2023-06-01');
     expect(headers['anthropic-dangerous-direct-browser-access']).toBe('true');
     expect(body.model).toBe('claude-opus-5-5');
+    expect(body.stream).toBe(true);
     expect(body.system).toBe(prompt('step3-edit'));
     expect(body.output_config.format.type).toBe('json_schema');
     const input = JSON.parse(body.messages[0].content);
@@ -187,6 +164,30 @@ test.describe('step 3 send', () => {
     expect(errors).toEqual([]);
   });
 
+  test('cancelling while OpenAI edits the image aborts that request; a late image is not used', async ({ page }) => {
+    const ex = example('image-edit');
+    const { errors } = await openBuild(page, ['claude', 'openai']);
+    await uploadImage(page);
+    const before = await page.evaluate(() => state.generatedImage);
+    await claudeReplies(page, ex.claudeOutput);
+    let pending = null;
+    const aborted = [];
+    page.on('requestfailed', (r) => { if (r.url() === OPENAI) aborted.push(r.failure()?.errorText); });
+    await page.route(OPENAI, (route) => { pending = route; });
+    await sendOnBuild(page, ex.request);
+    await expect.poll(() => pending !== null).toBe(true);
+    await expect(page.locator('#footer #aiStatus')).toContainText('Lumi 正在改你的图片…');
+    await page.locator('#footer #aiStatus').getByRole('button', { name: '取消' }).click();
+    // The OpenAI request itself is aborted, not only ignored.
+    await expect.poll(() => aborted.length).toBe(1);
+    expect(aborted[0]).toContain('ABORTED');
+    await pending.fulfill({ json: { created: 0, data: [{ b64_json: EDITED_B64 }] } }).catch(() => {});
+    await page.waitForTimeout(300);
+    expect(await page.evaluate(() => state.generatedImage)).toBe(before);
+    await expect(inlineError(page)).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
   test('an image request with no image says to upload one, without calling OpenAI', async ({ page }) => {
     const { errors } = await openBuild(page, ['claude', 'openai']);
     await page.evaluate(() => { state.generatedImage = null; });
@@ -214,11 +215,14 @@ test.describe('step 3 send', () => {
     ['wrong key', (route) => route.fulfill({ status: 401, json: { type: 'error', error: { type: 'authentication_error', message: 'invalid x-api-key' } } }), 'Claude 不认这个密钥。重新复制一个再试。', true],
     ['no credit', (route) => route.fulfill({ status: 400, json: { type: 'error', error: { type: 'invalid_request_error', message: 'Your credit balance is too low to access the Anthropic API.' } } }), 'Claude 账户没有额度了。充值后再试。', true],
     ['network', (route) => route.abort('internetdisconnected'), '连不上 Claude。检查网络后再试。', false],
-    ['unusable reply', (route) => route.fulfill({ json: { content: [{ type: 'text', text: '{"target":' }], stop_reason: 'max_tokens' } }), 'Claude 这次没有给出结果。再试一次。', false],
-    ['unknown target', (route) => route.fulfill({ json: { content: [{ type: 'text', text: JSON.stringify({ target: 'video', reply: '好了', image_instruction: '', slides: [], script: '' }) }], stop_reason: 'end_turn' } }), 'Claude 这次没有给出结果。再试一次。', false],
+    ['unusable reply', (route) => route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream' }, body: claudeSSE('{"target":') }), 'Claude 这次没有给出结果。再试一次。', false],
+    ['unknown target', (route) => fulfillClaude(route, { target: 'video', reply: '好了', image_instruction: '', slides: [], script: '' }), 'Claude 这次没有给出结果。再试一次。', false],
     ['too many requests', (route) => route.fulfill({ status: 429, json: { type: 'error', error: { type: 'rate_limit_error', message: 'Rate limited' } } }), 'Claude 现在请求太多，或到了用量上限。过一会儿再试。', false],
     ['overloaded', (route) => route.fulfill({ status: 529, json: { type: 'error', error: { type: 'overloaded_error', message: 'Overloaded' } } }), 'Claude 暂时没有响应。过一会儿再试。', false],
+    ['overloaded mid-stream', (route) => route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream' }, body: 'event: message_start\ndata: {"type":"message_start","message":{"content":[]}}\n\nevent: error\ndata: {"type":"error","error":{"type":"overloaded_error","message":"Overloaded"}}\n\n' }), 'Claude 暂时没有响应。过一会儿再试。', false],
     ['server error', (route) => route.fulfill({ status: 500, json: { type: 'error', error: { type: 'api_error', message: 'Internal server error' } } }), 'Claude 暂时没有响应。过一会儿再试。', false],
+    ['model retired', (route) => route.fulfill({ status: 404, json: { type: 'error', error: { type: 'not_found_error', message: 'model: claude-opus-5-5' } } }), 'Claude 停用了这个接口或模型。去设置换一个模型，或换一家服务商。', true],
+    ['region refused', (route) => route.fulfill({ status: 403, json: { type: 'error', error: { type: 'permission_error', message: 'Request not allowed' } } }), 'Claude 拒绝了这次请求，可能是地区或账号权限的问题。', false],
   ];
   for (const [name, reply, text, settingsLink] of claudeFailures) {
     test(`Claude failure (${name}) shows one line where the user sent, and keeps the text`, async ({ page }) => {
@@ -257,7 +261,7 @@ test.describe('step 3 edge cases', () => {
     await page.route(CLAUDE, async (route) => {
       sentLanguage = JSON.parse(route.request().postDataJSON().messages[0].content).language;
       await gate;
-      return route.fulfill({ json: { content: [{ type: 'text', text: JSON.stringify({ target: 'text', reply: '我把第 1 页标题改短了。', image_instruction: '', slides: [{ index: 0, title: '中文新标题', body: '中文新正文' }], script: '' }) }], stop_reason: 'end_turn' } });
+      return fulfillClaude(route, { target: 'text', reply: '我把第 1 页标题改短了。', image_instruction: '', slides: [{ index: 0, title: '中文新标题', body: '中文新正文' }], script: '' });
     });
     await sendOnBuild(page, '把第 1 页标题改短一点');
     await expect.poll(() => sentLanguage).toBe('zh');
@@ -411,6 +415,194 @@ test.describe('microphone', () => {
     await expect(connect).toContainText('这一步要用 Gemini，现在还没连接。');
     await connect.locator('[data-action="connectPrompt:gemini"]').click();
     await expect(page.locator('#key-gemini')).toBeFocused();
+    expect(errors).toEqual([]);
+  });
+});
+
+test.describe('step 3 video prompt', () => {
+  test('Claude writes the prompt from the slide the user sees (example: video-prompt)', async ({ page }) => {
+    const ex = example('video-prompt');
+    const { errors, logs } = await openBuild(page, ['claude']);
+    await page.evaluate(({ lang, slide }) => {
+      state.lang = lang;
+      Object.assign(state.scenes[slide.index], { [lang]: slide.title, [lang + 'p']: slide.body });
+    }, { lang: ex.uiLang, slide: ex.slide });
+    const seen = [];
+    await claudeReplies(page, ex.modelOutput, seen);
+    const text = await page.evaluate((i) => claudeVideoPrompt(i), ex.slide.index);
+    expect(text).toBe(ex.modelOutput.prompt);
+    expect(seen).toHaveLength(1);
+    const { headers, body } = seen[0];
+    expect(headers['x-api-key']).toBe(KEYS.claude);
+    expect(body.system).toBe(prompt('video-prompt'));
+    expect(body.output_config.format.schema.required).toEqual(['prompt']);
+    const input = JSON.parse(body.messages[0].content);
+    expect(input.slide).toEqual({ index: ex.slide.index, title: ex.slide.title, body: ex.slide.body, evidence: 'stated' });
+    expect(input).not.toHaveProperty('language'); // the prompt follows the slide's language, not the interface's
+    expectNoKeyIn(logs);
+    expect(errors).toEqual([]);
+  });
+
+  /** Record what the page copies; `fail` makes the clipboard refuse, as it can without focus or permission.
+   *  The test origin (http://lumi.test) isn't a secure context, so there is no real clipboard to wrap. */
+  const fakeClipboard = (page, fail = false) => page.evaluate((fail) => {
+    window.copiedTexts = [];
+    const writeText = async (text) => { if (fail) throw new DOMException('denied', 'NotAllowedError'); window.copiedTexts.push(text); };
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+  }, fail);
+  const vp = (page) => ({
+    copy: page.locator('#modal .vp-copy'),
+    feedback: page.locator('#modal .vp-feedback'),
+    text: page.locator('#modal .vp-text'),
+  });
+
+  test('copy writes the prompt once, copies it again without a new call, and writes a new one after the slide changes', async ({ page }) => {
+    const { errors, logs } = await openBuild(page, ['claude']);
+    await fakeClipboard(page);
+    const seen = [];
+    let release;
+    const gate = new Promise((r) => { release = r; });
+    await page.route(CLAUDE, async (route) => {
+      seen.push(route.request().postDataJSON());
+      await gate;
+      await route.fulfill({ json: { type: 'message', role: 'assistant', content: [{ type: 'text', text: JSON.stringify({ prompt: 'A quiet desk, slow push in.' }) }], stop_reason: 'end_turn' } });
+    });
+    await page.click('[data-action="deckZoom:1"]');
+    const v = vp(page);
+    await expect(v.feedback).toHaveText('');
+    await v.copy.click();
+    // Generating: button off, no empty prompt box, section busy.
+    await expect(v.feedback).toHaveClass(/generating/);
+    await expect(v.copy).toBeDisabled();
+    await expect(v.text).toHaveCount(0);
+    await expect(page.locator('#modal .vp')).toHaveAttribute('aria-busy', 'true');
+    release();
+    await expect(v.feedback).toHaveClass(/copied/);
+    await expect(v.text).toHaveText('A quiet desk, slow push in.');
+    await expect(v.copy).toBeEnabled();
+    await expect(v.copy).toBeFocused();
+    await expect(page.locator('#modal .vp')).toHaveAttribute('aria-busy', 'false');
+    expect(await page.evaluate(() => window.copiedTexts)).toEqual(['A quiet desk, slow push in.']);
+    // Copy again: no second call.
+    await v.copy.click();
+    await expect.poll(() => page.evaluate(() => window.copiedTexts.length)).toBe(2);
+    expect(seen).toHaveLength(1);
+    // Kept with the slide across a reopen and a reload.
+    await page.keyboard.press('Escape');
+    await page.reload();
+    await page.click('#sidebar [data-page="build"]');
+    await fakeClipboard(page);
+    await page.click('[data-action="deckZoom:1"]');
+    await expect(v.text).toHaveText('A quiet desk, slow push in.');
+    await v.copy.click();
+    await expect.poll(() => page.evaluate(() => window.copiedTexts)).toEqual(['A quiet desk, slow push in.']);
+    expect(seen).toHaveLength(1);
+    // The slide's text changes: the old prompt is stale, the next click asks Claude again.
+    await page.keyboard.press('Escape');
+    await page.evaluate(() => { state.scenes[1][state.lang] = 'A different title'; persist(); });
+    await page.click('[data-action="deckZoom:1"]');
+    await expect(v.text).toHaveCount(0);
+    await v.copy.click();
+    await expect(v.feedback).toHaveClass(/copied/);
+    expect(seen).toHaveLength(2);
+    expect(JSON.parse(seen[1].messages[0].content).slide.title).toBe('A different title');
+    expectNoKeyIn(logs);
+    expect(errors).toEqual([]);
+  });
+
+  // QA #72: the copy/error line belongs to the click it reports; closing the modal clears it.
+  test('closing the slide modal clears the copied or error line; a call still running keeps its state', async ({ page }) => {
+    const { errors } = await openBuild(page, ['claude']);
+    await fakeClipboard(page);
+    await claudeReplies(page, { prompt: 'A quiet desk, slow push in.' });
+    await page.click('[data-action="deckZoom:1"]');
+    const v = vp(page);
+    await v.copy.click();
+    await expect(v.feedback).toHaveClass(/copied/);
+    await page.keyboard.press('Escape');
+    await page.click('[data-action="deckZoom:1"]');
+    await expect(v.feedback).toHaveText('');
+    await expect(v.feedback).not.toHaveClass(/copied/);
+    await expect(v.text).toHaveText('A quiet desk, slow push in.');
+    // An error goes the same way, closed with the button this time.
+    await page.unroute(CLAUDE);
+    await claudeReplies(page, { prompt: '' });
+    await page.evaluate(() => { state.scenes[2][state.lang] = 'Another title'; persist(); });
+    await page.click('#modal .close');
+    await page.click('[data-action="deckZoom:2"]');
+    await v.copy.click();
+    await expect(v.feedback).toHaveClass(/failed/);
+    await page.click('#modal .close');
+    await page.click('[data-action="deckZoom:2"]');
+    await expect(v.feedback).toHaveText('');
+    await expect(v.copy).toBeEnabled();
+    // Closed while generating: reopening still shows it running, so a second click can't start a duplicate call.
+    await page.unroute(CLAUDE);
+    let release;
+    const gate = new Promise((r) => { release = r; });
+    await page.route(CLAUDE, async (route) => {
+      await gate;
+      await route.fulfill({ json: { type: 'message', role: 'assistant', content: [{ type: 'text', text: JSON.stringify({ prompt: 'Hands sort notes.' }) }], stop_reason: 'end_turn' } });
+    });
+    await v.copy.click();
+    await expect(v.feedback).toHaveClass(/generating/);
+    await page.keyboard.press('Escape');
+    await page.click('[data-action="deckZoom:2"]');
+    await expect(v.feedback).toHaveClass(/generating/);
+    await expect(v.copy).toBeDisabled();
+    release();
+    await expect(v.feedback).toHaveClass(/copied/);
+    expect(errors).toEqual([]);
+  });
+
+  test('when the clipboard refuses, the prompt stays on screen to copy by hand', async ({ page }) => {
+    const { errors } = await openBuild(page, ['claude']);
+    await fakeClipboard(page, true);
+    await claudeReplies(page, { prompt: 'Hands sort notes into three rows.' });
+    await page.click('[data-action="deckZoom:1"]');
+    const v = vp(page);
+    await v.copy.click();
+    await expect(v.feedback).toHaveClass(/failed/);
+    await expect(v.feedback).toContainText(/Select the prompt below|选中下面的提示词/);
+    await expect(v.text).toHaveText('Hands sort notes into three rows.');
+    await expect(v.copy).toBeEnabled();
+    expect(errors).toEqual([]);
+  });
+
+  test('a failed call says so and leaves no prompt box', async ({ page }) => {
+    const { errors } = await openBuild(page, ['claude']);
+    await fakeClipboard(page);
+    await claudeReplies(page, { prompt: '' });
+    await page.click('[data-action="deckZoom:1"]');
+    const v = vp(page);
+    await v.copy.click();
+    await expect(v.feedback).toHaveClass(/failed/);
+    await expect(v.feedback).toContainText(/Try again|再试一次/);
+    await expect(v.text).toHaveCount(0);
+    await expect(v.copy).toBeEnabled();
+    expect(await page.evaluate(() => window.copiedTexts)).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+
+  test('without a Claude key the button is off and the link opens Settings', async ({ page }) => {
+    const { errors } = await openBuild(page, []);
+    await page.click('[data-action="deckZoom:1"]');
+    const v = vp(page);
+    await expect(v.copy).toBeDisabled();
+    await expect(v.feedback).toHaveClass(/blocked/);
+    await expect(v.text).toHaveCount(0);
+    await expect(page.locator('#modal .vp-format')).toBeVisible();
+    await page.click('#modal [data-action="vpConnect"]');
+    await expect(page.locator('#modal')).not.toBeVisible();
+    await expect(page.locator('#key-claude')).toBeFocused();
+    expect(errors).toEqual([]);
+  });
+
+  test('an empty prompt from Claude is an error, not a blank prompt', async ({ page }) => {
+    const { errors } = await openBuild(page, ['claude']);
+    await claudeReplies(page, { prompt: '  ' });
+    const result = await page.evaluate(() => claudeVideoPrompt(1).then(() => 'ok', (e) => e.kind));
+    expect(result).toBe('reply');
     expect(errors).toEqual([]);
   });
 });

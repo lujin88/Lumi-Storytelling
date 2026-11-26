@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VideoPrompt — Lumi Design System</title>
+<style>
+:root{--paper:#f7f5f0;--surface:#fff;--sunken:#eeede8;--line:#e3e1db;--ink:#252a38;--muted:#677181;--info:#526787;--ok:#4f7a4d;--danger:#9d4b49;--action-line:#7e8fae;--soft:#e7ecf3;color-scheme:light;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink)}
+button,select{font:inherit;color:inherit}
+button:focus-visible,select:focus-visible,.prompt-output:focus-visible{outline:2px solid var(--action-line);outline-offset:2px}
+.review-bar{position:sticky;top:0;z-index:4;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px;background:color-mix(in srgb,var(--paper) 92%,transparent);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
+.review-bar strong{font-size:13px;margin-right:4px}.review-bar button{height:32px;padding:0 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface);font-size:13px;cursor:pointer}.review-bar button.on{background:var(--soft);border-color:var(--action-line);font-weight:600}
+.stage{min-height:calc(100dvh - 57px);display:grid;place-items:start center;padding:32px 24px}
+.modal{width:min(960px,calc(100vw - 48px));padding:32px;border:0;border-radius:8px;background:var(--surface);box-shadow:0 30px 90px #252a3824}
+.dz-bar{display:flex;align-items:center;gap:16px;margin-bottom:12px;padding-right:36px;flex-wrap:wrap}.dz-field{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}.dz-field select{height:32px;padding:0 30px 0 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}.dz-spacer{flex:1}.text-link{padding:0;border:0;background:none;color:var(--info);font-size:13px;font-weight:500;text-decoration:underline;text-underline-offset:4px;cursor:pointer}.close{position:absolute;top:16px;right:16px;width:32px;height:32px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:22px;line-height:1;cursor:pointer}.modal-shell{position:relative}
+.slide-preview{aspect-ratio:16/9;display:grid;align-content:end;overflow:hidden;padding:56px 64px;border:1px solid var(--line);border-radius:6px;background:linear-gradient(135deg,#dce3ee 0 52%,#f1c8ba 52%);color:#252a38}.slide-preview small{align-self:start;font:12px Georgia,serif;letter-spacing:.06em}.slide-preview h1{max-width:600px;margin:auto 0 8px;font:600 34px/1.2 Georgia,serif}.slide-preview p{max-width:560px;margin:0;font:14px/1.5 Georgia,serif;color:#50596a}
+.slide-nav{display:flex;justify-content:space-between;align-items:center;margin-top:12px}.slide-nav button{height:40px;padding:0;border:0;background:none;color:var(--info);font-size:13px;cursor:pointer}.slide-nav span{font-size:12px;color:var(--muted)}
+.video-work{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px;margin-top:24px;padding-top:24px;border-top:1px solid var(--line)}
+.prompt-head{display:flex;gap:12px;align-items:flex-start}.format h2{margin:0;font-size:13px;line-height:1.4;font-weight:600}.copy{height:40px;flex:none;padding:0 16px;border:1px solid var(--line);border-radius:6px;background:var(--surface);font-size:14px;font-weight:500;cursor:pointer}.copy:disabled{cursor:default;opacity:.45}
+.feedback{display:flex;align-items:flex-start;gap:8px;min-height:19px;margin-top:12px;font-size:13px;line-height:1.4}.feedback .mark{flex:none;display:grid;place-items:center;width:16px;height:16px;margin-top:1px;border:1px solid currentColor;border-radius:50%;font-size:11px;font-weight:600}.feedback.generating{color:var(--info)}.feedback.copied{color:var(--ok)}.feedback.failed,.feedback.blocked{color:var(--danger)}.feedback a{color:var(--info);font-weight:500;text-underline-offset:4px}.spinner{border-color:currentColor transparent currentColor currentColor!important;animation:spin .8s linear infinite}
+.prompt-output{min-height:112px;max-height:192px;overflow:auto;margin:12px 0 0;padding:12px;border:1px solid var(--line);border-radius:6px;background:var(--surface);font-family:inherit;font-size:13px;font-weight:400;line-height:1.6;white-space:pre-wrap;user-select:text}.prompt-output[hidden]{display:none}
+.format{padding:16px;border-radius:8px;background:var(--sunken)}.format p{margin:8px 0 0;color:var(--muted);font-size:13px;line-height:1.6}.format ul{display:grid;gap:8px;margin:12px 0 0;padding:0;list-style:none}.format li{position:relative;padding-left:12px;font-size:13px;line-height:1.4}.format li:before{content:"";position:absolute;left:0;top:.55em;width:4px;height:4px;border-radius:50%;background:var(--action-line)}
+html.dark{--paper:#17191f;--surface:#1f2229;--sunken:#1b1d23;--line:#2c3039;--ink:#e9e6df;--muted:#9aa1ad;--info:#a9bbd6;--ok:#9fc59d;--danger:#e0a09c;--action-line:#9fb0cf;--soft:#232a36;color-scheme:dark}.dark .modal{box-shadow:0 30px 90px #0008}.dark .slide-preview{border-color:#3d4350;background:linear-gradient(135deg,#cbd5e4 0 52%,#e7b9aa 52%)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:720px){.review-bar{position:static}.stage{display:block;padding:8px}.modal{width:100%;padding:16px;box-shadow:none}.dz-bar{gap:8px 12px;padding-right:32px}.dz-spacer{display:none}.slide-preview{padding:22px 20px}.slide-preview h1{font-size:23px}.slide-preview p{font-size:11px}.video-work{grid-template-columns:1fr;gap:16px}.prompt-head{display:grid}.copy{width:100%}.prompt-output{min-height:144px}.format{padding:16px}.close{top:8px;right:8px}}
+@media(prefers-reduced-motion:reduce){.spinner{animation:none}}
+</style>
+</head>
+<body>
+<nav class="review-bar" aria-label="设计状态预览">
+  <strong>状态</strong>
+  <button type="button" data-state="generating">生成中</button>
+  <button type="button" data-state="copied" class="on">已复制</button>
+  <button type="button" data-state="failed">复制失败</button>
+  <button type="button" data-state="blocked">没有 Claude key</button>
+  <button type="button" id="theme">切换深浅色</button>
+</nav>
+<main class="stage">
+  <section class="modal modal-shell" role="dialog" aria-modal="true" aria-labelledby="preview-title">
+    <button type="button" class="close" aria-label="关闭">×</button>
+    <div class="dz-bar">
+      <label class="dz-field">版式 <select><option>标题 + 正文</option></select></label>
+      <label class="dz-field">动效 <select><option>淡入</option></select></label>
+      <span class="dz-spacer"></span>
+      <button type="button" class="text-link">换成视频</button>
+    </div>
+    <div class="slide-preview">
+      <small>LUMI / 03</small>
+      <h1 id="preview-title">一个决定，让方案真正落地</h1>
+      <p>把零散素材整理成可以清楚讲述的项目故事。</p>
+    </div>
+    <div class="slide-nav">
+      <button type="button">上一页</button><span>3 / 6</span><button type="button">下一页</button>
+    </div>
+    <div class="video-work" id="videoWork">
+      <section class="prompt" aria-busy="false">
+        <div class="prompt-head"><button type="button" class="copy">复制视频提示词</button></div>
+        <div class="feedback copied" aria-live="polite"><span class="mark">✓</span><span class="message">已复制视频提示词</span></div>
+        <pre class="prompt-output" tabindex="0">宽银幕构图。散落在安静桌面上的项目笔记逐渐聚拢成一张清晰的演示幻灯片。温暖自然光，克制的镜头运动，编辑感构图，不出现文字或标志。</pre>
+      </section>
+      <aside class="format">
+        <h2>视频格式</h2>
+        <p>复制提示词，在你常用的视频工具里生成视频，再点「换成视频」放到这张幻灯片上。</p>
+      </aside>
+    </div>
+  </section>
+</main>
+<script>
+const states={
+  generating:{message:'Claude 正在为这张幻灯片写视频提示词…',mark:'',output:false,disabled:true,busy:true},
+  copied:{message:'已复制视频提示词',mark:'✓',output:true,disabled:false,busy:false},
+  failed:{message:'没能自动复制。选中下面的提示词，手动复制。',mark:'!',output:true,disabled:false,busy:false},
+  blocked:{message:'写视频提示词要用 Claude，你的 Claude API 密钥还没连上。',mark:'!',output:false,disabled:true,busy:false}
+};
+function show(name){const s=states[name],prompt=document.querySelector('.prompt'),feedback=document.querySelector('.feedback'),mark=feedback.querySelector('.mark'),message=feedback.querySelector('.message'),output=document.querySelector('.prompt-output'),copy=document.querySelector('.copy');document.querySelectorAll('[data-state]').forEach(b=>b.classList.toggle('on',b.dataset.state===name));prompt.setAttribute('aria-busy',String(s.busy));feedback.className='feedback '+name;mark.className='mark'+(name==='generating'?' spinner':'');mark.textContent=s.mark;message.innerHTML=s.message+(name==='blocked'?' <a href="#">去设置连接 Claude</a>':'');output.hidden=!s.output;copy.disabled=s.disabled}
+document.addEventListener('click',e=>{const state=e.target.closest('[data-state]');if(state)show(state.dataset.state);if(e.target.id==='theme')document.documentElement.classList.toggle('dark')});
+</script>
+</body>
+</html>

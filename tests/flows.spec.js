@@ -59,7 +59,6 @@ test('download excludes saved API keys and GitHub token', async ({ page }) => {
     claude: 'FAKE-CLAUDE-KEY-FOR-TEST-ONLY',
     openai: 'FAKE-OPENAI-KEY-FOR-TEST-ONLY',
     gemini: 'FAKE-GEMINI-KEY-FOR-TEST-ONLY',
-    jimeng: 'FAKE-JIMENG-KEY-FOR-TEST-ONLY',
   };
   const githubMarker = 'FAKE-GITHUB-TOKEN-FOR-TEST-ONLY';
   // Over http, because file:// pages no longer load saved keys (see key-storage.spec.js).
@@ -70,7 +69,7 @@ test('download excludes saved API keys and GitHub token', async ({ page }) => {
       'lumi-github-token-v1': githubMarker,
     },
   });
-  await expect.poll(() => page.evaluate(() => localStorage.getItem('lumi-api-keys-v1'))).toContain(keyMarkers.jimeng);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('lumi-api-keys-v1'))).toContain(keyMarkers.gemini);
   expect(await page.evaluate(() => localStorage.getItem('lumi-github-token-v1'))).toBe(githubMarker);
   await page.click('[data-action="loadSample"]');
   await page.click('#sidebar [data-page="publish"]');
@@ -149,6 +148,28 @@ test('clicking any row opens the editor in that row, in all three groups', async
     // Only one row editor at a time.
     await expect(page.locator('#content .inline-edit')).toHaveCount(1);
   }
+});
+
+test('switching from one row editor to another keeps the new editor open and its typing', async ({ page }) => {
+  await openApp(page);
+  await fillStepOne(page, NOTES);
+  await page.click('#footer [data-action="next"]');
+  await page.evaluate(() => {
+    state.found.reframe = { text: '先前的回答。' };
+    state.found.stake = { text: '推迟了一个季度。' };
+    render();
+  });
+  await page.click('[data-action="focus:reframe"]');
+  await expect(page.locator('[data-action="focus:reframe"] .inline-edit')).toBeFocused();
+  await page.keyboard.type('改');
+  await page.click('[data-action="focus:stake"]');
+  await page.keyboard.type('X');
+  // The first editor saves on its way out, 180ms later; the new one must survive that.
+  await page.waitForTimeout(400);
+  const editor = page.locator('[data-action="focus:stake"] .inline-edit');
+  await expect(editor).toBeFocused();
+  await expect(editor).toHaveValue('推迟了一个季度。X');
+  expect(await page.evaluate(() => [state.editing, state.found.reframe.text])).toEqual(['stake', '先前的回答。改']);
 });
 
 test('text typed in a row and then in the composer lands in that same row, in all three groups', async ({ page }) => {
@@ -302,4 +323,77 @@ test('the composer answers the row that is open in the editor', async ({ page })
   await page.keyboard.press('Enter');
   await expect(page.locator('[data-action="fuFocus:2"] .f-text')).toHaveText('全自动生成。');
   expect(await page.evaluate(() => state.followups[0].text)).toBe('');
+});
+
+/** Safari fires the keydown that confirms or closes an input method after compositionend: isComposing is false, keyCode is 229. */
+const imeKeydown = (page, selector, key) => page.evaluate(([s, k]) => {
+  const e = new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true });
+  Object.defineProperty(e, 'keyCode', { value: 229 });
+  return document.querySelector(s).dispatchEvent(e);
+}, [selector, key]);
+
+test('Enter that confirms an input method does not send the composer', async ({ page }) => {
+  await openApp(page);
+  await page.click('[data-action="loadSample"]');
+  await page.click('#sidebar [data-page="story"]');
+  const before = await page.evaluate(() => JSON.stringify([state.found, state.answers]));
+  await page.click('#guideText');
+  await page.keyboard.type('IME');
+  expect(await imeKeydown(page, '#guideText', 'Enter')).toBe(true);
+  await expect(page.locator('#guideText')).toHaveValue('IME');
+  expect(await page.evaluate(() => JSON.stringify([state.found, state.answers]))).toBe(before);
+});
+
+test('Enter or Esc that closes an input method keeps the row editor open with its text', async ({ page }) => {
+  await openApp(page);
+  await page.click('[data-action="loadSample"]');
+  await page.click('#sidebar [data-page="story"]');
+  const id = await page.evaluate(() => FOUNDATION.find((f) => foundationValue(f).text).id);
+  const saved = await page.evaluate((k) => foundationValue(FOUNDATION.find((f) => f.id === k)).text, id);
+  await page.click(`[data-action="focus:${id}"]`);
+  await page.keyboard.type(' X');
+  for (const key of ['Enter', 'Escape']) {
+    expect(await imeKeydown(page, '#content .inline-edit', key), key).toBe(true);
+    await expect(page.locator('#content .inline-edit'), key).toHaveValue(saved + ' X');
+  }
+  expect(await page.evaluate((k) => foundationValue(FOUNDATION.find((f) => f.id === k)).text, id)).toBe(saved);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#content .inline-edit')).toHaveCount(0);
+});
+
+test('Enter or Esc that closes an input method stays in the slide field', async ({ page }) => {
+  await openApp(page);
+  await page.click('[data-action="loadSample"]');
+  await page.click('#sidebar [data-page="build"]');
+  const field = page.locator('#content [data-deck-field="title"]').first();
+  await field.evaluate((el) => { el.contentEditable = 'true'; el.focus(); });
+  for (const key of ['Enter', 'Escape']) {
+    expect(await imeKeydown(page, '#content [data-deck-field="title"]', key), key).toBe(true);
+    await expect(field, key).toBeFocused();
+  }
+  await page.keyboard.press('Escape');
+  await expect(field).not.toBeFocused();
+});
+
+test('Esc that closes an input method keeps a draft moved into the composer', async ({ page }) => {
+  await storyWithFollowups(page);
+  await page.click('[data-action="fuFocus:1"]');
+  await page.keyboard.type(' X');
+  await page.click('#guideText');
+  expect(await imeKeydown(page, '#guideText', 'Escape')).toBe(true);
+  await expect(page.locator('#guideText')).toHaveValue('推迟了一个季度。 X');
+});
+
+test('Enter that confirms an input method does not add the custom audience yet', async ({ page }) => {
+  await openApp(page);
+  await page.click('[data-action="loadSample"]');
+  await page.click('#sidebar [data-page="dump"]');
+  const field = page.locator('#audNew');
+  await field.fill('设计总监');
+  const before = await page.evaluate(() => JSON.stringify(audCustom()));
+  expect(await imeKeydown(page, '#audNew', 'Enter')).toBe(true);
+  await expect(field).toHaveValue('设计总监');
+  expect(await page.evaluate(() => JSON.stringify(audCustom()))).toBe(before);
+  await field.press('Enter');
+  expect(await page.evaluate(() => audCustom())).toContain('设计总监');
 });

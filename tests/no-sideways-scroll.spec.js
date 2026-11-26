@@ -11,6 +11,8 @@ const CASES = [
   { page: 'dump', widths: [721, 1280] },
   { page: 'story', widths: [320, 390, 721, 1280] },
   { page: 'build', widths: [320, 390, 721, 1280] },
+  // 1512 is a 14-inch MacBook's default width; Lumi's media box there is wider than its stage.
+  { page: 'publish', widths: [390, 1280, 1512, 1900] },
 ];
 
 for (const lang of ['zh', 'en']) {
