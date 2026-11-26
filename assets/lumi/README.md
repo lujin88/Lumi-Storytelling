@@ -17,12 +17,12 @@ The Lumi renders used in `index.html`, extracted so agents can use them as refer
 ## Animated loops
 `<pose>.webm` (transparent VP9) plus `<pose>.webp` (animated fallback), each under 1 MB. Built from a green-screen clip with `scripts/lumi-clip.sh`; the source mp4 is not committed.
 
-| Pose | Source clip | `webm` | `webp` |
-|---|---|---|---|
-| wave | Dreamina seedance2.0 mini, task `cd75c5b3` | 564,393 B | 822,678 B |
-| think | Dreamina seedance2.0 mini, task `2c49178f` | 659,263 B | 801,430 B |
-| cheer | Dreamina seedance2.0 mini, task `b3e4fd1f` | 830,715 B | 810,874 B |
-| jump | Dreamina seedance2.0 mini, task `caa805fc`, from `standing.webp` | 873,773 B | 887,206 B |
+| Pose | Source clip | `webm` | `webp` | Plays |
+|---|---|---|---|---|
+| wave | Dreamina seedance2.0 mini, task `cd75c5b3` | 564,393 B | 822,678 B | Loops on step 1 |
+| cheer | Dreamina seedance2.0 mini, task `b3e4fd1f` | 830,715 B | 810,874 B | Loops on the download page |
+| think | Dreamina seedance2.0 mini, task `2c49178f`, from `standing.webp` | 814,661 B | 878,712 B | Loops while the user types, then back to the page's loop |
+| jump | Dreamina seedance2.0 mini, task `caa805fc`, from `standing.webp` | 873,773 B | 887,206 B | Not on the page yet |
 
 Wave and cheer were re-exported without a paid generation from the transparent
 clips in the pre-#58 `feat/lumi-loop-settings-error` branch. The old #58 method
@@ -45,8 +45,7 @@ Wave's original frame 92→93 jump measured 2.25; the trimmed 89→4 seam measur
 These seam figures are from the final encoded WebM outputs. Wave's and cheer's WebP
 fallbacks loop continuously (loop count 0) until WebP hold/replay lands.
 
-Think still uses the earlier six-frame endpoint easing in #58. Its seam has
-not been reworked in this pass.
+The think clip was fitted to `standing.webp` (`FIT="544 -32 -41" CANVAS="480 460"`, silhouette overlap 0.993) on the wave clip's canvas, so it takes the wave's place on step 1 without moving her. Its last frame is close to its first (mean RGBA difference 1.74; neighbouring frames 0.23 to 4.17, median 1.60), so it loops without a cross-fade. An 8-frame cross-fade was tried and dropped: it left a see-through second arm on the last frames.
 
 The jump clip is a one-shot reaction for a rising step-2 score. Its generated audio
 was removed. It is included as an asset only; page playback waits for the
