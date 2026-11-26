@@ -21,3 +21,7 @@ A design-led prototype that turns a messy project into a story you can present: 
 | `AGENTS.md` | How agents work in this repo |
 
 AI features use your own keys (Claude required; OpenAI and Gemini optional), set in Settings and kept in your browser. Keys are saved only when Lumi is opened over http(s); opened as a file, they last until the page closes.
+
+## Hosted version (static, bring your own key)
+
+`index.html` plus `assets/` is the whole app. Deploy the repo root as a static site (Vercel, no build command, no env vars). `vercel.json` sets a CSP that only lets the page call `api.anthropic.com`, `api.openai.com` and `generativelanguage.googleapis.com`, so a script injected into the page cannot send a saved key anywhere else. Keys stay in the visitor's browser (localStorage) and are not part of any download or ZIP. The three providers answer browser calls with CORS (checked 2026-11-26 with fake keys: Anthropic needs `anthropic-dangerous-direct-browser-access: true`), so no proxy is needed.

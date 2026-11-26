@@ -60,3 +60,14 @@ test('c: reframe and challenge titles carry the turn, not a label or half of it'
   expect(titles.reframe).not.toBe('大家以为是工具太多');
   expect(titles.reframe).toContain('交接');
 });
+
+test('first open explains how to get a key and that it stays in the browser', async ({ page }) => {
+  await openApp(page);
+  const help = page.locator('.first-run .key-help');
+  await expect(help).toBeVisible();
+  await help.locator('summary').click();
+  await expect(help).toContainText('只保存在这个浏览器');
+  for (const host of ['console.anthropic.com', 'platform.openai.com', 'aistudio.google.com']) {
+    await expect(help.locator(`a[href*="${host}"]`)).toHaveAttribute('rel', /noopener/);
+  }
+});
