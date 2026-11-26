@@ -49,7 +49,7 @@ test.describe('step 2 drafts', () => {
     expect(body.stream).toBe(true);
     expect(body.output_config.format.type).toBe('json_schema');
     expect(input.notes).toBe(ex.notes);
-    expect(input.questions.map((q) => q.id)).toEqual(['stake', 'reframe', 'challenge', 'decision', 'outcome', 'wisdom']);
+    expect(input.questions.map((q) => q.id)).toEqual(['stake', 'challenge', 'reframe', 'decision', 'outcome', 'wisdom']);
     // Drafts are kept for these notes: coming back doesn't call Claude again.
     await page.click('#sidebar [data-page="dump"]');
     await page.click('#sidebar [data-page="story"]');
@@ -230,7 +230,7 @@ test.describe('step 2 review and score', () => {
     expect(tip).not.toMatch(/最弱|Weakest/);
     // Research sample 1 (keyword stuffing): must NOT show 10/10 or "充足", shows 6 questions 已填/未填
     const res1 = await page.evaluate(() => {
-      const vals = ['客户。', '我发现了。', '客户很担心。', '代价很大。', '有反馈。', '下次。'];
+      const vals = ['客户。', '客户很担心。', '我发现了。', '代价很大。', '有反馈。', '下次。'];
       FOUNDATION.forEach((f, i) => { state.found[f.id] = { text: vals[i] }; });
       state.scoreOpen = true;
       render();
@@ -249,8 +249,8 @@ test.describe('step 2 review and score', () => {
     expect(res1.fixes).toBe(0);
     expect(res1.rows).toEqual([
       ['为什么重要', '已填'],
-      ['真正的问题', '已填'],
       ['真正的难点', '已填'],
+      ['真正的问题', '已填'],
       ['关键决定', '已填'],
       ['结果', '已填'],
       ['学到了什么', '已填'],
@@ -335,8 +335,8 @@ test.describe('step 4 drafts', () => {
     await page.click('#sidebar [data-page="defend"]');
     await expect.poll(() => page.evaluate(() => state.defend[4])).toBe(ex.expect.answers['4']);
     expect(await page.evaluate(() => state.defend[0])).toBe(ex.expect.answers['0']);
-    // Questions Claude didn't answer get the rule draft (the step 2 answer).
-    expect(await page.evaluate(() => state.defend[1])).toBe(await page.evaluate(() => state.found.challenge.text));
+    // Questions Claude didn't answer stay empty: the step 2 answer is not a reply to the follow-up (research #25525).
+    expect(await page.evaluate(() => (state.defend[1] || '').trim())).toBe('');
     expect(await page.evaluate(() => [0, 4].map((i) => state.defIsDraft[i]))).toEqual([true, true]);
     await expect(page.locator('.q-card[data-def="4"] .def-ans')).toContainText('效率提升了 [待补]%');
     expect(seen).toHaveLength(1);
@@ -345,7 +345,7 @@ test.describe('step 4 drafts', () => {
     expect(input.language).toBe('zh');
     expect(input.questions.map((q) => q.index)).toEqual([0, 1, 2, 3, 4, 5]);
     expect(input.questions[4]).toEqual({ index: 4, question: expect.any(String), evidence: 'stated', answer: expect.stringContaining('四小时') });
-    expect(input.story.map((x) => x.id)).toEqual(['stake', 'reframe', 'challenge', 'decision', 'outcome', 'wisdom']);
+    expect(input.story.map((x) => x.id)).toEqual(['stake', 'challenge', 'reframe', 'decision', 'outcome', 'wisdom']);
     expect(errors).toEqual([]);
   });
 
