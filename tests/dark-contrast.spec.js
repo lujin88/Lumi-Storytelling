@@ -92,3 +92,45 @@ for (const style of ['empty', 'guizang', 'zara']) {
     expect(colors.dark).toEqual(colors.light);
   });
 }
+
+for (const [theme, time] of [['light', DAY], ['dark', NIGHT]]) {
+  test(`${theme}: hovered follow-up question rows and slide titles meet 4.5:1 contrast`, async ({ page }) => {
+    await page.clock.install({ time });
+    const errors = await openApp(page);
+    await page.click('[data-action="firstRunSample"]');
+
+    const measureRatio = (locator) => locator.evaluate((el) => {
+      const rgb = (c) => (c.match(/[\d.]+/g) || []).map(Number);
+      const lum = ([r, g, b]) => {
+        const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+        return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+      };
+      const bgOf = (node) => {
+        for (let n = node; n; n = n.parentElement) {
+          const c = rgb(getComputedStyle(n).backgroundColor);
+          if (c.length === 3 || c[3] > 0.5) return c.slice(0, 3);
+        }
+        return [255, 255, 255];
+      };
+      const out = [];
+      for (const node of [el, ...el.querySelectorAll('*')]) {
+        const text = [...node.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim();
+        if (!text || !node.getClientRects().length) continue;
+        const a = lum(rgb(getComputedStyle(node).color)), z = lum(bgOf(node));
+        out.push((Math.max(a, z) + 0.05) / (Math.min(a, z) + 0.05));
+      }
+      return Math.min(...out);
+    });
+
+    await page.click('#sidebar [data-page="defend"]');
+    const closedSummary = page.locator('#content .q-card:not([open]) summary').first();
+    await closedSummary.hover();
+    expect(await measureRatio(closedSummary)).toBeGreaterThanOrEqual(4.5);
+
+    await page.click('#sidebar [data-page="build"]');
+    const deckTitle = page.locator('#content .deck-title').first();
+    await deckTitle.hover();
+    expect(await measureRatio(deckTitle)).toBeGreaterThanOrEqual(4.5);
+    expect(errors).toEqual([]);
+  });
+}
