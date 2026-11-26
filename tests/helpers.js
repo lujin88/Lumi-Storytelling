@@ -1,6 +1,18 @@
 // @ts-check
+const fs = require('fs');
 const path = require('path');
 const { expect } = require('@playwright/test');
+
+const MIME = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.webm': 'video/webm',
+  '.webp': 'image/webp',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+};
 
 const ROOT = path.resolve(__dirname, '..');
 const APP_URL = 'file://' + path.join(ROOT, 'index.html');
@@ -23,7 +35,32 @@ async function openApp(page, { storage = {}, http = false } = {}) {
       const rel = decodeURIComponent(new URL(route.request().url()).pathname);
       const file = path.join(ROOT, rel);
       if (!file.startsWith(ROOT + path.sep)) return route.abort();
-      return route.fulfill({ path: file }).catch(() => route.abort());
+      const range = route.request().headers().range;
+      if (range) {
+        const m = /^bytes=(\d+)-(\d*)$/.exec(range);
+        if (m) {
+          try {
+            const buf = fs.readFileSync(file);
+            const start = Number(m[1]);
+            const end = m[2] ? Math.min(Number(m[2]), buf.length - 1) : buf.length - 1;
+            if (start > end || start >= buf.length) {
+              return route.fulfill({ status: 416, headers: { 'content-range': `bytes */${buf.length}` } });
+            }
+            return route.fulfill({
+              status: 206,
+              headers: {
+                'accept-ranges': 'bytes',
+                'content-type': MIME[path.extname(file)] || 'application/octet-stream',
+                'content-range': `bytes ${start}-${end}/${buf.length}`,
+              },
+              body: buf.subarray(start, end + 1),
+            });
+          } catch {
+            return route.abort();
+          }
+        }
+      }
+      return route.fulfill({ path: file, headers: { 'accept-ranges': 'bytes' } }).catch(() => route.abort());
     });
   }
   if (Object.keys(storage).length) {
