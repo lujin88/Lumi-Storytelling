@@ -793,7 +793,7 @@ test('the download page shows the preview card and Lumi on a fixed stage, same b
       }
       const title = await page.evaluate(() => getScenes()[0][state.lang]);
       await expect(page.locator('.dl-preview .dl-slide h3')).toHaveText(title);
-      await expect(page.locator('.dl-preview .dl-score strong')).toContainText('/10');
+      await expect(page.locator('.dl-preview .dl-score strong')).toContainText('/6');
       // Stage and media are measured in one go, relative to the stage: the page itself may still be sliding in.
       const [st, media] = await page.evaluate(() => {
         const st = document.querySelector('.dl-stage').getBoundingClientRect();

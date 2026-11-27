@@ -10,7 +10,7 @@ Score five dimensions, each 0, 1 or 2. Return all five in `dims` as `{id, score,
 - `tension`, from `challenge`: 2 if it names who disagreed or pushed back, and why; 1 if it says it was hard but not who or why; 0 if there is no answer.
 - `decision`, from `decision`: 2 if it names what was given up or what it cost; 1 if it names a choice only; 0 if there is no answer.
 - `pivot`, from `reframe`: 2 if it sets what people first thought against what turned out to be true; 1 if it gives only one side; 0 if there is no answer.
-- `signal`, from all answers: 2 if the user says what they themselves did or decided; 1 if they only say "we" or "the team"; 0 if there are no answers.
+- `signal`, from `decision` and `challenge`: 2 if the user says what they themselves did or decided (using "I" / "我"); 1 if they only say "we" or "the team", or do not state their own role; 0 if neither has an answer.
 - `afterlife`, from `outcome` and `wisdom`: 2 if there is a result with a number or real feedback, and a lesson; 1 if only part of that; 0 if neither has an answer.
 
 Rules:

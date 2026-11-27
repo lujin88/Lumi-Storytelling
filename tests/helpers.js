@@ -45,11 +45,19 @@ async function fillStepOne(page, notes) {
   await page.click('[data-action="purpose:interview"]');
 }
 
-/** Current story score as a number, read from the score card ("7/10"). */
+/** Current content quality score as a number, read from the score card ("8/10"). */
 async function storyScore(page) {
   const text = await page.locator('.sc-head').innerText();
   const m = text.match(/(\d+)\s*\/\s*10/);
   if (!m) throw new Error('score not found in: ' + text);
+  return Number(m[1]);
+}
+
+/** Current completeness count as a number, read from the score card ("4/6"). */
+async function storyCompleteness(page) {
+  const text = await page.locator('.sc-head').innerText();
+  const m = text.match(/(\d+)\s*\/\s*6/);
+  if (!m) throw new Error('completeness not found in: ' + text);
   return Number(m[1]);
 }
 
@@ -97,4 +105,4 @@ function fulfillClaude(route, output) {
   return route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream' }, body: claudeSSE(JSON.stringify(output)) });
 }
 
-module.exports = { APP_URL, HTTP_APP_URL, KEYS, CLAUDE, openApp, openWithKeys, fillStepOne, storyScore, claudeSSE, fulfillClaude };
+module.exports = { APP_URL, HTTP_APP_URL, KEYS, CLAUDE, openApp, openWithKeys, fillStepOne, storyScore, storyCompleteness, claudeSSE, fulfillClaude };

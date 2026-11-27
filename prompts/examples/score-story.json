@@ -1,5 +1,5 @@
 {
-  "about": "The sample project in Chinese. The pivot quote isn't in the answers, so pivot drops to 0. The afterlife score of 7 is clamped to 2. Total 8; the rule score for the sample is 10.",
+  "about": "The sample project in Chinese. The pivot quote isn't in the answers, so pivot drops to 0. The afterlife score of 7 is clamped to 2. Total 8; completeness for the sample is 6/6.",
   "modelOutput": {
     "dims": [
       { "id": "tension", "score": 2, "quote": "研究负责人反对，他担心 AI 生成的结论不可信", "reason": "说清了谁反对、为什么。" },
@@ -9,5 +9,5 @@
       { "id": "afterlife", "score": 7, "quote": "从三天缩短到四小时", "reason": "有数字，也有教训。" }
     ]
   },
-  "expect": { "dims": { "tension": 2, "decision": 2, "pivot": 0, "signal": 2, "afterlife": 2 }, "total": 8, "ruleTotal": 10 }
+  "expect": { "dims": { "tension": 2, "decision": 2, "pivot": 0, "signal": 2, "afterlife": 2 }, "total": 8, "ruleTotal": 6 }
 }
