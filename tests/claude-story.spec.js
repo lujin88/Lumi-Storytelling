@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('@playwright/test');
-const { KEYS, CLAUDE, openWithKeys, fillStepOne, storyScore, fulfillClaude } = require('./helpers');
+const { KEYS, CLAUDE, openWithKeys, fillStepOne, storyScore, storyCompleteness, fulfillClaude } = require('./helpers');
 
 const ROOT = path.resolve(__dirname, '..');
 const prompt = (id) => fs.readFileSync(path.join(ROOT, 'prompts', id + '.md'), 'utf8').trim();
@@ -102,7 +102,7 @@ test.describe('step 2 review and score', () => {
     const rv = example('review-answers'), sc = example('score-story');
     const { errors } = await openSample(page);
     await page.click('#sidebar [data-page="story"]');
-    expect(await storyScore(page)).toBe(sc.expect.ruleTotal);
+    expect(await storyCompleteness(page)).toBe(sc.expect.ruleTotal);
     const seen = [];
     await claudeByPrompt(page, { 'review-answers': rv.modelOutput, 'score-story': sc.modelOutput }, seen);
     await page.click('#footer [data-action="next"]');
@@ -120,9 +120,9 @@ test.describe('step 2 review and score', () => {
     expect(await storyScore(page)).toBe(sc.expect.total);
     // The answers themselves are untouched.
     expect(await page.evaluate(() => state.found.outcome.text)).toBe('试点四周后，从三天缩短到四小时；研究团队开始复用我们的模板。');
-    // Once the text changes, the card falls back to the rule score until the next review.
+    // Once the text changes, the card falls back to completeness until the next review.
     await page.evaluate(() => { state.found.wisdom.text += ' 下次我会先找反对的人聊。'; render(); });
-    expect(await storyScore(page)).toBe(await page.evaluate(() => ruleAudit().total));
+    expect(await storyCompleteness(page)).toBe(await page.evaluate(() => ruleAudit().total));
     expect(seen).toHaveLength(2);
     expect(errors).toEqual([]);
   });
@@ -141,22 +141,23 @@ test.describe('step 2 review and score', () => {
     expect(await dims(all(2, '我放弃了全自动').slice(1))).toBeNull();
   });
 
-  test('Lumi does not jump when the card switches from the rule score to a higher Claude score', async ({ page }) => {
+  test('Lumi does not jump when the card switches from completeness to a Claude quality score', async ({ page }) => {
     await openSample(page);
     await page.click('#sidebar [data-page="story"]');
     await page.evaluate(() => { state.found.challenge.text = '这件事很难，推进很慢。'; render(); });
-    const rule = await storyScore(page);
-    expect(rule).toBe(9);
+    const comp = await storyCompleteness(page);
+    expect(comp).toBe(6);
     await expect.poll(() => page.evaluate(() => lumiAnim.state), { timeout: 5000 }).toBe('idle');
     await page.evaluate(() => { const set = lumiAnim.set.bind(lumiAnim); window.__sets = []; lumiAnim.set = (s) => { window.__sets.push(s); return set(s); }; });
     const dims = [['tension', '这件事很难'], ['decision', '代价是比纯自动慢一些'], ['pivot', '其实是步骤之间没人负责交接'], ['signal', '我放弃了全自动生成'], ['afterlife', '从三天缩短到四小时']].map(([id, quote]) => ({ id, score: 2, quote, reason: '' }));
     await claudeByPrompt(page, { 'review-answers': { followups: [{ id: 'challenge', question: '具体是谁觉得难？' }] }, 'score-story': { dims } });
     await page.click('#footer [data-action="next"]');
-    await expect.poll(() => storyScore(page)).toBe(10);
+    await expect(page.locator('.sc-label')).toHaveText('内容质量分');
+    expect(await storyScore(page)).toBe(10);
     expect(await page.evaluate(() => window.__sets)).not.toContain('jump');
   });
 
-  test('the card says estimate until Claude reviews, and "not specific enough yet" only where the user wrote something', async ({ page }) => {
+  test('the card shows completeness until Claude reviews, and "not specific enough yet" only where the user wrote something', async ({ page }) => {
     const { errors } = await openSample(page);
     await page.click('#sidebar [data-page="story"]');
     const label = () => page.locator('.sc-label').innerText();
@@ -164,21 +165,21 @@ test.describe('step 2 review and score', () => {
       if ((await page.locator('.score-card.open').count()) === 0) await page.click('.sc-head');
       return page.evaluate(() => Object.fromEntries([...document.querySelectorAll('.sc-dims li')].map((li) => [li.querySelector('.sc-dn').textContent, li.querySelector('.sc-st').textContent])));
     };
-    // Before review, a row the user left empty: the rule score, marked as an estimate; the empty row says missing.
+    // Before review, a row the user left empty: completeness only, the empty question says 未填.
     await page.evaluate(() => { state.found.challenge.text = ''; render(); });
     expect(await page.evaluate(() => foundationValue(FOUNDATION.find((f) => f.id === 'challenge')).src)).toBe('missing');
-    expect(await label()).toBe('故事评分 · 预估');
-    await expect(page.locator('.sc-note')).toHaveText('只看完整度。点「下一步」后 Lumi 会细看');
-    expect(await storyScore(page)).toBe(await page.evaluate(() => ruleAudit().total));
-    expect((await levels())['冲突']).toBe('缺材料');
+    expect(await label()).toBe('完整度');
+    await expect(page.locator('.sc-note')).toHaveText('只看完整度。点「下一步」后 Lumi 会评内容');
+    expect(await storyCompleteness(page)).toBe(await page.evaluate(() => ruleAudit().total));
+    expect((await levels())['真正的难点']).toBe('未填');
     expect(Object.values(await levels())).not.toContain('还不够具体');
-    // After review: Claude's score. Claude gives decision 0, but the user wrote a decision.
+    // After review: Claude's quality score. Claude gives decision 0, but the user wrote a decision.
     await page.evaluate(() => { state.found.challenge.text = '这件事很难，推进很慢。'; render(); });
     const dims = [['tension', '这件事很难'], ['decision', ''], ['pivot', '其实是步骤之间没人负责交接'], ['signal', '我放弃了全自动生成'], ['afterlife', '从三天缩短到四小时']].map(([id, quote]) => ({ id, score: quote ? 2 : 0, quote, reason: '' }));
     await claudeByPrompt(page, { 'review-answers': { followups: [{ id: 'decision', question: '你具体放弃了什么？' }] }, 'score-story': { dims } });
     await page.click('#footer [data-action="next"]');
     await expect.poll(() => page.evaluate(() => !!state.claudeScore)).toBe(true);
-    await expect(page.locator('.sc-label')).toHaveText('故事评分');
+    await expect(page.locator('.sc-label')).toHaveText('内容质量分');
     await expect(page.locator('.sc-note')).toHaveText('Lumi 看过，也看了写得够不够具体');
     expect(await storyScore(page)).toBe(8);
     const reviewed = await levels();
@@ -186,16 +187,16 @@ test.describe('step 2 review and score', () => {
     expect(reviewed['冲突']).toBe('充足');
     // English copy for the same review.
     await page.evaluate(() => { state.lang = 'en'; render(); });
-    expect(await label()).toBe('Story score');
+    expect(await label()).toBe('Content score');
     expect((await levels())['Trade-off']).toBe('Not specific enough yet');
     await page.evaluate(() => { state.lang = 'zh'; render(); });
-    // Edited after the review: back to the rule score, marked as an estimate again.
+    // Edited after the review: back to completeness again.
     await page.evaluate(() => { state.found.wisdom.text += ' 下次我会先找反对的人聊。'; render(); });
-    expect(await label()).toBe('故事评分 · 预估');
-    expect(await storyScore(page)).toBe(await page.evaluate(() => ruleAudit().total));
+    expect(await label()).toBe('完整度');
+    expect(await storyCompleteness(page)).toBe(await page.evaluate(() => ruleAudit().total));
     expect(Object.values(await levels())).not.toContain('还不够具体');
     await page.evaluate(() => { state.lang = 'en'; render(); });
-    expect(await label()).toBe('Story score · estimate');
+    expect(await label()).toBe('Completeness');
     // A row left empty: Next asks first; after "continue with gaps" Claude reviews, and that row still says missing.
     await page.evaluate(() => { state.lang = 'zh'; state.found.challenge.text = ''; state.storyReviewPass = false; render(); });
     await page.click('#footer [data-action="next"]');
@@ -203,7 +204,7 @@ test.describe('step 2 review and score', () => {
     await page.click('#modal [data-action="continueGaps"]');
     await expect.poll(() => page.evaluate(() => state.claudeScore.key === storyKey())).toBe(true);
     expect(await page.evaluate(() => state.page)).toBe('story');
-    expect(await label()).toBe('故事评分');
+    expect(await label()).toBe('内容质量分');
     const empty = await levels();
     expect(empty['冲突']).toBe('缺材料');
     expect(empty['取舍']).toBe('还不够具体');

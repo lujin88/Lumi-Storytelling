@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { openApp, fillStepOne, storyScore } = require('./helpers');
+const { openApp, fillStepOne, storyCompleteness } = require('./helpers');
 
 const NOTES = '我重新设计了团队的研究流程。产品经理反对，我放弃了自动生成，结果交付时间从两周降到三天。';
 
@@ -41,16 +41,16 @@ test('notes survive a reload', async ({ page }) => {
   await expect(page.locator('ol.foundation').first()).toContainText('产品经理反对');
 });
 
-test('answering a story question raises the score', async ({ page }) => {
+test('answering a story question raises completeness', async ({ page }) => {
   await openApp(page);
   await fillStepOne(page, NOTES);
   await page.click('#footer [data-action="next"]');
-  const before = await storyScore(page);
-  // Question 02 (reframe) is empty in NOTES; an "以为…其实…" answer fills the turning point.
+  const before = await storyCompleteness(page);
+  // Question 02 (reframe) is empty in NOTES; answering it raises completeness by 1.
   await page.click('[data-action="focus:reframe"]');
   await page.fill('#guideText', '大家以为是效率问题，其实是团队不信任自动生成的结论。');
   await page.press('#guideText', 'Enter');
-  await expect.poll(() => storyScore(page)).toBeGreaterThan(before);
+  await expect.poll(() => storyCompleteness(page)).toBeGreaterThan(before);
 });
 
 test('download excludes saved API keys and GitHub token', async ({ page }) => {
