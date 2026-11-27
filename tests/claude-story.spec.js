@@ -152,7 +152,8 @@ test.describe('step 2 review and score', () => {
     const dims = [['tension', '这件事很难'], ['decision', '代价是比纯自动慢一些'], ['pivot', '其实是步骤之间没人负责交接'], ['signal', '我放弃了全自动生成'], ['afterlife', '从三天缩短到四小时']].map(([id, quote]) => ({ id, score: 2, quote, reason: '' }));
     await claudeByPrompt(page, { 'review-answers': { followups: [{ id: 'challenge', question: '具体是谁觉得难？' }] }, 'score-story': { dims } });
     await page.click('#footer [data-action="next"]');
-    await expect.poll(() => storyScore(page)).toBe(10);
+    await expect(page.locator('.sc-label')).toHaveText('内容质量分');
+    expect(await storyScore(page)).toBe(10);
     expect(await page.evaluate(() => window.__sets)).not.toContain('jump');
   });
 
